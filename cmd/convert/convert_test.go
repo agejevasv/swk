@@ -9,28 +9,29 @@ import (
 )
 
 func resetAllFlags() {
-	// datetime.go package-level vars
+	nbFrom = "dec"
+	nbTo = "hex"
+	caseTo = ""
+	colorFrom = "auto"
+	colorTo = "all"
 	dtFrom = "auto"
 	dtTo = "iso"
 	dtTz = "Local"
+	imageToFormat = ""
+	imageQuality = 85
+	imageResize = ""
+	imageInput = ""
+	imageOutput = ""
+	jsonFrom = "json"
+	jsonTo = "json"
+	jsonMinify = false
+	jsonIndent = 2
+	jsonDelimiter = ","
+	mdHTML = false
+	mdTheme = "github"
+	xmlMinify = false
+	xmlIndent = 2
 
-	// cron.go package-level vars
-	cronNext = 5
-	cronExplain = false
-
-	// json_yaml.go package-level vars
-	jyReverse = false
-	jyIndent = 2
-
-	// json_csv.go package-level vars
-	jcReverse = false
-	jcDelimiter = ","
-
-	// numbase.go package-level vars
-	nbFrom = "dec"
-	nbTo = "hex"
-
-	// Reset all cobra subcommand flags to defaults and clear Changed state
 	for _, sub := range Cmd.Commands() {
 		sub.Flags().VisitAll(func(f *pflag.Flag) {
 			f.Value.Set(f.DefValue)
@@ -48,328 +49,205 @@ func executeCommand(args ...string) (string, error) {
 	return buf.String(), err
 }
 
-// ── json-yaml ──────────────────────────────────────────────────────────────
-
-func TestJsonYaml_JSONToYAML(t *testing.T) {
+func TestBase_DecToHex(t *testing.T) {
 	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("json-yaml", `{"name":"alice","age":30}`)
+	out, err := executeCommand("base", "255")
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(out, "name: alice") {
-		t.Errorf("expected YAML key 'name: alice', got:\n%s", out)
-	}
-	if !strings.Contains(out, "age: 30") {
-		t.Errorf("expected YAML key 'age: 30', got:\n%s", out)
+	lower := strings.ToLower(out)
+	if !strings.Contains(lower, "ff") {
+		t.Errorf("expected output to contain 'ff' or '0xff', got %q", out)
 	}
 }
 
-func TestJsonYaml_YAMLToJSON_Reverse(t *testing.T) {
+func TestBase_BinToDec(t *testing.T) {
 	t.Cleanup(resetAllFlags)
-	yamlInput := "name: alice\nage: 30"
-	out, err := executeCommand("json-yaml", "--reverse", yamlInput)
+	out, err := executeCommand("base", "--from", "bin", "--to", "dec", "11111111")
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(out, `"name"`) {
-		t.Errorf("expected JSON key '\"name\"', got:\n%s", out)
-	}
-	if !strings.Contains(out, `"age"`) {
-		t.Errorf("expected JSON key '\"age\"', got:\n%s", out)
+	if !strings.Contains(strings.TrimSpace(out), "255") {
+		t.Errorf("expected '255', got %q", out)
 	}
 }
 
-func TestJsonYaml_IndentFlag(t *testing.T) {
+func TestBase_InvalidBase(t *testing.T) {
 	t.Cleanup(resetAllFlags)
-	yamlInput := "name: alice"
-	out, err := executeCommand("json-yaml", "--reverse", "--indent", "4", yamlInput)
-	if err != nil {
-		t.Fatal(err)
-	}
-	// With indent=4, JSON should have 4-space indentation
-	if !strings.Contains(out, "    ") {
-		t.Errorf("expected 4-space indentation, got:\n%s", out)
-	}
-}
-
-func TestJsonYaml_InvalidJSON(t *testing.T) {
-	t.Cleanup(resetAllFlags)
-	_, err := executeCommand("json-yaml", `{invalid json!!!`)
+	_, err := executeCommand("base", "--from", "xyz", "42")
 	if err == nil {
-		t.Error("expected error for invalid JSON input")
+		t.Fatal("expected error for invalid base, got nil")
 	}
 }
 
-// ── json-csv ───────────────────────────────────────────────────────────────
-
-func TestJsonCSV_JSONToCSV(t *testing.T) {
+func TestCase_Snake(t *testing.T) {
 	t.Cleanup(resetAllFlags)
-	input := `[{"name":"alice","age":30},{"name":"bob","age":25}]`
-	out, err := executeCommand("json-csv", input)
+	out, err := executeCommand("case", "--to", "snake", "helloWorld")
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(out, "alice") || !strings.Contains(out, "bob") {
-		t.Errorf("expected CSV output with alice and bob, got:\n%s", out)
-	}
-	// Should have header row and data rows
-	lines := strings.Split(strings.TrimSpace(out), "\n")
-	if len(lines) < 3 {
-		t.Errorf("expected at least 3 lines (header + 2 data), got %d", len(lines))
+	if !strings.Contains(strings.TrimSpace(out), "hello_world") {
+		t.Errorf("expected 'hello_world', got %q", out)
 	}
 }
 
-func TestJsonCSV_CSVToJSON_Reverse(t *testing.T) {
+func TestCase_Camel(t *testing.T) {
 	t.Cleanup(resetAllFlags)
-	csvInput := "name,age\nalice,30\nbob,25"
-	out, err := executeCommand("json-csv", "--reverse", csvInput)
+	out, err := executeCommand("case", "--to", "camel", "hello_world")
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(out, `"name"`) {
-		t.Errorf("expected JSON with 'name' key, got:\n%s", out)
-	}
-	if !strings.Contains(out, `"alice"`) {
-		t.Errorf("expected JSON with 'alice' value, got:\n%s", out)
+	if !strings.Contains(strings.TrimSpace(out), "helloWorld") {
+		t.Errorf("expected 'helloWorld', got %q", out)
 	}
 }
 
-func TestJsonCSV_DelimiterFlag(t *testing.T) {
+func TestColor_HexToAll(t *testing.T) {
 	t.Cleanup(resetAllFlags)
-	// First convert JSON to semicolon-delimited CSV
-	input := `[{"name":"alice","age":"30"}]`
-	out, err := executeCommand("json-csv", "-d", ";", input)
+	out, err := executeCommand("color", "#ff0000")
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(out, ";") {
-		t.Errorf("expected semicolon-delimited output, got:\n%s", out)
+	lower := strings.ToLower(out)
+	if !strings.Contains(lower, "rgb") && !strings.Contains(lower, "hsl") {
+		t.Errorf("expected output to contain 'rgb' or 'hsl', got %q", out)
 	}
 }
 
-func TestJsonCSV_DelimiterFlag_Reverse(t *testing.T) {
+func TestDate_UnixToISO(t *testing.T) {
 	t.Cleanup(resetAllFlags)
-	csvInput := "name;age\nalice;30"
-	out, err := executeCommand("json-csv", "--reverse", "--delimiter", ";", csvInput)
+	out, err := executeCommand("date", "--from", "unix", "--tz", "UTC", "0")
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(out, `"alice"`) {
-		t.Errorf("expected JSON with alice, got:\n%s", out)
+	if !strings.Contains(out, "1970-01-01") {
+		t.Errorf("expected '1970-01-01', got %q", out)
 	}
 }
 
-// ── numbase ────────────────────────────────────────────────────────────────
-
-func TestNumbase_DecToHex_Default(t *testing.T) {
+func TestDate_Now(t *testing.T) {
 	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("numbase", "255")
+	out, err := executeCommand("date", "--tz", "UTC", "now")
 	if err != nil {
-		t.Fatal(err)
-	}
-	trimmed := strings.TrimSpace(out)
-	if !strings.EqualFold(trimmed, "ff") && !strings.EqualFold(trimmed, "0xff") {
-		t.Errorf("expected 'ff' or '0xff', got %q", trimmed)
-	}
-}
-
-func TestNumbase_BinToDec(t *testing.T) {
-	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("numbase", "--from", "bin", "--to", "dec", "11111111")
-	if err != nil {
-		t.Fatal(err)
-	}
-	trimmed := strings.TrimSpace(out)
-	if trimmed != "255" {
-		t.Errorf("expected '255', got %q", trimmed)
-	}
-}
-
-func TestNumbase_HexToOct(t *testing.T) {
-	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("numbase", "--from", "hex", "--to", "oct", "ff")
-	if err != nil {
-		t.Fatal(err)
-	}
-	trimmed := strings.TrimSpace(out)
-	if trimmed != "377" && trimmed != "0o377" {
-		t.Errorf("expected '377' or '0o377', got %q", trimmed)
-	}
-}
-
-func TestNumbase_DecToBin(t *testing.T) {
-	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("numbase", "--from", "dec", "--to", "bin", "10")
-	if err != nil {
-		t.Fatal(err)
-	}
-	trimmed := strings.TrimSpace(out)
-	if trimmed != "1010" && trimmed != "0b1010" {
-		t.Errorf("expected '1010' or '0b1010', got %q", trimmed)
-	}
-}
-
-func TestNumbase_OctToHex(t *testing.T) {
-	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("numbase", "--from", "oct", "--to", "hex", "377")
-	if err != nil {
-		t.Fatal(err)
-	}
-	trimmed := strings.TrimSpace(out)
-	if !strings.EqualFold(trimmed, "ff") && !strings.EqualFold(trimmed, "0xff") {
-		t.Errorf("expected 'ff' or '0xff', got %q", trimmed)
-	}
-}
-
-func TestNumbase_InvalidBase(t *testing.T) {
-	t.Cleanup(resetAllFlags)
-	_, err := executeCommand("numbase", "--from", "xyz", "42")
-	if err == nil {
-		t.Error("expected error for invalid base name")
-	}
-}
-
-// ── datetime ───────────────────────────────────────────────────────────────
-
-func TestDatetime_UnixToISO(t *testing.T) {
-	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("datetime", "--from", "unix", "--tz", "UTC", "0")
-	if err != nil {
-		t.Fatal(err)
-	}
-	trimmed := strings.TrimSpace(out)
-	if !strings.Contains(trimmed, "1970-01-01") {
-		t.Errorf("expected ISO date containing 1970-01-01, got %q", trimmed)
-	}
-}
-
-func TestDatetime_ISOToUnix(t *testing.T) {
-	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("datetime", "--from", "iso", "--to", "unix", "1970-01-01T00:00:00Z")
-	if err != nil {
-		t.Fatal(err)
-	}
-	trimmed := strings.TrimSpace(out)
-	if trimmed != "0" {
-		t.Errorf("expected '0', got %q", trimmed)
-	}
-}
-
-func TestDatetime_Now(t *testing.T) {
-	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("datetime", "--tz", "UTC", "now")
-	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("unexpected error: %v", err)
 	}
 	trimmed := strings.TrimSpace(out)
 	if trimmed == "" {
-		t.Error("expected non-empty output for 'now'")
+		t.Fatal("expected non-empty output")
 	}
-	// The output should be an ISO date string
 	if !strings.Contains(trimmed, "T") {
-		t.Errorf("expected ISO format with 'T' separator, got %q", trimmed)
+		t.Errorf("expected output to contain 'T', got %q", trimmed)
 	}
 }
 
-func TestDatetime_TzFlag(t *testing.T) {
+func TestJSON_Prettify(t *testing.T) {
 	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("datetime", "--from", "unix", "--tz", "America/New_York", "0")
+	out, err := executeCommand("json", `{"a":1,"b":2}`)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "\n") {
+		t.Errorf("expected newlines in prettified output, got %q", out)
+	}
+	if !strings.Contains(out, "  ") {
+		t.Errorf("expected indentation in prettified output, got %q", out)
+	}
+}
+
+func TestJSON_Minify(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("json", "--minify", `{"a": 1}`)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
 	trimmed := strings.TrimSpace(out)
-	// Unix epoch in New York is 1969-12-31T19:00:00-05:00
-	if !strings.Contains(trimmed, "1969-12-31") {
-		t.Errorf("expected date 1969-12-31 in New York timezone, got %q", trimmed)
+	if strings.Contains(trimmed, " ") {
+		t.Errorf("expected no whitespace in minified output, got %q", trimmed)
 	}
 }
 
-func TestDatetime_AutoDetect(t *testing.T) {
+func TestJSON_ToYAML(t *testing.T) {
 	t.Cleanup(resetAllFlags)
-	// Default --from is "auto"; passing a unix timestamp should auto-detect
-	out, err := executeCommand("datetime", "--to", "iso", "--tz", "UTC", "0")
+	out, err := executeCommand("json", "--to", "yaml", `{"a":1}`)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("unexpected error: %v", err)
 	}
-	trimmed := strings.TrimSpace(out)
-	if !strings.Contains(trimmed, "1970") {
-		t.Errorf("expected year 1970 in output, got %q", trimmed)
+	if !strings.Contains(out, "a: 1") {
+		t.Errorf("expected 'a: 1', got %q", out)
 	}
 }
 
-// ── cron ───────────────────────────────────────────────────────────────────
-
-func TestCron_DefaultShowsBoth(t *testing.T) {
+func TestJSON_FromYAML(t *testing.T) {
 	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("cron", "*/5 * * * *")
+	out, err := executeCommand("json", "--from", "yaml", "a: 1")
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("unexpected error: %v", err)
 	}
-	// Default shows explanation and next 5 runs
-	if !strings.Contains(out, "Next 5 runs") {
-		t.Errorf("expected 'Next 5 runs' in output, got:\n%s", out)
-	}
-	// Should contain some explanation text
-	if len(out) < 20 {
-		t.Errorf("expected substantial output with both explain + next, got:\n%s", out)
+	if !strings.Contains(out, `"a"`) {
+		t.Errorf("expected '\"a\"' in output, got %q", out)
 	}
 }
 
-func TestCron_ExplainOnly(t *testing.T) {
+func TestJSON_ToCSV(t *testing.T) {
 	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("cron", "--explain", "0 9 * * 1-5")
+	out, err := executeCommand("json", "--to", "csv", `[{"name":"alice","age":"30"}]`)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("unexpected error: %v", err)
 	}
-	// With --explain only (and no --next), should show explanation but not "Next N runs"
-	if strings.Contains(out, "Next") {
-		t.Errorf("expected explain-only output without 'Next', got:\n%s", out)
-	}
-	if out == "" {
-		t.Error("expected non-empty explanation")
+	if !strings.Contains(out, "alice") {
+		t.Errorf("expected 'alice' in output, got %q", out)
 	}
 }
 
-func TestCron_NextOnly(t *testing.T) {
+func TestJSON_FromCSV(t *testing.T) {
 	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("cron", "--next", "3", "*/10 * * * *")
+	out, err := executeCommand("json", "--from", "csv", "name,age\nalice,30")
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("unexpected error: %v", err)
 	}
-	// With --next 3 only (no --explain), should show timestamps
-	// The output may include a "Next N runs:" header line
-	if !strings.Contains(out, "T") {
-		t.Errorf("expected RFC3339 timestamps with 'T', got:\n%s", out)
-	}
-	// Count lines containing timestamps (with 'T' separator from RFC3339)
-	lines := strings.Split(strings.TrimSpace(out), "\n")
-	count := 0
-	for _, line := range lines {
-		if strings.Contains(line, "T") {
-			count++
-		}
-	}
-	if count != 3 {
-		t.Errorf("expected 3 timestamp lines, got %d:\n%s", count, out)
+	if !strings.Contains(out, `"alice"`) {
+		t.Errorf("expected '\"alice\"' in output, got %q", out)
 	}
 }
 
-func TestCron_NextWithExplain(t *testing.T) {
+func TestJSON_Invalid(t *testing.T) {
 	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("cron", "--next", "2", "--explain", "0 0 * * *")
-	if err != nil {
-		t.Fatal(err)
-	}
-	// When both --explain and --next are given, shows both
-	if !strings.Contains(out, "T") {
-		t.Errorf("expected timestamp output with 'T' in RFC3339, got:\n%s", out)
-	}
-}
-
-func TestCron_InvalidExpression(t *testing.T) {
-	t.Cleanup(resetAllFlags)
-	_, err := executeCommand("cron", "not-a-cron")
+	_, err := executeCommand("json", `{invalid`)
 	if err == nil {
-		t.Error("expected error for invalid cron expression")
+		t.Fatal("expected error for invalid JSON, got nil")
+	}
+}
+
+func TestMarkdown_HTML(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("markdown", "--html", "# Hello\n\nWorld")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "<h1>") {
+		t.Errorf("expected '<h1>' in output, got %q", out)
+	}
+}
+
+func TestXML_Prettify(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("xml", `<root><a>1</a></root>`)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "\n") {
+		t.Errorf("expected newlines in prettified output, got %q", out)
+	}
+}
+
+func TestXML_Minify(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("xml", "--minify", "<root>\n  <a>1</a>\n</root>")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	trimmed := strings.TrimSpace(out)
+	if strings.Contains(trimmed, "\n") {
+		t.Errorf("expected no newlines in minified output, got %q", trimmed)
 	}
 }

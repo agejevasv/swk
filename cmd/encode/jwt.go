@@ -87,6 +87,5 @@ func init() {
 	jwtCmd.Flags().BoolVarP(&jwtDecode, "decode", "d", false, "decode/inspect a JWT token")
 	jwtCmd.Flags().StringVarP(&jwtSecret, "secret", "s", "", "HMAC secret for signing or verification")
 	jwtCmd.Flags().StringVarP(&jwtAlgo, "algo", "a", "HS256", "signing algorithm (HS256, HS384, HS512)")
-
 	Cmd.AddCommand(jwtCmd)
 }

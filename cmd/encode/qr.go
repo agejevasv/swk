@@ -50,6 +50,5 @@ func init() {
 	qrCmd.Flags().StringVarP(&qrOutput, "output", "o", "terminal", "output format: terminal, png")
 	qrCmd.Flags().IntVarP(&qrSize, "size", "s", 256, "image size in pixels (for PNG output)")
 	qrCmd.Flags().StringVarP(&qrLevel, "level", "l", "M", "error correction level: L, M, Q, H")
-
 	Cmd.AddCommand(qrCmd)
 }

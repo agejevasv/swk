@@ -42,269 +42,203 @@ swk <category> <command> [input] [flags]
 
 Every command reads from **stdin** when no argument is given, writes to **stdout**, and sends errors to **stderr**.
 
+Print version:
+
+```bash
+swk --version
+swk -v
+```
+
 ## Commands
 
-### Converters (`swk convert`)
+### Convert (`swk convert`)
 
 | Command | Alias | Description |
 |---------|-------|-------------|
-| `convert json-yaml` | `c jy` | Convert between JSON and YAML |
-| `convert json-csv` | `c jc` | Convert between JSON and CSV |
-| `convert numbase` | `c nb` | Convert between number bases (bin, oct, dec, hex) |
-| `convert datetime` | `c dt` | Convert between date/time formats |
-| `convert cron` | `c cr` | Parse and explain cron expressions |
+| `convert base` | `c nb` | Convert between number bases (bin, oct, dec, hex) |
+| `convert case` | `c case` | Convert between case conventions |
+| `convert color` | `c col` | Convert between color formats |
+| `convert date` | `c dt` | Convert between date/time formats |
+| `convert image` | `c img` | Convert image formats, resize |
+| `convert json` | `c j` | Convert and format JSON (yaml, csv) |
+| `convert markdown` | `c md` | Render markdown to HTML or plain text |
+| `convert xml` | `c x` | Format (prettify/minify) XML |
 
 ```bash
-# JSON to YAML
-echo '{"name":"swk","version":"1.0"}' | swk convert json-yaml
-
-# YAML back to JSON
-echo -e "name: swk\nversion: '1.0'" | swk convert json-yaml --reverse
-
 # Number base conversion
-swk convert numbase --from dec --to hex 255
+swk convert base --from dec --to hex 255
 
-# Unix timestamp to ISO
-swk convert datetime --from unix --to iso 1700000000
+# Case conversion
+echo 'helloWorld' | swk convert case --to snake    # hello_world
 
-# Current time
-swk convert datetime now
+# Color format conversion
+swk convert color '#FF5733'
+swk convert color --from rgb --to hex '255,87,51'
 
-# Explain a cron expression
-swk convert cron --explain '*/5 * * * *'
+# Date/time conversion
+swk convert date --from unix --to iso 1700000000
+swk convert date now
 
-# Show next 3 runs (default is 5)
-swk convert cron --next 3 '0 9 * * MON'
+# Image conversion
+swk convert image --to jpeg -i photo.png -o photo.jpg
+swk convert image --to png --resize 200x200 -i large.png -o thumb.png
+
+# JSON prettify/minify
+echo '{"a":1,"b":2}' | swk convert json
+cat config.json | swk convert json --minify
+
+# JSON to YAML
+echo '{"name":"swk"}' | swk convert json --to yaml
+
+# YAML to JSON
+echo 'name: swk' | swk convert json --from yaml
+
+# JSON to CSV
+echo '[{"name":"alice","age":30}]' | swk convert json --to csv
+
+# CSV to JSON
+echo 'name,age\nalice,30' | swk convert json --from csv
+
+# Render markdown
+cat README.md | swk convert markdown --html > preview.html
+
+# XML format
+cat messy.xml | swk convert xml
+cat document.xml | swk convert xml --minify
 ```
 
-### Encoders / Decoders (`swk encode`)
+### Encode (`swk encode`)
 
 | Command | Alias | Description |
 |---------|-------|-------------|
 | `encode base64` | `enc b64` | Base64 encode/decode |
-| `encode url` | `enc url` | URL encode/decode |
-| `encode html` | `enc html` | HTML entity encode/decode |
+| `encode hash` | `enc h` | Generate hashes (MD5, SHA1, SHA256, SHA512) |
 | `encode jwt` | `enc jwt` | Create or decode JWT tokens |
-| `encode gzip` | `enc gz` | Gzip compress/decompress |
-| `encode cert` | `enc cert` | Decode X.509 PEM certificates |
 | `encode qr` | `enc qr` | Generate QR codes |
 
 ```bash
-# Base64 encode
+# Base64
 echo 'hello world' | swk encode base64
-
-# Base64 decode
 echo 'aGVsbG8gd29ybGQ=' | swk encode base64 -d
+echo 'data' | swk encode base64 --url-safe
 
-# URL-safe base64
-echo 'binary data here' | swk encode base64 --url-safe
+# Hash
+echo -n 'hello' | swk encode hash
+echo -n 'hello' | swk encode hash --algo md5
+echo -n 'hello' | swk encode hash --verify 2cf24dba...
 
-# URL encode
-echo 'hello world & friends' | swk encode url
-
-# HTML encode
-echo '<script>alert("xss")</script>' | swk encode html
-
-# Create a JWT
+# JWT
 swk encode jwt --secret mykey '{"sub":"user1","role":"admin"}'
-
-# Create with HS512
-swk encode jwt --secret mykey --algo HS512 '{"sub":"user1"}'
-
-# Decode a JWT
 swk encode jwt -d 'eyJhbGciOiJIUzI1NiIs...'
-
-# Decode and verify signature
 swk encode jwt -d --secret mykey 'eyJhbGciOiJIUzI1NiIs...'
 
-# Inspect a certificate
-cat cert.pem | swk encode cert
-
-# Check if certificate is expired (exit code 1 if expired)
-swk encode cert --check-expiry < cert.pem
-
-# Generate a QR code in terminal
+# QR code
 swk encode qr 'https://github.com/agejevasv/swk'
-
-# Generate QR as PNG
 swk encode qr --output png 'https://example.com' > qr.png
 ```
 
-### Formatters (`swk fmt`)
+### Escape (`swk escape`)
 
 | Command | Alias | Description |
 |---------|-------|-------------|
-| `fmt json` | `f j` | Pretty-print or minify JSON |
-| `fmt xml` | `f x` | Pretty-print or minify XML |
-| `fmt sql` | `f sql` | Format SQL queries |
+| `escape html` | `esc html` | HTML entity escape/unescape |
+| `escape json` | `esc json` | JSON string escape/unescape |
+| `escape shell` | `esc shell` | Shell escape/unescape |
+| `escape url` | `esc url` | URL percent-encode/decode |
+| `escape xml` | `esc xml` | XML escape/unescape |
 
 ```bash
-# Pretty-print JSON
-echo '{"a":1,"b":2}' | swk fmt json
+# HTML
+echo '<script>alert("xss")</script>' | swk escape html
+echo '&lt;div&gt;' | swk escape html -u
 
-# Minify JSON
-cat config.json | swk fmt json --minify
+# JSON
+echo 'line1\nline2' | swk escape json
+echo '\"hello\"' | swk escape json -u
 
-# Custom indent (4 spaces)
-cat data.json | swk fmt json --indent 4
+# Shell
+echo "it's a test" | swk escape shell
 
-# Format XML
-cat messy.xml | swk fmt xml
+# URL
+echo 'hello world & friends' | swk escape url
+echo 'hello%20world' | swk escape url -u
 
-# Minify XML
-cat document.xml | swk fmt xml --minify
-
-# Format SQL
-echo "SELECT id,name FROM users WHERE active=1 ORDER BY name" | swk fmt sql
-
-# Uppercase SQL keywords
-echo "select * from users where id = 1" | swk fmt sql --uppercase
+# XML
+echo '<tag attr="val">' | swk escape xml
 ```
 
-### Generators (`swk gen`)
+### Generate (`swk generate`)
 
 | Command | Alias | Description |
 |---------|-------|-------------|
-| `gen uuid` | `g uid` | Generate UUIDs (v1, v4, v5, v7) |
-| `gen hash` | `g h` | Generate hashes (MD5, SHA1, SHA256, SHA512) |
-| `gen password` | `g pw` | Generate random passwords |
-| `gen lorem` | `g li` | Generate lorem ipsum text |
+| `generate image` | `gen image` | Generate placeholder images |
+| `generate password` | `gen pw` | Generate random passwords |
+| `generate text` | `gen text` | Generate lorem ipsum text |
+| `generate uuid` | `gen uid` | Generate UUIDs (v1, v4, v5, v7) |
 
 ```bash
-# Generate a UUID (v4 by default)
-swk gen uuid
+# Placeholder image
+swk generate image -o placeholder.png
+swk generate image --style circles --width 1920 --height 1080 -o wallpaper.png
 
-# Generate 5 UUIDs
-swk gen uuid --count 5
+# Passwords
+swk generate password
+swk generate password --length 32 --no-symbols
+swk generate password --count 10
 
-# UUID v7 (time-ordered)
-swk gen uuid --version 7
+# Lorem ipsum
+swk generate text --paragraphs 3
+swk generate text --words 50
 
-# SHA256 hash (default)
-echo -n 'hello' | swk gen hash
-
-# MD5 hash
-echo -n 'hello' | swk gen hash --algo md5
-
-# Verify a hash
-echo -n 'hello' | swk gen hash --verify 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
-
-# Generate a 32-character password
-swk gen password --length 32
-
-# Password with only letters and digits
-swk gen password --no-symbols
-
-# Generate 10 passwords
-swk gen password --count 10
-
-# Lorem ipsum paragraphs
-swk gen lorem --paragraphs 3
-
-# Lorem ipsum words
-swk gen lorem --words 50
+# UUIDs
+swk generate uuid
+swk generate uuid --count 5
+swk generate uuid --version 7
 ```
 
-### Testers (`swk test`)
+### Inspect (`swk inspect`)
 
 | Command | Alias | Description |
 |---------|-------|-------------|
-| `test regex` | `t re` | Test regex patterns against input |
-| `test jsonpath` | `t jp` | Query JSON with JSONPath |
-| `test xmlval` | `t xv` | Validate XML well-formedness |
+| `inspect cert` | | Inspect X.509 PEM certificates |
+| `inspect cron` | `inspect cr` | Explain cron expressions |
+| `inspect text` | `inspect txt` | Character, word, line, byte counts |
 
 ```bash
-# Test a regex
-echo '2024-01-15 hello 2024-02-20' | swk test regex -p '\d{4}-\d{2}-\d{2}' -g
+# Certificate
+cat cert.pem | swk inspect cert
+swk inspect cert --check-expiry < cert.pem
 
-# Regex with capture groups
-echo 'John:30' | swk test regex -p '(\w+):(\d+)' --groups
+# Cron
+swk inspect cron '*/5 * * * *'
+swk inspect cron --explain '0 9 * * 1-5'
+swk inspect cron --next 3 '0 9 * * MON'
 
-# Regex replace
-echo 'foo bar baz' | swk test regex -p 'bar' -r 'qux'
-
-# JSONPath query
-echo '{"users":[{"name":"Alice"},{"name":"Bob"}]}' | swk test jsonpath -q '$.users[*].name'
-
-# Validate XML
-cat document.xml | swk test xmlval
+# Text stats
+cat essay.txt | swk inspect text
+echo 'hello world' | swk inspect text --json
 ```
 
-### Text Utilities (`swk text`)
+### Query (`swk query`)
 
 | Command | Alias | Description |
 |---------|-------|-------------|
-| `text inspect` | `txt info` | Character, word, line, byte counts |
-| `text escape` | `txt esc` | Escape/unescape strings |
-| `text case` | `txt case` | Convert between case conventions |
-| `text diff` | `txt diff` | Unified diff between two files |
-| `text md` | `txt md` | Render markdown |
+| `query html` | `q html` | Query HTML with CSS selectors |
+| `query json` | `q jp` | Query JSON with JSONPath |
+| `query regex` | `q re` | Match/replace with regular expressions |
 
 ```bash
-# Inspect text
-cat essay.txt | swk text inspect
+# HTML (CSS selectors)
+curl -s https://example.com | swk query html -q 'a' --attr href
+cat page.html | swk query html -q 'div.content p'
 
-# Inspect as JSON
-echo 'hello world' | swk text inspect --json
+# JSON (JSONPath)
+echo '{"users":[{"name":"Alice"},{"name":"Bob"}]}' | swk query json -q '$.users[*].name'
 
-# Escape for JSON
-echo 'line1\nline2' | swk text escape --mode json
-
-# Unescape
-echo '\"hello\"' | swk text escape --mode json --unescape
-
-# Shell escape
-echo "it's a test" | swk text escape --mode shell
-
-# Case conversion (preserves whitespace and structure)
-echo 'hello world' | swk text case --to camel    # helloWorld
-echo 'hello world' | swk text case --to pascal   # HelloWorld
-echo 'hello world' | swk text case --to snake    # hello_world
-echo 'hello world' | swk text case --to kebab    # hello-world
-echo 'helloWorld'  | swk text case --to snake    # hello_world
-cat file.go | swk text case --to upper           # uppercases file, preserves structure
-
-# Diff two files
-swk text diff -a old.txt -b new.txt
-
-# Render markdown to styled HTML page
-cat README.md | swk text md --html > preview.html
-
-# Use a different syntax highlighting theme
-cat README.md | swk text md --html --theme monokai > preview.html
-```
-
-### Graphic Tools (`swk graphic`)
-
-| Command | Alias | Description |
-|---------|-------|-------------|
-| `graphic color` | `gfx col` | Convert between color formats |
-| `graphic image` | `gfx img` | Convert image formats, resize |
-| `graphic generate` | `gfx gen` | Generate placeholder images |
-
-```bash
-# Convert hex to all formats
-swk graphic color '#FF5733'
-
-# Convert RGB to hex
-swk graphic color --from rgb --to hex '255,87,51'
-
-# Convert image format
-swk graphic image --to jpeg -i photo.png -o photo.jpg
-
-# Resize image
-swk graphic image --to png --resize 200x200 -i large.png -o thumb.png
-
-# Convert with quality setting
-swk graphic image --to jpeg --quality 75 -i input.png -o output.jpg
-
-# Generate placeholder image
-swk graphic generate -o placeholder.png
-
-# Specific style and dimensions
-swk graphic generate --style circles --width 1920 --height 1080 -o wallpaper.png
-
-# Available styles: circles, squares, lines, mixed (default)
+# Regex
+echo '2024-01-15 hello 2024-02-20' | swk query regex -p '\d{4}-\d{2}-\d{2}' -g
+echo 'John:30' | swk query regex -p '(\w+):(\d+)' --groups
+echo 'foo bar baz' | swk query regex -p 'bar' -r 'qux'
 ```
 
 ## Piping and chaining
@@ -313,22 +247,22 @@ Every command reads stdin and writes stdout:
 
 ```bash
 # JSON → format → base64
-echo '{"a":1}' | swk fmt json | swk encode base64
+echo '{"a":1}' | swk convert json | swk encode base64
 
 # Generate password → hash it
-swk gen password | swk gen hash
+swk generate password | swk encode hash
 
 # YAML → JSON → minify → clipboard (macOS)
-cat config.yaml | swk convert json-yaml -r | swk fmt json -m | pbcopy
+cat config.yaml | swk convert json --from yaml | swk convert json -m | pbcopy
 
 # Fetch API → format → inspect
-curl -s https://www.cloudflarestatus.com/api/v2/status.json | swk fmt json | swk text inspect
-
-# Uppercase a file preserving structure
-cat main.go | swk text case --to upper
+curl -s https://api.example.com/data | swk convert json | swk inspect text
 
 # CSV → JSON → query with JSONPath
-cat data.csv | swk convert json-csv -r | swk test jsonpath -q '$..[?(@.age>30)]'
+cat data.csv | swk convert json --from csv | swk query json -q '$..[?(@.age>30)]'
+
+# Scrape links from a webpage
+curl -s https://example.com | swk query html -q 'a' --attr href
 ```
 
 ## Shell completion

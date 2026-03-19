@@ -42,6 +42,5 @@ func init() {
 	base64Cmd.Flags().BoolVarP(&base64Decode, "decode", "d", false, "decode base64 input")
 	base64Cmd.Flags().BoolVarP(&base64URLSafe, "url-safe", "u", false, "use URL-safe encoding")
 	base64Cmd.Flags().BoolVar(&base64NoPadding, "no-padding", false, "omit padding characters")
-
 	Cmd.AddCommand(base64Cmd)
 }
