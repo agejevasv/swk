@@ -8,6 +8,18 @@ echo '{"name":"swk"}' | swk fmt json | swk encode base64
 
 ## Install
 
+### Quick install
+
+```bash
+curl -sL https://raw.githubusercontent.com/agejevasv/swk/main/install.sh | sh
+```
+
+Or specify a directory:
+
+```bash
+SWK_INSTALL_DIR=~/.local/bin curl -sL https://raw.githubusercontent.com/agejevasv/swk/main/install.sh | sh
+```
+
 ### From source
 
 Requires Go 1.25+.
