@@ -9,7 +9,10 @@ import (
 	textLib "github.com/agejevasv/swk/internal/text"
 )
 
-var mdHTML bool
+var (
+	mdHTML  bool
+	mdTheme string
+)
 
 var markdownCmd = &cobra.Command{
 	Use:     "markdown [text]",
@@ -21,7 +24,7 @@ var markdownCmd = &cobra.Command{
 			return err
 		}
 
-		result, err := textLib.RenderMarkdown([]byte(input), mdHTML)
+		result, err := textLib.RenderMarkdown([]byte(input), mdHTML, mdTheme)
 		if err != nil {
 			return err
 		}
@@ -33,5 +36,6 @@ var markdownCmd = &cobra.Command{
 
 func init() {
 	markdownCmd.Flags().BoolVar(&mdHTML, "html", false, "Output HTML (default is plain text)")
+	markdownCmd.Flags().StringVar(&mdTheme, "theme", "github", "highlight.js theme (github, monokai, dracula, nord, tokyo-night-dark, etc.)")
 	Cmd.AddCommand(markdownCmd)
 }

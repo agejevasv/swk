@@ -267,8 +267,11 @@ cat file.go | swk text case --to upper           # uppercases file, preserves st
 # Diff two files
 swk text diff -a old.txt -b new.txt
 
-# Render markdown to HTML
-cat README.md | swk text md --html
+# Render markdown to styled HTML page
+cat README.md | swk text md --html > preview.html
+
+# Use a different syntax highlighting theme
+cat README.md | swk text md --html --theme monokai > preview.html
 ```
 
 ### Graphic Tools (`swk graphic`)
@@ -277,6 +280,7 @@ cat README.md | swk text md --html
 |---------|-------|-------------|
 | `graphic color` | `gfx col` | Convert between color formats |
 | `graphic image` | `gfx img` | Convert image formats, resize |
+| `graphic generate` | `gfx gen` | Generate placeholder images |
 
 ```bash
 # Convert hex to all formats
@@ -293,6 +297,14 @@ swk graphic image --to png --resize 200x200 -i large.png -o thumb.png
 
 # Convert with quality setting
 swk graphic image --to jpeg --quality 75 -i input.png -o output.jpg
+
+# Generate placeholder image
+swk graphic generate -o placeholder.png
+
+# Specific style and dimensions
+swk graphic generate --style circles --width 1920 --height 1080 -o wallpaper.png
+
+# Available styles: circles, squares, lines, mixed (default)
 ```
 
 ## Piping and chaining
