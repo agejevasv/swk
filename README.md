@@ -1,6 +1,6 @@
 # swk — Developer's Swiss Army Knife
 
-A fast, Unix-friendly command-line toolkit for everyday developer tasks. Encode, decode, format, convert, generate, and inspect data — all from your terminal.
+A command-line toolkit for everyday developer tasks. Encode, decode, format, convert, generate, and inspect data — all from your terminal.
 
 ```
 echo '{"name":"swk"}' | swk fmt json | swk encode base64
@@ -26,30 +26,13 @@ To install into your `$GOPATH/bin`:
 make install
 ```
 
-### Build flags
-
-The Makefile embeds version info at build time:
-
-```bash
-make build VERSION=1.0.0
-./swk version
-# swk 1.0.0 (commit: abc1234, built: 2026-03-19T12:00:00Z)
-```
-
 ## Usage
 
 ```
 swk <category> <command> [input] [flags]
 ```
 
-Every command reads from **stdin** when no argument is given, writes to **stdout**, and sends errors to **stderr**. This makes `swk` fully pipeable.
-
-### Global flags
-
-| Flag | Description |
-|------|-------------|
-| `-q, --quiet` | Suppress non-essential output |
-| `--no-color` | Disable colored output (also respects `NO_COLOR` env) |
+Every command reads from **stdin** when no argument is given, writes to **stdout**, and sends errors to **stderr**.
 
 ## Commands
 
@@ -72,7 +55,6 @@ echo -e "name: swk\nversion: '1.0'" | swk convert json-yaml --reverse
 
 # Number base conversion
 swk convert numbase --from dec --to hex 255
-# 0xff
 
 # Unix timestamp to ISO
 swk convert datetime --from unix --to iso 1700000000
@@ -83,7 +65,7 @@ swk convert datetime now
 # Explain a cron expression
 swk convert cron --explain '*/5 * * * *'
 
-# Show next 3 runs
+# Show next 3 runs (default is 5)
 swk convert cron --next 3 '0 9 * * MON'
 ```
 
@@ -94,7 +76,7 @@ swk convert cron --next 3 '0 9 * * MON'
 | `encode base64` | `enc b64` | Base64 encode/decode |
 | `encode url` | `enc url` | URL encode/decode |
 | `encode html` | `enc html` | HTML entity encode/decode |
-| `encode jwt` | `enc jwt` | Decode and inspect JWT tokens |
+| `encode jwt` | `enc jwt` | Create or decode JWT tokens |
 | `encode gzip` | `enc gz` | Gzip compress/decompress |
 | `encode cert` | `enc cert` | Decode X.509 PEM certificates |
 | `encode qr` | `enc qr` | Generate QR codes |
@@ -115,11 +97,17 @@ echo 'hello world & friends' | swk encode url
 # HTML encode
 echo '<script>alert("xss")</script>' | swk encode html
 
-# Decode a JWT
-swk encode jwt 'eyJhbGciOiJIUzI1NiIs...'
+# Create a JWT
+swk encode jwt --secret mykey '{"sub":"user1","role":"admin"}'
 
-# Verify JWT with secret
-swk encode jwt --secret mysecret 'eyJhbGciOiJIUzI1NiIs...'
+# Create with HS512
+swk encode jwt --secret mykey --algo HS512 '{"sub":"user1"}'
+
+# Decode a JWT
+swk encode jwt -d 'eyJhbGciOiJIUzI1NiIs...'
+
+# Decode and verify signature
+swk encode jwt -d --secret mykey 'eyJhbGciOiJIUzI1NiIs...'
 
 # Inspect a certificate
 cat cert.pem | swk encode cert
@@ -151,9 +139,6 @@ cat config.json | swk fmt json --minify
 
 # Custom indent (4 spaces)
 cat data.json | swk fmt json --indent 4
-
-# Sort keys
-echo '{"z":1,"a":2}' | swk fmt json --sort-keys
 
 # Format XML
 cat messy.xml | swk fmt xml
@@ -187,7 +172,7 @@ swk gen uuid --count 5
 # UUID v7 (time-ordered)
 swk gen uuid --version 7
 
-# SHA256 hash of a string
+# SHA256 hash (default)
 echo -n 'hello' | swk gen hash
 
 # MD5 hash
@@ -263,12 +248,13 @@ echo '\"hello\"' | swk text escape --mode json --unescape
 # Shell escape
 echo "it's a test" | swk text escape --mode shell
 
-# Case conversion
+# Case conversion (preserves whitespace and structure)
 echo 'hello world' | swk text case --to camel    # helloWorld
 echo 'hello world' | swk text case --to pascal   # HelloWorld
 echo 'hello world' | swk text case --to snake    # hello_world
 echo 'hello world' | swk text case --to kebab    # hello-world
 echo 'helloWorld'  | swk text case --to snake    # hello_world
+cat file.go | swk text case --to upper           # uppercases file, preserves structure
 
 # Diff two files
 swk text diff -a old.txt -b new.txt
@@ -303,7 +289,7 @@ swk graphic image --to jpeg --quality 75 -i input.png -o output.jpg
 
 ## Piping and chaining
 
-`swk` follows Unix philosophy. Every command reads stdin and writes stdout, so you can chain them:
+Every command reads stdin and writes stdout:
 
 ```bash
 # JSON → format → base64
@@ -316,7 +302,10 @@ swk gen password | swk gen hash
 cat config.yaml | swk convert json-yaml -r | swk fmt json -m | pbcopy
 
 # Fetch API → format → inspect
-curl -s https://api.example.com/data | swk fmt json | swk text inspect
+curl -s https://www.cloudflarestatus.com/api/v2/status.json | swk fmt json | swk text inspect
+
+# Uppercase a file preserving structure
+cat main.go | swk text case --to upper
 
 # CSV → JSON → query with JSONPath
 cat data.csv | swk convert json-csv -r | swk test jsonpath -q '$..[?(@.age>30)]'

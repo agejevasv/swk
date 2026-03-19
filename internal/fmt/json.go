@@ -1,0 +1,44 @@
+package fmt
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+)
+
+type JSONOptions struct {
+	Indent int
+	Minify bool
+}
+
+func FormatJSON(input []byte, opts JSONOptions) ([]byte, error) {
+	var data interface{}
+	if err := json.Unmarshal(input, &data); err != nil {
+		return nil, fmt.Errorf("invalid JSON: %w", err)
+	}
+
+	if opts.Minify {
+		var buf bytes.Buffer
+		if err := json.NewEncoder(&buf).Encode(data); err != nil {
+			return nil, err
+		}
+		// json.Encoder.Encode adds a trailing newline; trim it
+		result := bytes.TrimRight(buf.Bytes(), "\n")
+		return result, nil
+	}
+
+	indent := "  "
+	if opts.Indent > 0 {
+		indent = ""
+		for i := 0; i < opts.Indent; i++ {
+			indent += " "
+		}
+	}
+
+	result, err := json.MarshalIndent(data, "", indent)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
