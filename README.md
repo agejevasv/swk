@@ -2,10 +2,6 @@
 
 A command-line toolkit for everyday developer tasks. Encode, decode, format, convert, generate, and inspect data — all from your terminal.
 
-```
-echo '{"name":"swk"}' | swk fmt json | swk encode base64
-```
-
 ## Install
 
 ### Quick install
