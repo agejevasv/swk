@@ -56,20 +56,35 @@ swk -v
 | Command | Alias | Description |
 |---------|-------|-------------|
 | `convert base` | `c nb` | Convert between number bases (bin, oct, dec, hex) |
+| `convert bytes` | `c bytes` | Convert between byte sizes and human-readable formats |
 | `convert case` | `c case` | Convert between case conventions |
+| `convert chmod` | `c chmod` | Convert between numeric and symbolic file permissions |
 | `convert color` | `c col` | Convert between color formats |
 | `convert date` | `c dt` | Convert between date/time formats |
+| `convert duration` | `c dur` | Convert between seconds and human-readable durations |
 | `convert image` | `c img` | Convert image formats, resize |
 | `convert json` | `c j` | Convert and format JSON (yaml, csv) |
 | `convert markdown` | `c md` | Render markdown to HTML or plain text |
+| `convert table` | `c table` | Render JSON or CSV as a formatted table |
 | `convert xml` | `c x` | Format (prettify/minify) XML |
 
 ```bash
 # Number base conversion
 swk convert base --from dec --to hex 255
 
+# Byte sizes (default: 1024-based, familiar labels)
+swk convert bytes 1073741824           # 1 GB
+swk convert bytes '1.5GB'              # 1610612736
+swk convert bytes -d 1000000000        # 1 GB (decimal, 1000-based)
+
 # Case conversion
 echo 'helloWorld' | swk convert case --to snake    # hello_world
+echo 'hello world' | swk convert case --to camel   # helloWorld
+
+# File permissions
+swk convert chmod 755                  # shows rwxr-xr-x + breakdown
+swk convert chmod rwxr-xr-x           # shows 755 + breakdown
+swk convert chmod 4755                 # setuid support
 
 # Color format conversion
 swk convert color '#FF5733'
@@ -78,6 +93,12 @@ swk convert color --from rgb --to hex '255,87,51'
 # Date/time conversion
 swk convert date --from unix --to iso 1700000000
 swk convert date now
+
+# Duration conversion
+swk convert duration 86400             # 1d
+swk convert duration '2d 5h 30m'      # 190200
+swk convert duration 31536000          # 1y
+swk convert duration '1y 6mo'         # 47088000
 
 # Image conversion
 swk convert image --to jpeg -i photo.png -o photo.jpg
@@ -101,6 +122,11 @@ echo 'name,age\nalice,30' | swk convert json --from csv
 
 # Render markdown
 cat README.md | swk convert markdown --html > preview.html
+
+# JSON/CSV as table
+echo '[{"name":"alice","age":30},{"name":"bob","age":25}]' | swk convert table
+echo '[{"name":"alice"}]' | swk convert table --style simple
+printf 'name,age\nalice,30\n' | swk convert table --from csv
 
 # XML format
 cat messy.xml | swk convert xml
@@ -203,6 +229,7 @@ swk generate uuid --version 7
 | `inspect cert` | | Inspect X.509 PEM certificates |
 | `inspect cron` | `inspect cr` | Explain cron expressions |
 | `inspect text` | `inspect txt` | Character, word, line, byte counts |
+| `inspect url` | | Parse URL into components |
 
 ```bash
 # Certificate
@@ -217,6 +244,9 @@ swk inspect cron --next 3 '0 9 * * MON'
 # Text stats
 cat essay.txt | swk inspect text
 echo 'hello world' | swk inspect text --json
+
+# URL parsing
+swk inspect url 'https://example.com:8080/api/v1/users?page=1&limit=10#section'
 ```
 
 ### Query (`swk query`)
@@ -255,8 +285,11 @@ swk generate password | swk encode hash
 # YAML → JSON → minify → clipboard (macOS)
 cat config.yaml | swk convert json --from yaml | swk convert json -m | pbcopy
 
-# Fetch API → format → inspect
-curl -s https://api.example.com/data | swk convert json | swk inspect text
+# Fetch API → format → as table
+curl -s https://api.example.com/users | swk convert table
+
+# Duration roundtrip
+swk convert duration '2d 5h' --to seconds | swk convert duration --to human
 
 # CSV → JSON → query with JSONPath
 cat data.csv | swk convert json --from csv | swk query json -q '$..[?(@.age>30)]'
