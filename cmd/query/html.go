@@ -10,26 +10,27 @@ import (
 )
 
 var htmlCmd = &cobra.Command{
-	Use:   "html [input]",
+	Use:   "html SELECTOR [input]",
 	Short: "Query HTML with CSS selectors",
 	Example: `  # Extract all links
-  curl -s https://example.com | swk query html -q 'a' --attr href
+  curl -s https://example.com | swk query html 'a' --attr href
 
   # Get text content of all paragraphs
-  cat page.html | swk query html -q 'p'
+  cat page.html | swk query html 'p'
 
   # Extract specific element
-  echo '<div class="x"><span>hi</span></div>' | swk query html -q 'div.x span'`,
+  echo '<div class="x"><span>hi</span></div>' | swk query html 'div.x span'`,
+	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		input, err := ioutil.ReadFileInputString(args, cmd.InOrStdin())
+		selector := args[0]
+		input, err := ioutil.ReadFileInputString(args[1:], cmd.InOrStdin())
 		if err != nil {
 			return err
 		}
 
-		htmlQuerySelector := ioutil.MustGetString(cmd, "query")
 		htmlQueryAttr := ioutil.MustGetString(cmd, "attr")
 
-		results, err := queryLib.HTMLQuery(input, htmlQuerySelector, htmlQueryAttr)
+		results, err := queryLib.HTMLQuery(input, selector, htmlQueryAttr)
 		if err != nil {
 			return err
 		}
@@ -47,8 +48,6 @@ var htmlCmd = &cobra.Command{
 }
 
 func init() {
-	htmlCmd.Flags().StringP("query", "q", "", "CSS selector")
 	htmlCmd.Flags().String("attr", "", "extract attribute value instead of text")
-	htmlCmd.MarkFlagRequired("query")
 	Cmd.AddCommand(htmlCmd)
 }

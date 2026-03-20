@@ -28,7 +28,7 @@ func executeCommand(args ...string) (string, error) {
 
 func TestJSON_BasicQuery(t *testing.T) {
 	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("json", "--query", "$.name", `{"name":"alice"}`)
+	out, err := executeCommand("json", "$.name", `{"name":"alice"}`)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -39,7 +39,7 @@ func TestJSON_BasicQuery(t *testing.T) {
 
 func TestJSON_NestedQuery(t *testing.T) {
 	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("json", "--query", "$.a.b", `{"a":{"b":"deep"}}`)
+	out, err := executeCommand("json", "$.a.b", `{"a":{"b":"deep"}}`)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -87,7 +87,7 @@ func TestRegex_Replace(t *testing.T) {
 
 func TestHTML_Query(t *testing.T) {
 	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("html", "--query", "span", "<div><span>hello</span></div>")
+	out, err := executeCommand("html", "span", "<div><span>hello</span></div>")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -98,7 +98,7 @@ func TestHTML_Query(t *testing.T) {
 
 func TestHTML_QueryAttr(t *testing.T) {
 	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("html", "--query", "a", "--attr", "href", `<a href="http://example.com">link</a>`)
+	out, err := executeCommand("html", "a", "--attr", "href", `<a href="http://example.com">link</a>`)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

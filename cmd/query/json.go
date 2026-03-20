@@ -10,15 +10,15 @@ import (
 )
 
 var jsonCmd = &cobra.Command{
-	Use:   "json [input]",
-	Short:   "Query JSON with JSONPath expressions",
+	Use:   "json EXPRESSION [input]",
+	Short: "Query JSON with JSONPath expressions",
+	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		input, err := ioutil.ReadFileInputString(args, cmd.InOrStdin())
+		jsonpathQuery := args[0]
+		input, err := ioutil.ReadFileInputString(args[1:], cmd.InOrStdin())
 		if err != nil {
 			return err
 		}
-
-		jsonpathQuery := ioutil.MustGetString(cmd, "query")
 
 		result, err := queryLib.JSONPathQuery([]byte(input), jsonpathQuery)
 		if err != nil {
@@ -35,7 +35,5 @@ var jsonCmd = &cobra.Command{
 }
 
 func init() {
-	jsonCmd.Flags().StringP("query", "q", "", "JSONPath query expression")
-	jsonCmd.MarkFlagRequired("query")
 	Cmd.AddCommand(jsonCmd)
 }
