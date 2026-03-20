@@ -117,46 +117,9 @@ func TestDate_Now(t *testing.T) {
 	}
 }
 
-func TestJSON_Prettify(t *testing.T) {
+func TestYAML2JSON(t *testing.T) {
 	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("json", `{"a":1,"b":2}`)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if !strings.Contains(out, "\n") {
-		t.Errorf("expected newlines in prettified output, got %q", out)
-	}
-	if !strings.Contains(out, "  ") {
-		t.Errorf("expected indentation in prettified output, got %q", out)
-	}
-}
-
-func TestJSON_Minify(t *testing.T) {
-	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("json", "--minify", `{"a": 1}`)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	trimmed := strings.TrimSpace(out)
-	if strings.Contains(trimmed, " ") {
-		t.Errorf("expected no whitespace in minified output, got %q", trimmed)
-	}
-}
-
-func TestJSON_ToYAML(t *testing.T) {
-	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("json", "--to", "yaml", `{"a":1}`)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if !strings.Contains(out, "a: 1") {
-		t.Errorf("expected 'a: 1', got %q", out)
-	}
-}
-
-func TestJSON_FromYAML(t *testing.T) {
-	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("json", "--from", "yaml", "a: 1")
+	out, err := executeCommand("yaml2json", "a: 1")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -165,20 +128,20 @@ func TestJSON_FromYAML(t *testing.T) {
 	}
 }
 
-func TestJSON_ToCSV(t *testing.T) {
+func TestJSON2YAML(t *testing.T) {
 	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("json", "--to", "csv", `[{"name":"alice","age":"30"}]`)
+	out, err := executeCommand("json2yaml", `{"a":1}`)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(out, "alice") {
-		t.Errorf("expected 'alice' in output, got %q", out)
+	if !strings.Contains(out, "a: 1") {
+		t.Errorf("expected 'a: 1', got %q", out)
 	}
 }
 
-func TestJSON_FromCSV(t *testing.T) {
+func TestCSV2JSON(t *testing.T) {
 	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("json", "--from", "csv", "name,age\nalice,30")
+	out, err := executeCommand("csv2json", "name,age\nalice,30")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -187,11 +150,14 @@ func TestJSON_FromCSV(t *testing.T) {
 	}
 }
 
-func TestJSON_Invalid(t *testing.T) {
+func TestJSON2CSV(t *testing.T) {
 	t.Cleanup(resetAllFlags)
-	_, err := executeCommand("json", `{invalid`)
-	if err == nil {
-		t.Fatal("expected error for invalid JSON, got nil")
+	out, err := executeCommand("json2csv", `[{"name":"alice","age":"30"}]`)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "alice") {
+		t.Errorf("expected 'alice' in output, got %q", out)
 	}
 }
 
@@ -203,29 +169,6 @@ func TestMarkdown_HTML(t *testing.T) {
 	}
 	if !strings.Contains(out, "<h1>") {
 		t.Errorf("expected '<h1>' in output, got %q", out)
-	}
-}
-
-func TestXML_Prettify(t *testing.T) {
-	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("xml", `<root><a>1</a></root>`)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if !strings.Contains(out, "\n") {
-		t.Errorf("expected newlines in prettified output, got %q", out)
-	}
-}
-
-func TestXML_Minify(t *testing.T) {
-	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("xml", "--minify", "<root>\n  <a>1</a>\n</root>")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	trimmed := strings.TrimSpace(out)
-	if strings.Contains(trimmed, "\n") {
-		t.Errorf("expected no newlines in minified output, got %q", trimmed)
 	}
 }
 

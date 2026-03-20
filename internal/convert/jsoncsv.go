@@ -9,7 +9,7 @@ import (
 )
 
 func JSONToCSV(input []byte, delimiter rune) ([]byte, error) {
-	var data []map[string]interface{}
+	var data []map[string]any
 	if err := json.Unmarshal(input, &data); err != nil {
 		return nil, fmt.Errorf("input must be a JSON array of objects: %w", err)
 	}
@@ -60,10 +60,10 @@ func CSVToJSON(input []byte, delimiter rune) ([]byte, error) {
 	}
 
 	headers := records[0]
-	var result []map[string]interface{}
+	var result []map[string]any
 
 	for _, row := range records[1:] {
-		obj := make(map[string]interface{}, len(headers))
+		obj := make(map[string]any, len(headers))
 		for i, h := range headers {
 			if i < len(row) {
 				obj[h] = row[i]

@@ -12,7 +12,7 @@ type JSONOptions struct {
 }
 
 func FormatJSON(input []byte, opts JSONOptions) ([]byte, error) {
-	var data interface{}
+	var data any
 	if err := json.Unmarshal(input, &data); err != nil {
 		return nil, fmt.Errorf("invalid JSON: %w", err)
 	}

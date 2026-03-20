@@ -305,7 +305,7 @@ func TestURLInfoJSON_OmitsEmpty(t *testing.T) {
 		t.Fatalf("URLInfoJSON() error = %v", err)
 	}
 
-	var m map[string]interface{}
+	var m map[string]any
 	if err := json.Unmarshal(out, &m); err != nil {
 		t.Fatalf("json.Unmarshal: %v", err)
 	}

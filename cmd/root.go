@@ -10,6 +10,7 @@ import (
 	convertCmd "github.com/agejevasv/swk/cmd/convert"
 	encodeCmd "github.com/agejevasv/swk/cmd/encode"
 	escapeCmd "github.com/agejevasv/swk/cmd/escape"
+	formatCmd "github.com/agejevasv/swk/cmd/format"
 	generateCmd "github.com/agejevasv/swk/cmd/generate"
 	inspectCmd "github.com/agejevasv/swk/cmd/inspect"
 	queryCmd "github.com/agejevasv/swk/cmd/query"
@@ -45,6 +46,7 @@ func init() {
 	rootCmd.AddCommand(convertCmd.Cmd)
 	rootCmd.AddCommand(encodeCmd.Cmd)
 	rootCmd.AddCommand(escapeCmd.Cmd)
+	rootCmd.AddCommand(formatCmd.Cmd)
 	rootCmd.AddCommand(generateCmd.Cmd)
 	rootCmd.AddCommand(inspectCmd.Cmd)
 	rootCmd.AddCommand(queryCmd.Cmd)

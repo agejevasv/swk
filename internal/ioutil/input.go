@@ -63,9 +63,21 @@ func resolveFileArg(arg string, stdin io.Reader) ([]byte, error) {
 	return []byte(arg), nil
 }
 
+// MaxInputSize is the maximum bytes ReadStdin will read (64 MiB).
+// Prevents accidental OOM from unbounded pipes.
+const MaxInputSize = 64 << 20
+
 func ReadStdin(stdin io.Reader) ([]byte, error) {
 	if stdin == nil {
 		return nil, fmt.Errorf("no input provided")
 	}
-	return io.ReadAll(stdin)
+	limited := io.LimitReader(stdin, MaxInputSize+1)
+	data, err := io.ReadAll(limited)
+	if err != nil {
+		return nil, err
+	}
+	if len(data) > MaxInputSize {
+		return nil, fmt.Errorf("input exceeds maximum size (%d MiB)", MaxInputSize>>20)
+	}
+	return data, nil
 }

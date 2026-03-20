@@ -147,7 +147,7 @@ func TestCSVToJSON_OutputIsValidJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CSVToJSON: %v", err)
 	}
-	var result []map[string]interface{}
+	var result []map[string]any
 	if err := json.Unmarshal(got, &result); err != nil {
 		t.Fatalf("output is not valid JSON: %v\ngot: %s", err, got)
 	}
@@ -180,7 +180,7 @@ func TestJSONCSVRoundtrip(t *testing.T) {
 		t.Fatalf("CSVToJSON: %v", err)
 	}
 
-	var orig, roundtripped []map[string]interface{}
+	var orig, roundtripped []map[string]any
 	json.Unmarshal([]byte(originalJSON), &orig)
 	json.Unmarshal(jsonBack, &roundtripped)
 

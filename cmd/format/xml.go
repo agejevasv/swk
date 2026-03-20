@@ -1,4 +1,4 @@
-package convert
+package format
 
 import (
 	"github.com/spf13/cobra"
@@ -9,20 +9,22 @@ import (
 
 var xmlCmd = &cobra.Command{
 	Use:   "xml [input]",
-	Short:   "Format XML",
+	Short: "Prettify or minify XML",
+	Example: `  # Prettify XML
+  echo '<root><a>1</a></root>' | swk format xml
+
+  # Minify XML
+  swk format xml --minify file.xml`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		input, err := ioutil.ReadFileInputString(args, cmd.InOrStdin())
 		if err != nil {
 			return err
 		}
 
-		xmlMinify := ioutil.MustGetBool(cmd, "minify")
-		xmlIndent := ioutil.MustGetInt(cmd, "indent")
 		opts := fmtLib.XMLOptions{
-			Indent: xmlIndent,
-			Minify: xmlMinify,
+			Indent: ioutil.MustGetInt(cmd, "indent"),
+			Minify: ioutil.MustGetBool(cmd, "minify"),
 		}
-
 		result, err := fmtLib.FormatXML([]byte(input), opts)
 		if err != nil {
 			return err

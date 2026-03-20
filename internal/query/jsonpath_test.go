@@ -22,7 +22,7 @@ func TestJSONPathQuery(t *testing.T) {
 			input: `{"name":"Alice"}`,
 			query: "$",
 			checkFunc: func(t *testing.T, output []byte) {
-				var v map[string]interface{}
+				var v map[string]any
 				if err := json.Unmarshal(output, &v); err != nil {
 					t.Fatalf("failed to unmarshal output: %v", err)
 				}
@@ -69,7 +69,7 @@ func TestJSONPathQuery(t *testing.T) {
 			input: `{"items":["a","b","c"]}`,
 			query: "$.items[*]",
 			checkFunc: func(t *testing.T, output []byte) {
-				var v []interface{}
+				var v []any
 				if err := json.Unmarshal(output, &v); err != nil {
 					t.Fatalf("failed to unmarshal: %v", err)
 				}
@@ -83,7 +83,7 @@ func TestJSONPathQuery(t *testing.T) {
 			input: `{"a":{"name":"x"},"b":{"name":"y"}}`,
 			query: "$..name",
 			checkFunc: func(t *testing.T, output []byte) {
-				var v []interface{}
+				var v []any
 				if err := json.Unmarshal(output, &v); err != nil {
 					t.Fatalf("failed to unmarshal: %v", err)
 				}
@@ -119,7 +119,7 @@ func TestJSONPathQuery(t *testing.T) {
 			input: bookstore,
 			query: "$..author",
 			checkFunc: func(t *testing.T, output []byte) {
-				var v []interface{}
+				var v []any
 				if err := json.Unmarshal(output, &v); err != nil {
 					t.Fatalf("failed to unmarshal: %v", err)
 				}
@@ -144,7 +144,7 @@ func TestJSONPathQuery(t *testing.T) {
 			input: bookstore,
 			query: "$..price",
 			checkFunc: func(t *testing.T, output []byte) {
-				var v []interface{}
+				var v []any
 				if err := json.Unmarshal(output, &v); err != nil {
 					t.Fatalf("failed to unmarshal: %v", err)
 				}

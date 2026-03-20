@@ -12,7 +12,7 @@ import (
 var markdownCmd = &cobra.Command{
 	Use:     "markdown [text]",
 	Aliases: []string{"md"},
-	Short:   "Render markdown to HTML or plain text",
+	Short:   "Convert markdown to HTML or plain text",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		input, err := ioutil.ReadFileInputString(args, cmd.InOrStdin())
 		if err != nil {

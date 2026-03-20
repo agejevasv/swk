@@ -9,33 +9,37 @@ import (
 	textLib "github.com/agejevasv/swk/internal/text"
 )
 
-var jsonCmd = &cobra.Command{
-	Use:   "json [input]",
-	Short: "JSON string escape or unescape",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		input, err := ioutil.ReadInputString(args, cmd.InOrStdin())
-		if err != nil {
-			return err
-		}
+// NewJSONCmd creates a JSON string escape/unescape command.
+func NewJSONCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "json [input]",
+		Short: "JSON string escape or unescape",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			input, err := ioutil.ReadInputString(args, cmd.InOrStdin())
+			if err != nil {
+				return err
+			}
 
-		jsonUnescape := ioutil.MustGetBool(cmd, "unescape")
+			jsonUnescape := ioutil.MustGetBool(cmd, "unescape")
 
-		var result string
-		if jsonUnescape {
-			result, err = textLib.Unescape(input, "json")
-		} else {
-			result, err = textLib.Escape(input, "json")
-		}
-		if err != nil {
-			return err
-		}
+			var result string
+			if jsonUnescape {
+				result, err = textLib.Unescape(input, "json")
+			} else {
+				result, err = textLib.Escape(input, "json")
+			}
+			if err != nil {
+				return err
+			}
 
-		fmt.Fprintln(cmd.OutOrStdout(), result)
-		return nil
-	},
+			fmt.Fprintln(cmd.OutOrStdout(), result)
+			return nil
+		},
+	}
+	cmd.Flags().BoolP("unescape", "u", false, "unescape instead of escape")
+	return cmd
 }
 
 func init() {
-	jsonCmd.Flags().BoolP("unescape", "u", false, "unescape instead of escape")
-	Cmd.AddCommand(jsonCmd)
+	Cmd.AddCommand(NewJSONCmd())
 }

@@ -178,7 +178,7 @@ func TestJSONYAMLRoundtrip(t *testing.T) {
 			}
 
 			// Parse both original and roundtripped to compare structurally.
-			var orig, roundtripped interface{}
+			var orig, roundtripped any
 			if err := json.Unmarshal([]byte(tt.input), &orig); err != nil {
 				t.Fatalf("unmarshal original: %v", err)
 			}

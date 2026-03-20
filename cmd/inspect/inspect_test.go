@@ -141,7 +141,7 @@ func TestText_InspectJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	var result map[string]interface{}
+	var result map[string]any
 	if jsonErr := json.Unmarshal([]byte(out), &result); jsonErr != nil {
 		t.Errorf("expected valid JSON output, got parse error: %v\noutput: %q", jsonErr, out)
 	}

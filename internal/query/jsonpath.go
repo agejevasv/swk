@@ -24,7 +24,7 @@ func JSONPathQuery(input []byte, query string) ([]byte, error) {
 		return nil, nil
 	}
 
-	var output interface{}
+	var output any
 	if len(results) == 1 {
 		output = results[0]
 	} else {

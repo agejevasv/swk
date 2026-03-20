@@ -6,15 +6,6 @@ import (
 	"strings"
 )
 
-var permBits = [3]struct {
-	letter string
-	name   string
-}{
-	{"r", "read"},
-	{"w", "write"},
-	{"x", "execute"},
-}
-
 // ChmodToSymbolic converts numeric permission like "755" or "4755" to symbolic like "rwxr-xr-x".
 func ChmodToSymbolic(numeric string) (string, error) {
 	numeric = strings.TrimSpace(numeric)

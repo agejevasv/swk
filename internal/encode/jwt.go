@@ -13,8 +13,8 @@ import (
 
 // JWTInfo holds decoded JWT information.
 type JWTInfo struct {
-	Header    map[string]interface{} `json:"header"`
-	Payload   map[string]interface{} `json:"payload"`
+	Header    map[string]any `json:"header"`
+	Payload   map[string]any `json:"payload"`
 	Signature string                 `json:"signature"`
 	Valid     bool                   `json:"valid"`
 	ExpiredAt *time.Time             `json:"expired_at,omitempty"`
@@ -64,7 +64,7 @@ func JWTDecode(tokenStr string) (*JWTInfo, error) {
 
 	info := &JWTInfo{
 		Header:    token.Header,
-		Payload:   map[string]interface{}(claims),
+		Payload:   map[string]any(claims),
 		Signature: sig,
 	}
 
@@ -74,7 +74,7 @@ func JWTDecode(tokenStr string) (*JWTInfo, error) {
 }
 
 func JWTVerify(tokenStr string, secret string, keyPEM []byte) (*JWTInfo, error) {
-	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (any, error) {
 		return resolveVerifyKey(token.Method, secret, keyPEM)
 	})
 
@@ -94,7 +94,7 @@ func JWTVerify(tokenStr string, secret string, keyPEM []byte) (*JWTInfo, error) 
 
 	info.Header = token.Header
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		info.Payload = map[string]interface{}(claims)
+		info.Payload = map[string]any(claims)
 		extractExpiry(claims, info)
 	}
 	info.Valid = token.Valid
@@ -107,7 +107,7 @@ func JWTInfoJSON(info *JWTInfo) ([]byte, error) {
 }
 
 // resolveSigningKey returns the appropriate signing key for the given method.
-func resolveSigningKey(method jwt.SigningMethod, secret string, keyPEM []byte) (interface{}, error) {
+func resolveSigningKey(method jwt.SigningMethod, secret string, keyPEM []byte) (any, error) {
 	switch method.(type) {
 	case *jwt.SigningMethodHMAC:
 		if secret == "" {
@@ -126,7 +126,7 @@ func resolveSigningKey(method jwt.SigningMethod, secret string, keyPEM []byte) (
 }
 
 // resolveVerifyKey returns the appropriate verification key for the given method.
-func resolveVerifyKey(method jwt.SigningMethod, secret string, keyPEM []byte) (interface{}, error) {
+func resolveVerifyKey(method jwt.SigningMethod, secret string, keyPEM []byte) (any, error) {
 	switch method.(type) {
 	case *jwt.SigningMethodHMAC:
 		if secret == "" {
@@ -144,7 +144,7 @@ func resolveVerifyKey(method jwt.SigningMethod, secret string, keyPEM []byte) (i
 	}
 }
 
-func parsePrivateKey(keyPEM []byte, expect string) (interface{}, error) {
+func parsePrivateKey(keyPEM []byte, expect string) (any, error) {
 	if len(keyPEM) == 0 {
 		return nil, fmt.Errorf("--key is required for %s algorithms", expect)
 	}
@@ -170,7 +170,7 @@ func parsePrivateKey(keyPEM []byte, expect string) (interface{}, error) {
 	return nil, fmt.Errorf("failed to parse private key")
 }
 
-func parsePublicKey(keyPEM []byte, expect string) (interface{}, error) {
+func parsePublicKey(keyPEM []byte, expect string) (any, error) {
 	if len(keyPEM) == 0 {
 		return nil, fmt.Errorf("--key is required for %s algorithms", expect)
 	}

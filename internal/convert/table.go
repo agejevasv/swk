@@ -104,7 +104,7 @@ func parseJSONData(input []byte) ([]string, [][]string, error) {
 		}
 	}
 
-	var data []map[string]interface{}
+	var data []map[string]any
 	if err := json.Unmarshal(input, &data); err != nil {
 		return nil, nil, fmt.Errorf("expected array of objects: %w", err)
 	}
@@ -125,9 +125,9 @@ func parseJSONData(input []byte) ([]string, [][]string, error) {
 
 // formatCellValue renders a value for display in a table cell.
 // Nested objects and arrays are JSON-serialized; scalars use simple formatting.
-func formatCellValue(v interface{}) string {
+func formatCellValue(v any) string {
 	switch v.(type) {
-	case map[string]interface{}, []interface{}:
+	case map[string]any, []any:
 		b, err := json.Marshal(v)
 		if err != nil {
 			return fmt.Sprintf("%v", v)

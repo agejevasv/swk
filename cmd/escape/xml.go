@@ -9,33 +9,37 @@ import (
 	textLib "github.com/agejevasv/swk/internal/text"
 )
 
-var xmlCmd = &cobra.Command{
-	Use:   "xml [input]",
-	Short: "XML escape or unescape",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		input, err := ioutil.ReadInputString(args, cmd.InOrStdin())
-		if err != nil {
-			return err
-		}
+// NewXMLCmd creates an XML escape/unescape command.
+func NewXMLCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "xml [input]",
+		Short: "XML escape or unescape",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			input, err := ioutil.ReadInputString(args, cmd.InOrStdin())
+			if err != nil {
+				return err
+			}
 
-		xmlUnescape := ioutil.MustGetBool(cmd, "unescape")
+			xmlUnescape := ioutil.MustGetBool(cmd, "unescape")
 
-		var result string
-		if xmlUnescape {
-			result, err = textLib.Unescape(input, "xml")
-		} else {
-			result, err = textLib.Escape(input, "xml")
-		}
-		if err != nil {
-			return err
-		}
+			var result string
+			if xmlUnescape {
+				result, err = textLib.Unescape(input, "xml")
+			} else {
+				result, err = textLib.Escape(input, "xml")
+			}
+			if err != nil {
+				return err
+			}
 
-		fmt.Fprintln(cmd.OutOrStdout(), result)
-		return nil
-	},
+			fmt.Fprintln(cmd.OutOrStdout(), result)
+			return nil
+		},
+	}
+	cmd.Flags().BoolP("unescape", "u", false, "unescape instead of escape")
+	return cmd
 }
 
 func init() {
-	xmlCmd.Flags().BoolP("unescape", "u", false, "unescape instead of escape")
-	Cmd.AddCommand(xmlCmd)
+	Cmd.AddCommand(NewXMLCmd())
 }

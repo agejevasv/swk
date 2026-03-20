@@ -48,20 +48,21 @@ func TestJSON_NestedQuery(t *testing.T) {
 	}
 }
 
-func TestRegex_SimpleMatch(t *testing.T) {
+func TestRegex_DefaultPrintsMatchingLines(t *testing.T) {
 	t.Cleanup(resetAllFlags)
+	// Default mode is line-oriented: prints full lines that match.
 	out, err := executeCommand("regex", `\d+`, "abc123def")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(out, "123") {
-		t.Errorf("expected '123' in output, got %q", out)
+	if strings.TrimSpace(out) != "abc123def" {
+		t.Errorf("expected full line 'abc123def', got %q", out)
 	}
 }
 
-func TestRegex_GlobalFindsAll(t *testing.T) {
+func TestRegex_OnlyMatchingExtractsValues(t *testing.T) {
 	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("regex", "--global", `\d+`, "abc123def456")
+	out, err := executeCommand("regex", "-o", "--global", `\d+`, "abc123def456")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

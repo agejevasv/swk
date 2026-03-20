@@ -24,7 +24,7 @@ func createTestJWT(t *testing.T, claims jwt.MapClaims, secret string) string {
 	return tokenStr
 }
 
-func encodePEMPrivateKey(t *testing.T, key interface{}) []byte {
+func encodePEMPrivateKey(t *testing.T, key any) []byte {
 	t.Helper()
 	der, err := x509.MarshalPKCS8PrivateKey(key)
 	if err != nil {
@@ -33,7 +33,7 @@ func encodePEMPrivateKey(t *testing.T, key interface{}) []byte {
 	return pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: der})
 }
 
-func encodePEMPublicKey(t *testing.T, key interface{}) []byte {
+func encodePEMPublicKey(t *testing.T, key any) []byte {
 	t.Helper()
 	der, err := x509.MarshalPKIXPublicKey(key)
 	if err != nil {
@@ -432,8 +432,8 @@ func TestJWT_KeyErrors(t *testing.T) {
 
 func TestJWTInfoJSON(t *testing.T) {
 	info := &JWTInfo{
-		Header:  map[string]interface{}{"alg": "HS256", "typ": "JWT"},
-		Payload: map[string]interface{}{"sub": "123"},
+		Header:  map[string]any{"alg": "HS256", "typ": "JWT"},
+		Payload: map[string]any{"sub": "123"},
 		Valid:   true,
 	}
 	out, err := JWTInfoJSON(info)
