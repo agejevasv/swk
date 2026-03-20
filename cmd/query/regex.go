@@ -11,16 +11,17 @@ import (
 )
 
 var regexCmd = &cobra.Command{
-	Use:     "regex [input]",
+	Use:     "regex PATTERN [input]",
 	Aliases: []string{"re"},
 	Short:   "Test regular expressions against input",
+	Args:    cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		input, err := ioutil.ReadFileInputString(args, cmd.InOrStdin())
+		regexPattern := args[0]
+		input, err := ioutil.ReadFileInputString(args[1:], cmd.InOrStdin())
 		if err != nil {
 			return err
 		}
 
-		regexPattern := ioutil.MustGetString(cmd, "pattern")
 		regexGlobal := ioutil.MustGetBool(cmd, "global")
 		regexGroups := ioutil.MustGetBool(cmd, "groups")
 		regexReplace := ioutil.MustGetString(cmd, "replace")
@@ -58,10 +59,8 @@ var regexCmd = &cobra.Command{
 }
 
 func init() {
-	regexCmd.Flags().StringP("pattern", "p", "", "Regex pattern")
 	regexCmd.Flags().BoolP("global", "g", false, "Find all matches")
 	regexCmd.Flags().Bool("groups", false, "Show capture groups as JSON")
 	regexCmd.Flags().StringP("replace", "r", "", "Replacement string")
-	regexCmd.MarkFlagRequired("pattern")
 	Cmd.AddCommand(regexCmd)
 }

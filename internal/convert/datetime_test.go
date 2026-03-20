@@ -158,6 +158,42 @@ func TestConvertDateTime(t *testing.T) {
 			want:    "1700000000",
 		},
 
+		// Custom strftime as --to format.
+		{
+			name:    "unix_to_strftime_date",
+			input:   "1700000000",
+			fromFmt: "unix",
+			toFmt:   "%Y-%m-%d",
+			tz:      "UTC",
+			want:    "2023-11-14",
+		},
+		{
+			name:    "unix_to_strftime_time",
+			input:   "1700000000",
+			fromFmt: "unix",
+			toFmt:   "%H:%M:%S",
+			tz:      "UTC",
+			want:    "22:13:20",
+		},
+		{
+			name:    "unix_to_strftime_full",
+			input:   "1700000000",
+			fromFmt: "unix",
+			toFmt:   "%Y-%m-%d %H:%M:%S",
+			tz:      "UTC",
+			want:    "2023-11-14 22:13:20",
+		},
+
+		// Custom strftime as --from format.
+		{
+			name:    "strftime_to_iso",
+			input:   "2023-11-14",
+			fromFmt: "%Y-%m-%d",
+			toFmt:   "iso",
+			tz:      "UTC",
+			want:    "2023-11-14T00:00:00Z",
+		},
+
 		// Local timezone (empty string).
 		{
 			name:    "empty_tz_uses_local",
@@ -193,19 +229,12 @@ func TestConvertDateTime(t *testing.T) {
 			tz:      "Invalid/Zone",
 			wantErr: true,
 		},
+		// Custom strftime: a layout that doesn't match the input will error.
 		{
-			name:    "unsupported_from_format",
-			input:   "2023-01-01",
-			fromFmt: "badformat",
+			name:    "strftime_from_mismatch",
+			input:   "not-a-date",
+			fromFmt: "%Y-%m-%d",
 			toFmt:   "iso",
-			tz:      "UTC",
-			wantErr: true,
-		},
-		{
-			name:    "unsupported_to_format",
-			input:   "1700000000",
-			fromFmt: "unix",
-			toFmt:   "badformat",
 			tz:      "UTC",
 			wantErr: true,
 		},

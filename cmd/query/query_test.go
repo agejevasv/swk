@@ -50,7 +50,7 @@ func TestJSON_NestedQuery(t *testing.T) {
 
 func TestRegex_SimpleMatch(t *testing.T) {
 	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("regex", "--pattern", `\d+`, "abc123def")
+	out, err := executeCommand("regex", `\d+`, "abc123def")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -61,7 +61,7 @@ func TestRegex_SimpleMatch(t *testing.T) {
 
 func TestRegex_GlobalFindsAll(t *testing.T) {
 	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("regex", "--pattern", `\d+`, "--global", "abc123def456")
+	out, err := executeCommand("regex", "--global", `\d+`, "abc123def456")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -75,7 +75,7 @@ func TestRegex_GlobalFindsAll(t *testing.T) {
 
 func TestRegex_Replace(t *testing.T) {
 	t.Cleanup(resetAllFlags)
-	out, err := executeCommand("regex", "--pattern", `\d+`, "--replace", "NUM", "abc123def")
+	out, err := executeCommand("regex", "--replace", "NUM", `\d+`, "abc123def")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

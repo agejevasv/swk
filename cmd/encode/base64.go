@@ -14,16 +14,16 @@ var base64Cmd = &cobra.Command{
 	Aliases: []string{"b64"},
 	Short:   "Base64 encode or decode",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		input, err := ioutil.ReadFileInputString(args, cmd.InOrStdin())
-		if err != nil {
-			return err
-		}
-
 		decode := ioutil.MustGetBool(cmd, "decode")
 		urlSafe := ioutil.MustGetBool(cmd, "url-safe")
 		noPadding := ioutil.MustGetBool(cmd, "no-padding")
 
 		if decode {
+			// Decode expects a base64 string — trim whitespace but not binary data.
+			input, err := ioutil.ReadFileInputString(args, cmd.InOrStdin())
+			if err != nil {
+				return err
+			}
 			result, err := encLib.Base64Decode(input, urlSafe)
 			if err != nil {
 				return err
@@ -31,7 +31,13 @@ var base64Cmd = &cobra.Command{
 			_, err = cmd.OutOrStdout().Write(result)
 			return err
 		}
-		result := encLib.Base64Encode([]byte(input), urlSafe, noPadding)
+
+		// Encode: use raw bytes to preserve all input including trailing newlines.
+		input, err := ioutil.ReadFileInput(args, cmd.InOrStdin())
+		if err != nil {
+			return err
+		}
+		result := encLib.Base64Encode(input, urlSafe, noPadding)
 		fmt.Fprintln(cmd.OutOrStdout(), result)
 
 		return nil

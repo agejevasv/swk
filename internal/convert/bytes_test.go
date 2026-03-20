@@ -40,42 +40,42 @@ func TestBytesToHuman(t *testing.T) {
 			want:   "512 B",
 		},
 
-		// 1024-based units (decimal=false uses binaryUnits).
+		// 1024-based units (decimal=false uses binaryUnits with IEC labels).
 		{
-			name:   "exactly_1KB_1024",
+			name:   "exactly_1KiB_1024",
 			bytes:  1024,
 			decimal: false,
-			want:   "1 KB",
+			want:   "1 KiB",
 		},
 		{
-			name:   "exactly_1MB_1024",
+			name:   "exactly_1MiB_1024",
 			bytes:  1048576,
 			decimal: false,
-			want:   "1 MB",
+			want:   "1 MiB",
 		},
 		{
-			name:   "exactly_1GB_1024",
+			name:   "exactly_1GiB_1024",
 			bytes:  1073741824,
 			decimal: false,
-			want:   "1 GB",
+			want:   "1 GiB",
 		},
 		{
-			name:   "exactly_1TB_1024",
+			name:   "exactly_1TiB_1024",
 			bytes:  int64(math.Pow(1024, 4)),
 			decimal: false,
-			want:   "1 TB",
+			want:   "1 TiB",
 		},
 		{
-			name:   "exactly_1PB_1024",
+			name:   "exactly_1PiB_1024",
 			bytes:  int64(math.Pow(1024, 5)),
 			decimal: false,
-			want:   "1 PB",
+			want:   "1 PiB",
 		},
 		{
-			name:   "fractional_KB_1024",
+			name:   "fractional_KiB_1024",
 			bytes:  1536,
 			decimal: false,
-			want:   "1.5 KB",
+			want:   "1.5 KiB",
 		},
 
 		// 1000-based units (decimal=true uses decimalUnits).
@@ -109,7 +109,7 @@ func TestBytesToHuman(t *testing.T) {
 			name:   "large_value_1024",
 			bytes:  5368709120,
 			decimal: false,
-			want:   "5 GB",
+			want:   "5 GiB",
 		},
 		{
 			name:   "large_value_1000",
@@ -120,10 +120,10 @@ func TestBytesToHuman(t *testing.T) {
 
 		// Non-round values.
 		{
-			name:   "non_round_MB",
+			name:   "non_round_MiB",
 			bytes:  1572864,
 			decimal: false,
-			want:   "1.5 MB",
+			want:   "1.5 MiB",
 		},
 		{
 			name:   "non_round_decimal",
@@ -137,13 +137,13 @@ func TestBytesToHuman(t *testing.T) {
 			name:   "negative_bytes",
 			bytes:  -1024,
 			decimal: false,
-			want:   "-1 KB",
+			want:   "-1 KiB",
 		},
 		{
 			name:   "negative_large",
 			bytes:  -1073741824,
 			decimal: false,
-			want:   "-1 GB",
+			want:   "-1 GiB",
 		},
 	}
 
@@ -352,7 +352,7 @@ func TestBytesConvert(t *testing.T) {
 			name:   "number_to_human_1024",
 			input:  "1024",
 			decimal: false,
-			want:   "1 KB",
+			want:   "1 KiB",
 		},
 		{
 			name:   "number_to_human_1000",
@@ -370,7 +370,7 @@ func TestBytesConvert(t *testing.T) {
 			name:   "number_to_human_large",
 			input:  "1073741824",
 			decimal: false,
-			want:   "1 GB",
+			want:   "1 GiB",
 		},
 		{
 			name:   "number_to_human_small",
@@ -416,13 +416,13 @@ func TestBytesConvert(t *testing.T) {
 			name:   "negative_number_to_human",
 			input:  "-1024",
 			decimal: false,
-			want:   "-1 KB",
+			want:   "-1 KiB",
 		},
 		{
 			name:   "positive_sign_number",
 			input:  "+1048576",
 			decimal: false,
-			want:   "1 MB",
+			want:   "1 MiB",
 		},
 
 		// formatFloat tested indirectly: fractional formatting.
@@ -430,13 +430,13 @@ func TestBytesConvert(t *testing.T) {
 			name:   "format_float_whole_number",
 			input:  "1048576",
 			decimal: false,
-			want:   "1 MB",
+			want:   "1 MiB",
 		},
 		{
 			name:   "format_float_one_decimal",
 			input:  "1536",
 			decimal: false,
-			want:   "1.5 KB",
+			want:   "1.5 KiB",
 		},
 		{
 			name:   "format_float_two_decimals",
@@ -450,7 +450,7 @@ func TestBytesConvert(t *testing.T) {
 			name:   "whitespace_around_number",
 			input:  "  1024  ",
 			decimal: false,
-			want:   "1 KB",
+			want:   "1 KiB",
 		},
 		{
 			name:   "whitespace_around_human",

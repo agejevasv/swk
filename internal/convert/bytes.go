@@ -12,11 +12,11 @@ var binaryUnits = []struct {
 	suffix string
 	size   float64
 }{
-	{"PB", math.Pow(1024, 5)},
-	{"TB", math.Pow(1024, 4)},
-	{"GB", math.Pow(1024, 3)},
-	{"MB", math.Pow(1024, 2)},
-	{"KB", 1024},
+	{"PiB", math.Pow(1024, 5)},
+	{"TiB", math.Pow(1024, 4)},
+	{"GiB", math.Pow(1024, 3)},
+	{"MiB", math.Pow(1024, 2)},
+	{"KiB", 1024},
 	{"B", 1},
 }
 

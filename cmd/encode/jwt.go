@@ -13,7 +13,8 @@ var jwtCmd = &cobra.Command{
 	Use:   "jwt [input]",
 	Short: "Encode or decode JWT tokens",
 	Long: `Encode: pass a JSON payload to create a signed JWT (requires --secret).
-Decode: pass a JWT token with -d to inspect header and payload.`,
+Decode: pass a JWT token with -d to inspect header and payload (works with any algorithm).
+Verify: pass -d with --secret to verify signature (HMAC only: HS256, HS384, HS512).`,
 	Example: `  # Create a JWT
   swk encode jwt --secret mykey '{"sub":"user1","role":"admin"}'
 
@@ -75,6 +76,6 @@ func jwtDecodeRun(cmd *cobra.Command, tokenStr, secret string) error {
 func init() {
 	jwtCmd.Flags().BoolP("decode", "d", false, "decode/inspect a JWT token")
 	jwtCmd.Flags().StringP("secret", "s", "", "HMAC secret for signing or verification")
-	jwtCmd.Flags().StringP("algo", "a", "HS256", "signing algorithm (HS256, HS384, HS512)")
+	jwtCmd.Flags().StringP("algo", "a", "HS256", "HMAC signing algorithm (HS256, HS384, HS512)")
 	Cmd.AddCommand(jwtCmd)
 }

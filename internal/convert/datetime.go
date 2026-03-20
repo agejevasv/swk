@@ -7,6 +7,46 @@ import (
 	"time"
 )
 
+// strftimeToGo maps strftime directives to Go reference time components.
+var strftimeToGo = []struct {
+	directive string
+	goLayout  string
+}{
+	// Order matters: longer directives first to avoid partial matches.
+	{"%Y", "2006"},
+	{"%m", "01"},
+	{"%d", "02"},
+	{"%H", "15"},
+	{"%I", "03"},
+	{"%M", "04"},
+	{"%S", "05"},
+	{"%p", "PM"},
+	{"%P", "pm"},
+	{"%Z", "MST"},
+	{"%z", "-0700"},
+	{"%A", "Monday"},
+	{"%a", "Mon"},
+	{"%B", "January"},
+	{"%b", "Jan"},
+	{"%n", "\n"},
+	{"%t", "\t"},
+	{"%%", "%"},
+}
+
+// convertStrftime converts a strftime format string to a Go time layout.
+func convertStrftime(format string) string {
+	result := format
+	for _, s := range strftimeToGo {
+		result = strings.ReplaceAll(result, s.directive, s.goLayout)
+	}
+	return result
+}
+
+// isStrftime returns true if the format contains strftime-style % directives.
+func isStrftime(format string) bool {
+	return strings.Contains(format, "%")
+}
+
 const (
 	humanFormat   = "Mon, 02 Jan 2006 15:04:05 MST"
 	rfc2822Format = "Mon, 02 Jan 2006 15:04:05 -0700"
@@ -62,7 +102,12 @@ func parseFormat(input, format string) (time.Time, error) {
 	case "human":
 		return time.Parse(humanFormat, input)
 	default:
-		return time.Time{}, fmt.Errorf("unsupported format: %q", format)
+		// Treat as a strftime format string (e.g. "%Y-%m-%d").
+		layout := format
+		if isStrftime(format) {
+			layout = convertStrftime(format)
+		}
+		return time.Parse(layout, input)
 	}
 }
 
@@ -102,6 +147,11 @@ func formatTime(t time.Time, format string) (string, error) {
 	case "human":
 		return t.Format(humanFormat), nil
 	default:
-		return "", fmt.Errorf("unsupported output format: %q", format)
+		// Treat as a strftime format string (e.g. "%Y-%m-%d", "%H:%M:%S").
+		layout := format
+		if isStrftime(format) {
+			layout = convertStrftime(format)
+		}
+		return t.Format(layout), nil
 	}
 }
