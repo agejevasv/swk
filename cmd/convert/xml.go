@@ -8,8 +8,7 @@ import (
 )
 
 var xmlCmd = &cobra.Command{
-	Use:     "xml [input]",
-	Aliases: []string{"x"},
+	Use:   "xml [input]",
 	Short:   "Format XML",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		input, err := ioutil.ReadFileInputString(args, cmd.InOrStdin())

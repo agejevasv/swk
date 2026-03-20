@@ -11,8 +11,7 @@ import (
 )
 
 var cronCmd = &cobra.Command{
-	Use:     "cron [expression]",
-	Aliases: []string{"cr"},
+	Use:   "cron [expression]",
 	Short:   "Explain cron expressions",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		input, err := ioutil.ReadInputString(args, cmd.InOrStdin())

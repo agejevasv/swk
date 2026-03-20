@@ -10,7 +10,8 @@ import (
 )
 
 var shellCmd = &cobra.Command{
-	Use:   "shell [input]",
+	Use:     "shell [input]",
+	Aliases: []string{"sh"},
 	Short: "Shell escape or unescape",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		input, err := ioutil.ReadInputString(args, cmd.InOrStdin())

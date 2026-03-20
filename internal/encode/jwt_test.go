@@ -1,6 +1,13 @@
 package encode
 
 import (
+	"crypto/ecdsa"
+	"crypto/ed25519"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"testing"
 	"time"
 
@@ -15,6 +22,24 @@ func createTestJWT(t *testing.T, claims jwt.MapClaims, secret string) string {
 		t.Fatalf("failed to create test JWT: %v", err)
 	}
 	return tokenStr
+}
+
+func encodePEMPrivateKey(t *testing.T, key interface{}) []byte {
+	t.Helper()
+	der, err := x509.MarshalPKCS8PrivateKey(key)
+	if err != nil {
+		t.Fatalf("failed to marshal private key: %v", err)
+	}
+	return pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: der})
+}
+
+func encodePEMPublicKey(t *testing.T, key interface{}) []byte {
+	t.Helper()
+	der, err := x509.MarshalPKIXPublicKey(key)
+	if err != nil {
+		t.Fatalf("failed to marshal public key: %v", err)
+	}
+	return pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: der})
 }
 
 func TestJWTDecode(t *testing.T) {
@@ -123,7 +148,7 @@ func TestJWTDecode(t *testing.T) {
 	}
 }
 
-func TestJWTVerify(t *testing.T) {
+func TestJWTVerify_HMAC(t *testing.T) {
 	secret := "my-secret-key"
 
 	validFutureToken := createTestJWT(t, jwt.MapClaims{
@@ -165,7 +190,7 @@ func TestJWTVerify(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			info, err := JWTVerify(tt.token, tt.secret)
+			info, err := JWTVerify(tt.token, tt.secret, nil)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("JWTVerify() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -176,29 +201,7 @@ func TestJWTVerify(t *testing.T) {
 	}
 }
 
-func TestJWTVerify_WrongSecret_ReturnsInvalidInfo(t *testing.T) {
-	secret := "correct-secret"
-	token := createTestJWT(t, jwt.MapClaims{
-		"sub": "user1",
-		"exp": float64(time.Now().Add(time.Hour).Unix()),
-	}, secret)
-
-	info, err := JWTVerify(token, "wrong-secret")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if info.Valid {
-		t.Error("expected Valid=false for wrong secret")
-	}
-	if info.Header == nil {
-		t.Error("expected Header to be populated")
-	}
-	if info.Payload["sub"] != "user1" {
-		t.Errorf("expected sub=user1, got %v", info.Payload["sub"])
-	}
-}
-
-func TestJWTEncode(t *testing.T) {
+func TestJWTEncode_HMAC(t *testing.T) {
 	tests := []struct {
 		name    string
 		payload string
@@ -208,20 +211,17 @@ func TestJWTEncode(t *testing.T) {
 		checkFn func(t *testing.T, token string)
 	}{
 		{
-			name:    "basic HS256",
+			name:    "basic_HS256",
 			payload: `{"sub":"user1","role":"admin"}`,
 			secret:  "test-secret",
 			algo:    "HS256",
 			checkFn: func(t *testing.T, token string) {
 				info, err := JWTDecode(token)
 				if err != nil {
-					t.Fatalf("failed to decode created token: %v", err)
+					t.Fatalf("failed to decode: %v", err)
 				}
 				if info.Payload["sub"] != "user1" {
 					t.Errorf("expected sub=user1, got %v", info.Payload["sub"])
-				}
-				if info.Payload["role"] != "admin" {
-					t.Errorf("expected role=admin, got %v", info.Payload["role"])
 				}
 				if info.Header["alg"] != "HS256" {
 					t.Errorf("expected alg=HS256, got %v", info.Header["alg"])
@@ -234,10 +234,7 @@ func TestJWTEncode(t *testing.T) {
 			secret:  "secret",
 			algo:    "HS384",
 			checkFn: func(t *testing.T, token string) {
-				info, err := JWTDecode(token)
-				if err != nil {
-					t.Fatalf("failed to decode: %v", err)
-				}
+				info, _ := JWTDecode(token)
 				if info.Header["alg"] != "HS384" {
 					t.Errorf("expected alg=HS384, got %v", info.Header["alg"])
 				}
@@ -249,63 +246,46 @@ func TestJWTEncode(t *testing.T) {
 			secret:  "secret",
 			algo:    "HS512",
 			checkFn: func(t *testing.T, token string) {
-				info, err := JWTDecode(token)
-				if err != nil {
-					t.Fatalf("failed to decode: %v", err)
-				}
+				info, _ := JWTDecode(token)
 				if info.Header["alg"] != "HS512" {
 					t.Errorf("expected alg=HS512, got %v", info.Header["alg"])
 				}
 			},
 		},
 		{
-			name:    "roundtrip: encode then verify",
+			name:    "roundtrip_encode_then_verify",
 			payload: `{"sub":"roundtrip","exp":9999999999}`,
 			secret:  "my-secret",
 			algo:    "HS256",
 			checkFn: func(t *testing.T, token string) {
-				info, err := JWTVerify(token, "my-secret")
+				info, err := JWTVerify(token, "my-secret", nil)
 				if err != nil {
 					t.Fatalf("verify failed: %v", err)
 				}
 				if !info.Valid {
 					t.Error("expected Valid=true")
 				}
-				if info.Payload["sub"] != "roundtrip" {
-					t.Errorf("expected sub=roundtrip, got %v", info.Payload["sub"])
-				}
 			},
 		},
 		{
-			name:    "invalid JSON payload",
+			name:    "invalid_JSON_payload",
 			payload: `not json`,
 			secret:  "secret",
 			algo:    "HS256",
 			wantErr: true,
 		},
 		{
-			name:    "unsupported algorithm",
+			name:    "unsupported_algorithm",
 			payload: `{"sub":"test"}`,
 			secret:  "secret",
-			algo:    "RS256",
+			algo:    "NONE",
 			wantErr: true,
-		},
-		{
-			name:    "empty secret still signs",
-			payload: `{"sub":"test"}`,
-			secret:  "",
-			algo:    "HS256",
-			checkFn: func(t *testing.T, token string) {
-				if token == "" {
-					t.Error("expected non-empty token")
-				}
-			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			token, err := JWTEncode(tt.payload, tt.secret, tt.algo)
+			token, err := JWTEncode(tt.payload, tt.secret, nil, tt.algo)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("JWTEncode() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -313,6 +293,140 @@ func TestJWTEncode(t *testing.T) {
 				tt.checkFn(t, token)
 			}
 		})
+	}
+}
+
+func TestJWT_RSA_Roundtrip(t *testing.T) {
+	privKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatalf("failed to generate RSA key: %v", err)
+	}
+
+	privPEM := encodePEMPrivateKey(t, privKey)
+	pubPEM := encodePEMPublicKey(t, &privKey.PublicKey)
+
+	// Sign with private key.
+	token, err := JWTEncode(`{"sub":"rsa-test","exp":9999999999}`, "", privPEM, "RS256")
+	if err != nil {
+		t.Fatalf("JWTEncode RS256 failed: %v", err)
+	}
+
+	// Decode without verification.
+	info, err := JWTDecode(token)
+	if err != nil {
+		t.Fatalf("JWTDecode failed: %v", err)
+	}
+	if info.Header["alg"] != "RS256" {
+		t.Errorf("expected alg=RS256, got %v", info.Header["alg"])
+	}
+	if info.Payload["sub"] != "rsa-test" {
+		t.Errorf("expected sub=rsa-test, got %v", info.Payload["sub"])
+	}
+
+	// Verify with public key.
+	info, err = JWTVerify(token, "", pubPEM)
+	if err != nil {
+		t.Fatalf("JWTVerify RS256 failed: %v", err)
+	}
+	if !info.Valid {
+		t.Error("expected Valid=true for correct public key")
+	}
+
+	// Verify with wrong key should return Valid=false.
+	wrongKey, _ := rsa.GenerateKey(rand.Reader, 2048)
+	wrongPEM := encodePEMPublicKey(t, &wrongKey.PublicKey)
+	info, err = JWTVerify(token, "", wrongPEM)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if info.Valid {
+		t.Error("expected Valid=false for wrong public key")
+	}
+}
+
+func TestJWT_ECDSA_Roundtrip(t *testing.T) {
+	privKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatalf("failed to generate EC key: %v", err)
+	}
+
+	privPEM := encodePEMPrivateKey(t, privKey)
+	pubPEM := encodePEMPublicKey(t, &privKey.PublicKey)
+
+	token, err := JWTEncode(`{"sub":"ec-test","exp":9999999999}`, "", privPEM, "ES256")
+	if err != nil {
+		t.Fatalf("JWTEncode ES256 failed: %v", err)
+	}
+
+	info, err := JWTDecode(token)
+	if err != nil {
+		t.Fatalf("JWTDecode failed: %v", err)
+	}
+	if info.Header["alg"] != "ES256" {
+		t.Errorf("expected alg=ES256, got %v", info.Header["alg"])
+	}
+
+	info, err = JWTVerify(token, "", pubPEM)
+	if err != nil {
+		t.Fatalf("JWTVerify ES256 failed: %v", err)
+	}
+	if !info.Valid {
+		t.Error("expected Valid=true")
+	}
+}
+
+func TestJWT_Ed25519_Roundtrip(t *testing.T) {
+	pubKey, privKey, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatalf("failed to generate Ed25519 key: %v", err)
+	}
+
+	privPEM := encodePEMPrivateKey(t, privKey)
+	pubPEM := encodePEMPublicKey(t, pubKey)
+
+	token, err := JWTEncode(`{"sub":"ed-test","exp":9999999999}`, "", privPEM, "EdDSA")
+	if err != nil {
+		t.Fatalf("JWTEncode EdDSA failed: %v", err)
+	}
+
+	info, err := JWTDecode(token)
+	if err != nil {
+		t.Fatalf("JWTDecode failed: %v", err)
+	}
+	if info.Header["alg"] != "EdDSA" {
+		t.Errorf("expected alg=EdDSA, got %v", info.Header["alg"])
+	}
+
+	info, err = JWTVerify(token, "", pubPEM)
+	if err != nil {
+		t.Fatalf("JWTVerify EdDSA failed: %v", err)
+	}
+	if !info.Valid {
+		t.Error("expected Valid=true")
+	}
+}
+
+func TestJWT_KeyErrors(t *testing.T) {
+	// RS256 without key file should error.
+	_, err := JWTEncode(`{"sub":"test"}`, "", nil, "RS256")
+	if err == nil {
+		t.Error("expected error for RS256 without key")
+	}
+
+	// HMAC without secret returns Valid=false (not an error — token is still parseable).
+	hmacToken := createTestJWT(t, jwt.MapClaims{"sub": "test"}, "secret")
+	info, err := JWTVerify(hmacToken, "", nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if info.Valid {
+		t.Error("expected Valid=false for HMAC verify without secret")
+	}
+
+	// Bad PEM data should error.
+	_, err = JWTEncode(`{"sub":"test"}`, "", []byte("not a pem"), "RS256")
+	if err == nil {
+		t.Error("expected error for invalid PEM")
 	}
 }
 

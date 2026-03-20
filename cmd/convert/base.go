@@ -19,7 +19,7 @@ var baseNameMap = map[string]int{
 
 var baseCmd = &cobra.Command{
 	Use:     "base [input]",
-	Aliases: []string{"nb"},
+	Aliases: []string{},
 	Short:   "Convert numbers between bases",
 	Long:    "Convert numbers between binary, octal, decimal, and hexadecimal.",
 	RunE: func(cmd *cobra.Command, args []string) error {

@@ -11,7 +11,7 @@ import (
 
 var uuidCmd = &cobra.Command{
 	Use:     "uuid",
-	Aliases: []string{"uid"},
+	Aliases: []string{},
 	Short:   "Generate UUIDs",
 	Long:    "Generate UUIDs of various versions (1, 4, 5, 7).",
 	RunE: func(cmd *cobra.Command, args []string) error {

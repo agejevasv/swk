@@ -11,8 +11,7 @@ import (
 )
 
 var jsonCmd = &cobra.Command{
-	Use:     "json [input]",
-	Aliases: []string{"j"},
+	Use:   "json [input]",
 	Short:   "Convert and format JSON",
 	Long: `Convert between JSON, YAML, and CSV. Also prettify or minify JSON.
 

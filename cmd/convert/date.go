@@ -12,8 +12,7 @@ import (
 )
 
 var dateCmd = &cobra.Command{
-	Use:     "date [input]",
-	Aliases: []string{"dt"},
+	Use:   "date [input]",
 	Short:   "Convert between date/time formats",
 	Long: `Convert between unix timestamps, ISO 8601, RFC 2822, and human-readable formats.
 Also accepts strftime format strings (e.g. "%Y-%m-%d", "%H:%M:%S") as custom formats.`,

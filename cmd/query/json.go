@@ -10,8 +10,7 @@ import (
 )
 
 var jsonCmd = &cobra.Command{
-	Use:     "json [input]",
-	Aliases: []string{"jp"},
+	Use:   "json [input]",
 	Short:   "Query JSON with JSONPath expressions",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		input, err := ioutil.ReadFileInputString(args, cmd.InOrStdin())

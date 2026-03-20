@@ -1,7 +1,9 @@
 package encode
 
 import (
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"strings"
 	"time"
@@ -18,26 +20,25 @@ type JWTInfo struct {
 	ExpiredAt *time.Time             `json:"expired_at,omitempty"`
 }
 
-func JWTEncode(payloadJSON string, secret string, algo string) (string, error) {
+func JWTEncode(payloadJSON string, secret string, keyPEM []byte, algo string) (string, error) {
 	var claims jwt.MapClaims
 	if err := json.Unmarshal([]byte(payloadJSON), &claims); err != nil {
 		return "", fmt.Errorf("invalid JSON payload: %w", err)
 	}
 
-	var method jwt.SigningMethod
-	switch algo {
-	case "HS256":
-		method = jwt.SigningMethodHS256
-	case "HS384":
-		method = jwt.SigningMethodHS384
-	case "HS512":
-		method = jwt.SigningMethodHS512
-	default:
-		return "", fmt.Errorf("unsupported algorithm: %s (supported: HS256, HS384, HS512)", algo)
+	method := jwt.GetSigningMethod(algo)
+	if method == nil {
+		return "", fmt.Errorf("unsupported algorithm: %s", algo)
 	}
 
 	token := jwt.NewWithClaims(method, claims)
-	tokenStr, err := token.SignedString([]byte(secret))
+
+	signingKey, err := resolveSigningKey(method, secret, keyPEM)
+	if err != nil {
+		return "", err
+	}
+
+	tokenStr, err := token.SignedString(signingKey)
 	if err != nil {
 		return "", fmt.Errorf("failed to sign token: %w", err)
 	}
@@ -67,25 +68,16 @@ func JWTDecode(tokenStr string) (*JWTInfo, error) {
 		Signature: sig,
 	}
 
-	if exp, ok := claims["exp"]; ok {
-		if expFloat, ok := exp.(float64); ok {
-			expTime := time.Unix(int64(expFloat), 0)
-			info.ExpiredAt = &expTime
-		}
-	}
+	extractExpiry(claims, info)
 
 	return info, nil
 }
 
-func JWTVerify(tokenStr string, secret string) (*JWTInfo, error) {
+func JWTVerify(tokenStr string, secret string, keyPEM []byte) (*JWTInfo, error) {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-		return []byte(secret), nil
+		return resolveVerifyKey(token.Method, secret, keyPEM)
 	})
 
-	// Extract signature from raw token string
 	sig := ""
 	if parts := strings.SplitN(tokenStr, ".", 3); len(parts) == 3 {
 		sig = parts[2]
@@ -96,7 +88,6 @@ func JWTVerify(tokenStr string, secret string) (*JWTInfo, error) {
 		Signature: sig,
 	}
 
-	// If token is nil, the JWT was malformed — that's a hard error.
 	if token == nil {
 		return nil, fmt.Errorf("invalid JWT: %w", err)
 	}
@@ -104,20 +95,114 @@ func JWTVerify(tokenStr string, secret string) (*JWTInfo, error) {
 	info.Header = token.Header
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
 		info.Payload = map[string]interface{}(claims)
-
-		if exp, ok := claims["exp"]; ok {
-			if expFloat, ok := exp.(float64); ok {
-				expTime := time.Unix(int64(expFloat), 0)
-				info.ExpiredAt = &expTime
-			}
-		}
+		extractExpiry(claims, info)
 	}
 	info.Valid = token.Valid
 
-	// Signature mismatch or expiry is not an error — it's represented by Valid=false.
 	return info, nil
 }
 
 func JWTInfoJSON(info *JWTInfo) ([]byte, error) {
 	return json.MarshalIndent(info, "", "  ")
+}
+
+// resolveSigningKey returns the appropriate signing key for the given method.
+func resolveSigningKey(method jwt.SigningMethod, secret string, keyPEM []byte) (interface{}, error) {
+	switch method.(type) {
+	case *jwt.SigningMethodHMAC:
+		if secret == "" {
+			return nil, fmt.Errorf("--secret is required for %s", method.Alg())
+		}
+		return []byte(secret), nil
+	case *jwt.SigningMethodRSA:
+		return parsePrivateKey(keyPEM, "RSA")
+	case *jwt.SigningMethodECDSA:
+		return parsePrivateKey(keyPEM, "EC")
+	case *jwt.SigningMethodEd25519:
+		return parsePrivateKey(keyPEM, "Ed25519")
+	default:
+		return nil, fmt.Errorf("unsupported signing method: %s", method.Alg())
+	}
+}
+
+// resolveVerifyKey returns the appropriate verification key for the given method.
+func resolveVerifyKey(method jwt.SigningMethod, secret string, keyPEM []byte) (interface{}, error) {
+	switch method.(type) {
+	case *jwt.SigningMethodHMAC:
+		if secret == "" {
+			return nil, fmt.Errorf("--secret is required for %s", method.Alg())
+		}
+		return []byte(secret), nil
+	case *jwt.SigningMethodRSA:
+		return parsePublicKey(keyPEM, "RSA")
+	case *jwt.SigningMethodECDSA:
+		return parsePublicKey(keyPEM, "EC")
+	case *jwt.SigningMethodEd25519:
+		return parsePublicKey(keyPEM, "Ed25519")
+	default:
+		return nil, fmt.Errorf("unsupported signing method: %s", method.Alg())
+	}
+}
+
+func parsePrivateKey(keyPEM []byte, expect string) (interface{}, error) {
+	if len(keyPEM) == 0 {
+		return nil, fmt.Errorf("--key is required for %s algorithms", expect)
+	}
+
+	block, _ := pem.Decode(keyPEM)
+	if block == nil {
+		return nil, fmt.Errorf("failed to decode PEM block")
+	}
+
+	// Try PKCS8 first (works for all key types).
+	if key, err := x509.ParsePKCS8PrivateKey(block.Bytes); err == nil {
+		return key, nil
+	}
+
+	// Fall back to type-specific parsers.
+	if key, err := x509.ParsePKCS1PrivateKey(block.Bytes); err == nil {
+		return key, nil
+	}
+	if key, err := x509.ParseECPrivateKey(block.Bytes); err == nil {
+		return key, nil
+	}
+
+	return nil, fmt.Errorf("failed to parse private key")
+}
+
+func parsePublicKey(keyPEM []byte, expect string) (interface{}, error) {
+	if len(keyPEM) == 0 {
+		return nil, fmt.Errorf("--key is required for %s algorithms", expect)
+	}
+
+	block, _ := pem.Decode(keyPEM)
+	if block == nil {
+		return nil, fmt.Errorf("failed to decode PEM block")
+	}
+
+	// Try PKIX (standard public key format).
+	if key, err := x509.ParsePKIXPublicKey(block.Bytes); err == nil {
+		return key, nil
+	}
+
+	// Try PKCS1 RSA public key.
+	if key, err := x509.ParsePKCS1PublicKey(block.Bytes); err == nil {
+		return key, nil
+	}
+
+	// Try parsing as certificate and extracting public key.
+	if cert, err := x509.ParseCertificate(block.Bytes); err == nil {
+		return cert.PublicKey, nil
+	}
+
+	return nil, fmt.Errorf("failed to parse public key")
+}
+
+func extractExpiry(claims jwt.MapClaims, info *JWTInfo) {
+	if exp, ok := claims["exp"]; ok {
+		if expFloat, ok := exp.(float64); ok {
+			expTime := time.Unix(int64(expFloat), 0)
+			info.ExpiredAt = &expTime
+		}
+	}
 }

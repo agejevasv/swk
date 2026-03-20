@@ -18,7 +18,7 @@ SWK_INSTALL_DIR=~/.local/bin curl -sL https://raw.githubusercontent.com/agejevas
 
 ### From source
 
-Requires Go 1.25+.
+Requires Go 1.26+.
 
 ```bash
 git clone https://github.com/agejevasv/swk.git
@@ -53,36 +53,37 @@ Print version:
 
 ```bash
 swk --version
-swk -v
+swk -V
 ```
 
 ## Commands
 
-### Convert (`swk convert`)
+### Convert (`swk convert`, `swk c`)
 
 | Command | Alias | Description |
 |---------|-------|-------------|
-| `convert base` | `c nb` | Convert between number bases (bin, oct, dec, hex) |
-| `convert bytes` | `c bytes` | Convert between byte sizes and human-readable formats |
-| `convert case` | `c case` | Convert between case conventions |
-| `convert chmod` | `c chmod` | Convert between numeric and symbolic file permissions |
-| `convert color` | `c col` | Convert between color formats |
-| `convert date` | `c dt` | Convert between date/time formats |
-| `convert duration` | `c dur` | Convert between seconds and human-readable durations |
+| `convert base` | | Convert between number bases (bin, oct, dec, hex) |
+| `convert bytes` | | Convert between byte sizes and human-readable formats |
+| `convert case` | | Convert between case conventions |
+| `convert chmod` | | Convert between numeric and symbolic file permissions |
+| `convert color` | | Convert between color formats |
+| `convert date` | | Convert between date/time formats |
+| `convert duration` | | Convert between seconds and human-readable durations |
 | `convert image` | `c img` | Convert image formats, resize |
-| `convert json` | `c j` | Convert and format JSON (yaml, csv) |
+| `convert json` | | Convert and format JSON (yaml, csv) |
 | `convert markdown` | `c md` | Render markdown to HTML or plain text |
-| `convert table` | `c table` | Render a JSON array or CSV as a formatted table |
-| `convert xml` | `c x` | Format (prettify/minify) XML |
+| `convert table` | | Render a JSON array or CSV as a formatted table |
+| `convert xml` | | Format (prettify/minify) XML |
 
 ```bash
 # Number base conversion
 swk convert base --from dec --to hex 255
 
-# Byte sizes (default: 1024-based, familiar labels)
-swk convert bytes 1073741824           # 1 GB
-swk convert bytes '1.5GB'              # 1610612736
+# Byte sizes (default: 1024-based with IEC labels)
+swk convert bytes 1073741824           # 1 GiB
+swk convert bytes '1.5GiB'            # 1610612736
 swk convert bytes -d 1000000000        # 1 GB (decimal, 1000-based)
+swk convert bytes '1.5GB'             # 1500000000
 
 # Case conversion
 echo 'helloWorld' | swk convert case --to snake    # hello_world
@@ -100,14 +101,16 @@ swk convert color --from rgb --to hex '255,87,51'
 # Date/time conversion
 swk convert date --from unix --to iso 1700000000
 swk convert date now
+swk convert date --from unix --to '%Y-%m-%d' --tz UTC 1700000000   # 2023-11-14
+swk convert date --from '%Y-%m-%d' --to unix '2023-11-14'
 
 # Duration conversion
 swk convert duration 86400             # 1d
-swk convert duration '2d 5h 30m'      # 190200
+swk convert duration '2d 5h 30m'      # 192600
 swk convert duration 31536000          # 1y
 swk convert duration '1y 6mo'         # 47088000
 
-# Image conversion (accepts file path or stdin)
+# Image conversion (accepts file path)
 swk convert image --to jpeg photo.png -o photo.jpg
 swk convert image --to png --resize 200x200 large.png -o thumb.png
 
@@ -146,14 +149,14 @@ swk convert xml messy.xml
 swk convert xml --minify document.xml
 ```
 
-### Encode (`swk encode`)
+### Encode (`swk encode`, `swk enc`)
 
 | Command | Alias | Description |
 |---------|-------|-------------|
 | `encode base64` | `enc b64` | Base64 encode/decode |
-| `encode hash` | `enc h` | Generate hashes (MD5, SHA1, SHA256, SHA512) |
-| `encode jwt` | `enc jwt` | Create or decode JWT tokens |
-| `encode qr` | `enc qr` | Generate QR codes |
+| `encode hash` | `enc sum` | Generate hashes (MD5, SHA1, SHA256, SHA512) |
+| `encode jwt` | | Create, decode, or verify JWT tokens |
+| `encode qr` | | Generate QR codes |
 
 ```bash
 # Base64
@@ -166,25 +169,36 @@ swk encode hash README.md
 swk encode hash --algo md5 README.md
 echo -n 'hello' | swk encode hash --verify 2cf24dba...
 
-# JWT
+# JWT — create with HMAC
 swk encode jwt --secret mykey '{"sub":"user1","role":"admin"}'
+
+# JWT — create with RSA/EC/Ed25519
+swk encode jwt --algo RS256 --key private.pem '{"sub":"user1"}'
+swk encode jwt --algo ES256 --key ec-private.pem '{"sub":"user1"}'
+
+# JWT — decode (no verification, works with any algorithm)
 swk encode jwt -d 'eyJhbGciOiJIUzI1NiIs...'
+
+# JWT — verify with HMAC secret
 swk encode jwt -d --secret mykey 'eyJhbGciOiJIUzI1NiIs...'
+
+# JWT — verify with public key (RSA/EC/Ed25519)
+swk encode jwt -d --key public.pem 'eyJhbGciOiJSUzI1NiIs...'
 
 # QR code
 swk encode qr 'https://github.com/agejevasv/swk'
 swk encode qr --output png 'https://example.com' > qr.png
 ```
 
-### Escape (`swk escape`)
+### Escape (`swk escape`, `swk esc`)
 
 | Command | Alias | Description |
 |---------|-------|-------------|
-| `escape html` | `esc html` | HTML entity escape/unescape |
-| `escape json` | `esc json` | JSON string escape/unescape |
-| `escape shell` | `esc shell` | Shell escape/unescape |
-| `escape url` | `esc url` | URL percent-encode/decode |
-| `escape xml` | `esc xml` | XML escape/unescape |
+| `escape html` | | HTML entity escape/unescape |
+| `escape json` | | JSON string escape/unescape |
+| `escape shell` | `esc sh` | Shell escape/unescape |
+| `escape url` | | URL percent-encode/decode |
+| `escape xml` | | XML escape/unescape |
 
 ```bash
 # HTML
@@ -206,14 +220,14 @@ echo 'hello%20world' | swk escape url -u
 echo '<tag attr="val">' | swk escape xml
 ```
 
-### Generate (`swk generate`)
+### Generate (`swk generate`, `swk g`)
 
 | Command | Alias | Description |
 |---------|-------|-------------|
-| `generate image` | `gen image` | Generate placeholder images |
-| `generate password` | `gen pw` | Generate random passwords |
-| `generate text` | `gen text` | Generate lorem ipsum text |
-| `generate uuid` | `gen uid` | Generate UUIDs (v1, v4, v5, v7) |
+| `generate image` | | Generate placeholder images |
+| `generate password` | `g pw` | Generate random passwords |
+| `generate text` | | Generate lorem ipsum text |
+| `generate uuid` | | Generate UUIDs (v1, v4, v5, v7) |
 
 ```bash
 # Placeholder image
@@ -235,13 +249,13 @@ swk generate uuid --count 5
 swk generate uuid --version 7
 ```
 
-### Inspect (`swk inspect`)
+### Inspect (`swk inspect`, `swk i`)
 
 | Command | Alias | Description |
 |---------|-------|-------------|
 | `inspect cert` | | Inspect X.509 PEM certificates |
-| `inspect cron` | `inspect cr` | Explain cron expressions |
-| `inspect text` | `inspect txt` | Character, word, line, byte counts |
+| `inspect cron` | | Explain cron expressions |
+| `inspect text` | `i txt` | Character, word, line, byte counts |
 | `inspect url` | | Parse URL into components |
 
 ```bash
@@ -262,12 +276,12 @@ echo 'hello world' | swk inspect text --json
 swk inspect url 'https://example.com:8080/api/v1/users?page=1&limit=10#section'
 ```
 
-### Query (`swk query`)
+### Query (`swk query`, `swk q`)
 
 | Command | Alias | Description |
 |---------|-------|-------------|
-| `query html` | `q html` | Query HTML with CSS selectors |
-| `query json` | `q jp` | Query JSON with JSONPath |
+| `query html` | | Query HTML with CSS selectors |
+| `query json` | | Query JSON with JSONPath |
 | `query regex` | `q re` | Match/replace with regular expressions |
 
 ```bash
@@ -278,10 +292,10 @@ swk query html -q 'div.content p' page.html
 # JSON (JSONPath — accepts file path)
 swk query json -q '$.users[*].name' data.json
 
-# Regex (accepts file path)
-echo '2024-01-15 hello 2024-02-20' | swk query regex -p '\d{4}-\d{2}-\d{2}' -g
-echo 'John:30' | swk query regex -p '(\w+):(\d+)' --groups
-echo 'foo bar baz' | swk query regex -p 'bar' -r 'qux'
+# Regex (pattern is first argument — accepts file path)
+echo '2024-01-15 hello 2024-02-20' | swk query regex -g '\d{4}-\d{2}-\d{2}'
+echo 'John:30' | swk query regex --groups '(\w+):(\d+)'
+echo 'foo bar baz' | swk query regex -r 'qux' 'bar'
 ```
 
 ## Piping and chaining
