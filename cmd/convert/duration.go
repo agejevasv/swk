@@ -20,7 +20,7 @@ var durationCmd = &cobra.Command{
 			return err
 		}
 
-		durationTo, _ := cmd.Flags().GetString("to")
+		durationTo := ioutil.MustGetString(cmd, "to")
 		result, err := convLib.DurationConvert(input, durationTo)
 		if err != nil {
 			return err

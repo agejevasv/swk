@@ -20,8 +20,8 @@ var cronCmd = &cobra.Command{
 			return err
 		}
 
-		cronNext, _ := cmd.Flags().GetInt("next")
-		cronExplain, _ := cmd.Flags().GetBool("explain")
+		cronNext := ioutil.MustGetInt(cmd, "next")
+		cronExplain := ioutil.MustGetBool(cmd, "explain")
 
 		showExplain := cronExplain || !cmd.Flags().Changed("next")
 		showNext := cmd.Flags().Changed("next") || !cronExplain

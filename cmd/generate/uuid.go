@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	genLib "github.com/agejevasv/swk/internal/gen"
+	"github.com/agejevasv/swk/internal/ioutil"
 )
 
 var uuidCmd = &cobra.Command{
@@ -14,10 +15,10 @@ var uuidCmd = &cobra.Command{
 	Short:   "Generate UUIDs",
 	Long:    "Generate UUIDs of various versions (1, 4, 5, 7).",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		uuidVersion, _ := cmd.Flags().GetInt("version")
-		uuidCount, _ := cmd.Flags().GetInt("count")
-		uuidNamespace, _ := cmd.Flags().GetString("namespace")
-		uuidName, _ := cmd.Flags().GetString("name")
+		uuidVersion := ioutil.MustGetInt(cmd, "version")
+		uuidCount := ioutil.MustGetInt(cmd, "count")
+		uuidNamespace := ioutil.MustGetString(cmd, "namespace")
+		uuidName := ioutil.MustGetString(cmd, "name")
 
 		for i := 0; i < uuidCount; i++ {
 			id, err := genLib.GenerateUUID(uuidVersion, uuidNamespace, uuidName)

@@ -18,7 +18,7 @@ var jsonCmd = &cobra.Command{
 			return err
 		}
 
-		jsonUnescape, _ := cmd.Flags().GetBool("unescape")
+		jsonUnescape := ioutil.MustGetBool(cmd, "unescape")
 
 		var result string
 		if jsonUnescape {

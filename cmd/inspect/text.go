@@ -23,7 +23,7 @@ var textCmd = &cobra.Command{
 
 		info := textLib.Inspect(input)
 
-		inspectJSON, _ := cmd.Flags().GetBool("json")
+		inspectJSON := ioutil.MustGetBool(cmd, "json")
 
 		if inspectJSON {
 			enc := json.NewEncoder(cmd.OutOrStdout())

@@ -1,4 +1,4 @@
-package encode
+package inspect
 
 import (
 	"crypto/x509"

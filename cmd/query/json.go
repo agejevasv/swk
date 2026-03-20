@@ -19,11 +19,15 @@ var jsonCmd = &cobra.Command{
 			return err
 		}
 
-		jsonpathQuery, _ := cmd.Flags().GetString("query")
+		jsonpathQuery := ioutil.MustGetString(cmd, "query")
 
 		result, err := queryLib.JSONPathQuery([]byte(input), jsonpathQuery)
 		if err != nil {
 			return err
+		}
+
+		if result == nil {
+			return ioutil.NoMatchError{}
 		}
 
 		fmt.Fprint(cmd.OutOrStdout(), string(result))

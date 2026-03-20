@@ -28,8 +28,8 @@ var baseCmd = &cobra.Command{
 			return err
 		}
 
-		nbFrom, _ := cmd.Flags().GetString("from")
-		nbTo, _ := cmd.Flags().GetString("to")
+		nbFrom := ioutil.MustGetString(cmd, "from")
+		nbTo := ioutil.MustGetString(cmd, "to")
 
 		fromBase, ok := baseNameMap[strings.ToLower(nbFrom)]
 		if !ok {

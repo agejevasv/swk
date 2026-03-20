@@ -18,7 +18,7 @@ var htmlCmd = &cobra.Command{
 			return err
 		}
 
-		htmlDecode, _ := cmd.Flags().GetBool("unescape")
+		htmlDecode := ioutil.MustGetBool(cmd, "unescape")
 
 		if htmlDecode {
 			fmt.Fprintln(cmd.OutOrStdout(), encLib.HTMLDecode(input))

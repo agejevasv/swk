@@ -20,6 +20,9 @@ func JSONPathQuery(input []byte, query string) ([]byte, error) {
 	}
 
 	results := expr.Get(obj)
+	if len(results) == 0 {
+		return nil, nil
+	}
 
 	var output interface{}
 	if len(results) == 1 {

@@ -19,7 +19,7 @@ var bytesCmd = &cobra.Command{
 			return err
 		}
 
-		bytesDecimal, _ := cmd.Flags().GetBool("decimal")
+		bytesDecimal := ioutil.MustGetBool(cmd, "decimal")
 		result, err := convLib.BytesConvert(input, bytesDecimal)
 		if err != nil {
 			return err

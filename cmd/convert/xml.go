@@ -17,8 +17,8 @@ var xmlCmd = &cobra.Command{
 			return err
 		}
 
-		xmlMinify, _ := cmd.Flags().GetBool("minify")
-		xmlIndent, _ := cmd.Flags().GetInt("indent")
+		xmlMinify := ioutil.MustGetBool(cmd, "minify")
+		xmlIndent := ioutil.MustGetInt(cmd, "indent")
 		opts := fmtLib.XMLOptions{
 			Indent: xmlIndent,
 			Minify: xmlMinify,

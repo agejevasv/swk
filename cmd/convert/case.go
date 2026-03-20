@@ -18,7 +18,7 @@ var caseCmd = &cobra.Command{
 			return err
 		}
 
-		caseTo, _ := cmd.Flags().GetString("to")
+		caseTo := ioutil.MustGetString(cmd, "to")
 		result, err := textLib.ConvertCase(input, caseTo)
 		if err != nil {
 			return err

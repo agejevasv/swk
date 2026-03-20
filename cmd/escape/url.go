@@ -18,8 +18,8 @@ var urlCmd = &cobra.Command{
 			return err
 		}
 
-		urlDecode, _ := cmd.Flags().GetBool("unescape")
-		urlComponent, _ := cmd.Flags().GetBool("component")
+		urlDecode := ioutil.MustGetBool(cmd, "unescape")
+		urlComponent := ioutil.MustGetBool(cmd, "component")
 
 		if urlDecode {
 			result, err := encLib.URLDecode(input, urlComponent)

@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	graphicLib "github.com/agejevasv/swk/internal/graphic"
+	"github.com/agejevasv/swk/internal/ioutil"
 )
 
 var imageCmd = &cobra.Command{
@@ -15,10 +16,10 @@ var imageCmd = &cobra.Command{
   swk generate image --width 800 --height 600 --style circles -o out.png
   swk generate image --style mixed > art.png`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		genWidth, _ := cmd.Flags().GetInt("width")
-		genHeight, _ := cmd.Flags().GetInt("height")
-		genStyle, _ := cmd.Flags().GetString("style")
-		genOutput, _ := cmd.Flags().GetString("output")
+		genWidth := ioutil.MustGetInt(cmd, "width")
+		genHeight := ioutil.MustGetInt(cmd, "height")
+		genStyle := ioutil.MustGetString(cmd, "style")
+		genOutput := ioutil.MustGetString(cmd, "output")
 
 		data, err := graphicLib.GenerateImage(genWidth, genHeight, genStyle)
 		if err != nil {

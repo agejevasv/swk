@@ -93,14 +93,12 @@ func TestJSONPathQuery(t *testing.T) {
 			},
 		},
 		{
-			name:  "non-existent path returns empty",
+			name:  "non-existent path returns nil",
 			input: `{"name":"Alice"}`,
 			query: "$.nonexistent",
 			checkFunc: func(t *testing.T, output []byte) {
-				s := strings.TrimSpace(string(output))
-				// Should be empty array or null
-				if s != "[]" && s != "null" {
-					t.Errorf("expected empty result, got %s", s)
+				if output != nil {
+					t.Errorf("expected nil result for no match, got %s", output)
 				}
 			},
 		},

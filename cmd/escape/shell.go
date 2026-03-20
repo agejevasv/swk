@@ -18,7 +18,7 @@ var shellCmd = &cobra.Command{
 			return err
 		}
 
-		shellUnescape, _ := cmd.Flags().GetBool("unescape")
+		shellUnescape := ioutil.MustGetBool(cmd, "unescape")
 
 		var result string
 		if shellUnescape {

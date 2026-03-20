@@ -19,7 +19,7 @@ var chmodCmd = &cobra.Command{
 			return err
 		}
 
-		chmodTo, _ := cmd.Flags().GetString("to")
+		chmodTo := ioutil.MustGetString(cmd, "to")
 		switch chmodTo {
 		case "numeric":
 			result, err := convLib.ChmodToNumeric(input)

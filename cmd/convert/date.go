@@ -17,9 +17,9 @@ var dateCmd = &cobra.Command{
 	Short:   "Convert between date/time formats",
 	Long:    "Convert between unix timestamps, ISO 8601, RFC 2822, and human-readable formats.",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		dtFrom, _ := cmd.Flags().GetString("from")
-		dtTo, _ := cmd.Flags().GetString("to")
-		dtTz, _ := cmd.Flags().GetString("tz")
+		dtFrom := ioutil.MustGetString(cmd, "from")
+		dtTo := ioutil.MustGetString(cmd, "to")
+		dtTz := ioutil.MustGetString(cmd, "tz")
 
 		var inputStr string
 		var err error

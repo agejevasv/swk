@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	genLib "github.com/agejevasv/swk/internal/gen"
+	"github.com/agejevasv/swk/internal/ioutil"
 )
 
 var passwordCmd = &cobra.Command{
@@ -14,13 +15,13 @@ var passwordCmd = &cobra.Command{
 	Short:   "Generate random passwords",
 	Long:    "Generate cryptographically secure random passwords.",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		pwLength, _ := cmd.Flags().GetInt("length")
-		pwCount, _ := cmd.Flags().GetInt("count")
-		pwNoUpper, _ := cmd.Flags().GetBool("no-upper")
-		pwNoLower, _ := cmd.Flags().GetBool("no-lower")
-		pwNoDigits, _ := cmd.Flags().GetBool("no-digits")
-		pwNoSymbols, _ := cmd.Flags().GetBool("no-symbols")
-		pwExclude, _ := cmd.Flags().GetString("exclude")
+		pwLength := ioutil.MustGetInt(cmd, "length")
+		pwCount := ioutil.MustGetInt(cmd, "count")
+		pwNoUpper := ioutil.MustGetBool(cmd, "no-upper")
+		pwNoLower := ioutil.MustGetBool(cmd, "no-lower")
+		pwNoDigits := ioutil.MustGetBool(cmd, "no-digits")
+		pwNoSymbols := ioutil.MustGetBool(cmd, "no-symbols")
+		pwExclude := ioutil.MustGetString(cmd, "exclude")
 
 		opts := genLib.PasswordOpts{
 			Length:  pwLength,

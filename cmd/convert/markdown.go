@@ -19,9 +19,9 @@ var markdownCmd = &cobra.Command{
 			return err
 		}
 
-		mdHTML, _ := cmd.Flags().GetBool("html")
-		syntaxHL, _ := cmd.Flags().GetBool("syntax-highlight")
-		theme, _ := cmd.Flags().GetString("theme")
+		mdHTML := ioutil.MustGetBool(cmd, "html")
+		syntaxHL := ioutil.MustGetBool(cmd, "syntax-highlight")
+		theme := ioutil.MustGetString(cmd, "theme")
 
 		result, err := textLib.RenderMarkdown([]byte(input), mdHTML, syntaxHL, theme)
 		if err != nil {

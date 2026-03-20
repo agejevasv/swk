@@ -19,9 +19,9 @@ var base64Cmd = &cobra.Command{
 			return err
 		}
 
-		decode, _ := cmd.Flags().GetBool("decode")
-		urlSafe, _ := cmd.Flags().GetBool("url-safe")
-		noPadding, _ := cmd.Flags().GetBool("no-padding")
+		decode := ioutil.MustGetBool(cmd, "decode")
+		urlSafe := ioutil.MustGetBool(cmd, "url-safe")
+		noPadding := ioutil.MustGetBool(cmd, "no-padding")
 
 		if decode {
 			result, err := encLib.Base64Decode(input, urlSafe)

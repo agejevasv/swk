@@ -18,7 +18,7 @@ var xmlCmd = &cobra.Command{
 			return err
 		}
 
-		xmlUnescape, _ := cmd.Flags().GetBool("unescape")
+		xmlUnescape := ioutil.MustGetBool(cmd, "unescape")
 
 		var result string
 		if xmlUnescape {

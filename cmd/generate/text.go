@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	genLib "github.com/agejevasv/swk/internal/gen"
+	"github.com/agejevasv/swk/internal/ioutil"
 )
 
 var textCmd = &cobra.Command{
@@ -13,9 +14,9 @@ var textCmd = &cobra.Command{
 	Short: "Generate lorem ipsum text",
 	Long:  "Generate lorem ipsum placeholder text as words, sentences, or paragraphs.",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		textWords, _ := cmd.Flags().GetInt("words")
-		textSentences, _ := cmd.Flags().GetInt("sentences")
-		textParagraphs, _ := cmd.Flags().GetInt("paragraphs")
+		textWords := ioutil.MustGetInt(cmd, "words")
+		textSentences := ioutil.MustGetInt(cmd, "sentences")
+		textParagraphs := ioutil.MustGetInt(cmd, "paragraphs")
 
 		if textWords == 0 && textSentences == 0 && textParagraphs == 0 {
 			textParagraphs = 1

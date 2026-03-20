@@ -40,11 +40,11 @@ When --from and --to are both json (the default), it formats the input.`,
 			return err
 		}
 
-		jsonFrom, _ := cmd.Flags().GetString("from")
-		jsonTo, _ := cmd.Flags().GetString("to")
-		jsonMinify, _ := cmd.Flags().GetBool("minify")
-		jsonIndent, _ := cmd.Flags().GetInt("indent")
-		jsonDelimiter, _ := cmd.Flags().GetString("delimiter")
+		jsonFrom := ioutil.MustGetString(cmd, "from")
+		jsonTo := ioutil.MustGetString(cmd, "to")
+		jsonMinify := ioutil.MustGetBool(cmd, "minify")
+		jsonIndent := ioutil.MustGetInt(cmd, "indent")
+		jsonDelimiter := ioutil.MustGetString(cmd, "delimiter")
 
 		switch {
 		case jsonFrom == "yaml":

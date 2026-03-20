@@ -19,8 +19,8 @@ var colorCmd = &cobra.Command{
 			return err
 		}
 
-		colorFrom, _ := cmd.Flags().GetString("from")
-		colorTo, _ := cmd.Flags().GetString("to")
+		colorFrom := ioutil.MustGetString(cmd, "from")
+		colorTo := ioutil.MustGetString(cmd, "to")
 		result, err := graphicLib.ConvertColor(input, colorFrom, colorTo)
 		if err != nil {
 			return err

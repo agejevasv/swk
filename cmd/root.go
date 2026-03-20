@@ -23,23 +23,21 @@ var rootCmd = &cobra.Command{
 	Short:         "Developer's Swiss Army Knife",
 	SilenceUsage:  true,
 	SilenceErrors: true,
-	Run: func(cmd *cobra.Command, args []string) {
-		showVersion, _ := cmd.Flags().GetBool("version")
-		if showVersion {
-			commit, date, dirty := vcsInfo()
-			dirtyMark := ""
-			if dirty {
-				dirtyMark = "-dirty"
-			}
-			fmt.Fprintf(cmd.OutOrStdout(), "swk %s (commit: %s%s, built: %s)\n", Version, commit, dirtyMark, date)
-			return
-		}
-		cmd.Help()
-	},
+}
+
+func versionString() string {
+	commit, date, dirty := vcsInfo()
+	dirtyMark := ""
+	if dirty {
+		dirtyMark = "-dirty"
+	}
+	return fmt.Sprintf("%s (commit: %s%s, built: %s)", Version, commit, dirtyMark, date)
 }
 
 func init() {
-	rootCmd.Flags().BoolP("version", "v", false, "print version")
+	rootCmd.SetVersionTemplate("swk version {{.Version}}\n")
+	rootCmd.Version = versionString()
+	rootCmd.Flags().BoolP("version", "V", false, "print version")
 
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
@@ -81,7 +79,7 @@ func vcsInfo() (commit, date string, dirty bool) {
 
 func Execute() error {
 	err := rootCmd.Execute()
-	if err != nil {
+	if err != nil && err.Error() != "" {
 		fmt.Fprintln(os.Stderr, "Error:", err)
 	}
 	return err

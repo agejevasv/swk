@@ -22,10 +22,10 @@ var imageCmd = &cobra.Command{
 			return err
 		}
 
-		imageToFormat, _ := cmd.Flags().GetString("to")
-		imageQuality, _ := cmd.Flags().GetInt("quality")
-		imageResize, _ := cmd.Flags().GetString("resize")
-		imageOutput, _ := cmd.Flags().GetString("output")
+		imageToFormat := ioutil.MustGetString(cmd, "to")
+		imageQuality := ioutil.MustGetInt(cmd, "quality")
+		imageResize := ioutil.MustGetString(cmd, "resize")
+		imageOutput := ioutil.MustGetString(cmd, "output")
 
 		var width, height int
 		if imageResize != "" {

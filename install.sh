@@ -51,4 +51,4 @@ else
 fi
 
 echo "Installed swk to $INSTALL_DIR/swk"
-swk version
+swk --version

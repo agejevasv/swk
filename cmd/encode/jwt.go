@@ -28,9 +28,9 @@ Decode: pass a JWT token with -d to inspect header and payload.`,
 			return err
 		}
 
-		decode, _ := cmd.Flags().GetBool("decode")
-		secret, _ := cmd.Flags().GetString("secret")
-		algo, _ := cmd.Flags().GetString("algo")
+		decode := ioutil.MustGetBool(cmd, "decode")
+		secret := ioutil.MustGetString(cmd, "secret")
+		algo := ioutil.MustGetString(cmd, "algo")
 
 		if decode {
 			return jwtDecodeRun(cmd, input, secret)

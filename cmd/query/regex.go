@@ -20,10 +20,10 @@ var regexCmd = &cobra.Command{
 			return err
 		}
 
-		regexPattern, _ := cmd.Flags().GetString("pattern")
-		regexGlobal, _ := cmd.Flags().GetBool("global")
-		regexGroups, _ := cmd.Flags().GetBool("groups")
-		regexReplace, _ := cmd.Flags().GetString("replace")
+		regexPattern := ioutil.MustGetString(cmd, "pattern")
+		regexGlobal := ioutil.MustGetBool(cmd, "global")
+		regexGroups := ioutil.MustGetBool(cmd, "groups")
+		regexReplace := ioutil.MustGetString(cmd, "replace")
 
 		if regexReplace != "" {
 			result, err := queryLib.RegexReplace(input, regexPattern, regexReplace)
@@ -40,8 +40,7 @@ var regexCmd = &cobra.Command{
 		}
 
 		if !result.Matched {
-			fmt.Fprintln(cmd.OutOrStdout(), "No matches found.")
-			return nil
+			return ioutil.NoMatchError{}
 		}
 
 		if regexGroups {

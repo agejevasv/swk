@@ -29,9 +29,9 @@ var tableCmd = &cobra.Command{
 			return err
 		}
 
-		tableStyle, _ := cmd.Flags().GetString("style")
-		tableFrom, _ := cmd.Flags().GetString("from")
-		tableDelimiter, _ := cmd.Flags().GetString("delimiter")
+		tableStyle := ioutil.MustGetString(cmd, "style")
+		tableFrom := ioutil.MustGetString(cmd, "from")
+		tableDelimiter := ioutil.MustGetString(cmd, "delimiter")
 
 		delimiter := ','
 		if len(tableDelimiter) > 0 {

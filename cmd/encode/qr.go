@@ -18,9 +18,9 @@ var qrCmd = &cobra.Command{
 			return err
 		}
 
-		qrOutput, _ := cmd.Flags().GetString("output")
-		qrSize, _ := cmd.Flags().GetInt("size")
-		qrLevel, _ := cmd.Flags().GetString("level")
+		qrOutput := ioutil.MustGetString(cmd, "output")
+		qrSize := ioutil.MustGetInt(cmd, "size")
+		qrLevel := ioutil.MustGetString(cmd, "level")
 
 		switch qrOutput {
 		case "terminal":

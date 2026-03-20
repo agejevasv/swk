@@ -26,12 +26,16 @@ var htmlCmd = &cobra.Command{
 			return err
 		}
 
-		htmlQuerySelector, _ := cmd.Flags().GetString("query")
-		htmlQueryAttr, _ := cmd.Flags().GetString("attr")
+		htmlQuerySelector := ioutil.MustGetString(cmd, "query")
+		htmlQueryAttr := ioutil.MustGetString(cmd, "attr")
 
 		results, err := queryLib.HTMLQuery(input, htmlQuerySelector, htmlQueryAttr)
 		if err != nil {
 			return err
+		}
+
+		if len(results) == 0 {
+			return ioutil.NoMatchError{}
 		}
 
 		for _, r := range results {

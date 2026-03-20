@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	encLib "github.com/agejevasv/swk/internal/encode"
+	inspectLib "github.com/agejevasv/swk/internal/inspect"
 	"github.com/agejevasv/swk/internal/ioutil"
 )
 
@@ -18,18 +18,18 @@ var certCmd = &cobra.Command{
 			return err
 		}
 
-		info, err := encLib.CertDecode([]byte(input))
+		info, err := inspectLib.CertDecode([]byte(input))
 		if err != nil {
 			return err
 		}
 
-		output, err := encLib.CertInfoJSON(info)
+		output, err := inspectLib.CertInfoJSON(info)
 		if err != nil {
 			return err
 		}
 		fmt.Fprintln(cmd.OutOrStdout(), string(output))
 
-		certCheckExpiry, _ := cmd.Flags().GetBool("check-expiry")
+		certCheckExpiry := ioutil.MustGetBool(cmd, "check-expiry")
 
 		if certCheckExpiry && info.IsExpired {
 			return fmt.Errorf("certificate is expired (expired at %s)", info.NotAfter.Format("2006-01-02T15:04:05Z07:00"))

@@ -20,8 +20,8 @@ var hashCmd = &cobra.Command{
 			return err
 		}
 
-		hashAlgo, _ := cmd.Flags().GetString("algo")
-		hashVerify, _ := cmd.Flags().GetString("verify")
+		hashAlgo := ioutil.MustGetString(cmd, "algo")
+		hashVerify := ioutil.MustGetString(cmd, "verify")
 
 		if hashVerify != "" {
 			ok, err := genLib.HashVerify(input, hashAlgo, hashVerify)
