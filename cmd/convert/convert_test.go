@@ -172,6 +172,171 @@ func TestMarkdown_HTML(t *testing.T) {
 	}
 }
 
+func TestBytes_ToHuman(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("bytes", "1073741824")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "GiB") {
+		t.Errorf("expected 'GiB' in output, got %q", out)
+	}
+}
+
+func TestBytes_ToBytes(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("bytes", "1GiB")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "1073741824") {
+		t.Errorf("expected '1073741824' in output, got %q", out)
+	}
+}
+
+func TestBytes_Decimal(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("bytes", "-d", "1000000000")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "GB") {
+		t.Errorf("expected 'GB' in output, got %q", out)
+	}
+}
+
+func TestChmod_Numeric(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("chmod", "--to", "symbolic", "755")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "rwxr-xr-x") {
+		t.Errorf("expected 'rwxr-xr-x', got %q", out)
+	}
+}
+
+func TestChmod_Symbolic(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("chmod", "--to", "numeric", "rwxr-xr-x")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "755") {
+		t.Errorf("expected '755', got %q", out)
+	}
+}
+
+func TestChmod_Explain(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("chmod", "755")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "Owner:") {
+		t.Errorf("expected 'Owner:' in explain output, got %q", out)
+	}
+}
+
+func TestChmod_Setuid(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("chmod", "4755")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "setuid") {
+		t.Errorf("expected 'setuid' in output, got %q", out)
+	}
+}
+
+func TestColor_RGBToHex(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("color", "--from", "rgb", "--to", "hex", "255,87,51")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(strings.ToUpper(out), "FF5733") {
+		t.Errorf("expected 'FF5733' in output, got %q", out)
+	}
+}
+
+func TestDuration_SecondsToHuman(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("duration", "86400")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "1d") {
+		t.Errorf("expected '1d', got %q", out)
+	}
+}
+
+func TestDuration_HumanToSeconds(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("duration", "2d 5h 30m")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "192600") {
+		t.Errorf("expected '192600', got %q", out)
+	}
+}
+
+func TestDuration_ExplicitTo(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("duration", "--to", "seconds", "2d 5h")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "190800") {
+		t.Errorf("expected '190800', got %q", out)
+	}
+}
+
+func TestDate_CustomLayout(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("date", "--from", "unix", "--to", "2006-01-02", "--tz", "UTC", "1700000000")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "2023-11-14") {
+		t.Errorf("expected '2023-11-14', got %q", out)
+	}
+}
+
+func TestMarkdown_PlainText(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("markdown", "**bold** text")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if strings.Contains(out, "**") {
+		t.Errorf("expected markdown stripped, got %q", out)
+	}
+}
+
+func TestCSV2JSON_Basic(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("csv2json", "name,age\nalice,30")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, `"alice"`) {
+		t.Errorf("expected '\"alice\"' in output, got %q", out)
+	}
+}
+
+func TestJSON2CSV_Basic(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("json2csv", `[{"name":"alice","age":"30"}]`)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "alice") {
+		t.Errorf("expected 'alice' in output, got %q", out)
+	}
+}
+
 func TestParseResize(t *testing.T) {
 	tests := []struct {
 		input   string

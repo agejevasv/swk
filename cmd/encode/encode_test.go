@@ -167,6 +167,83 @@ func TestJWT_Roundtrip(t *testing.T) {
 	}
 }
 
+func TestBase64_URLSafe(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("base64", "--url-safe", "hello?world")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	trimmed := strings.TrimSpace(out)
+	if strings.ContainsAny(trimmed, "+/") {
+		t.Errorf("expected URL-safe encoding without +/, got %q", trimmed)
+	}
+}
+
+func TestBase64_NoPadding(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("base64", "--no-padding", "hello")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	trimmed := strings.TrimSpace(out)
+	if strings.Contains(trimmed, "=") {
+		t.Errorf("expected no padding, got %q", trimmed)
+	}
+}
+
+func TestHash_VerifyFail(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("hash", "--verify", "0000000000000000000000000000000000000000000000000000000000000000", "hello")
+	if err == nil {
+		t.Fatal("expected error for failed verification, got nil")
+	}
+	if !strings.Contains(out, "FAILED") {
+		t.Errorf("expected 'FAILED' in output, got %q", out)
+	}
+}
+
+func TestHash_SHA512(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("hash", "--algo", "sha512", "hello")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	trimmed := strings.TrimSpace(out)
+	if len(trimmed) != 128 {
+		t.Errorf("expected 128-char SHA-512 hash, got %d chars: %q", len(trimmed), trimmed)
+	}
+}
+
+func TestJWT_EncodeNoSecret(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	_, err := executeCommand("jwt", `{"sub":"user1"}`)
+	if err == nil {
+		t.Fatal("expected error when no secret provided, got nil")
+	}
+}
+
+func TestJWT_DecodeInvalid(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	_, err := executeCommand("jwt", "-d", "not.a.jwt")
+	if err == nil {
+		t.Fatal("expected error for invalid JWT, got nil")
+	}
+}
+
+func TestJWT_VerifyWrongSecret(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	token := makeTestJWT("correct", jwt.MapClaims{"sub": "u"})
+	out, err := executeCommand("jwt", "-d", "--secret", "wrong", token)
+	// Should still decode but Valid should be false
+	if err != nil {
+		// Some implementations error on bad sig
+		return
+	}
+	if strings.Contains(out, `"valid": true`) {
+		t.Errorf("expected valid=false, got %q", out)
+	}
+}
+
 func TestQR_Terminal(t *testing.T) {
 	t.Cleanup(resetAllFlags)
 	out, err := executeCommand("qr", "https://example.com")

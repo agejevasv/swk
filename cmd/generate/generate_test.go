@@ -113,6 +113,67 @@ func TestUUID_Count3(t *testing.T) {
 	}
 }
 
+func TestUUID_V7(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("uuid", "--version", "7")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	trimmed := strings.TrimSpace(out)
+	if len(trimmed) != 36 {
+		t.Errorf("expected 36-char UUID, got %d chars: %q", len(trimmed), trimmed)
+	}
+}
+
+func TestUUID_V1(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("uuid", "--version", "1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	trimmed := strings.TrimSpace(out)
+	if len(trimmed) != 36 {
+		t.Errorf("expected 36-char UUID, got %d chars: %q", len(trimmed), trimmed)
+	}
+}
+
+func TestPassword_NoSymbols(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("password", "--no-symbols", "--length", "50")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	trimmed := strings.TrimSpace(out)
+	for _, r := range trimmed {
+		if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9')) {
+			t.Errorf("expected no symbols, got char %q in %q", string(r), trimmed)
+			break
+		}
+	}
+}
+
+func TestText_Paragraphs(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("text", "--paragraphs", "2")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if strings.TrimSpace(out) == "" {
+		t.Error("expected non-empty paragraph output")
+	}
+}
+
+func TestText_Sentences(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("text", "--sentences", "3")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if strings.TrimSpace(out) == "" {
+		t.Error("expected non-empty sentence output")
+	}
+}
+
 func TestUUID_InvalidVersion(t *testing.T) {
 	t.Cleanup(resetAllFlags)
 	_, err := executeCommand("uuid", "--version", "99")

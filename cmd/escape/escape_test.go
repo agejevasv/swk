@@ -139,3 +139,46 @@ func TestXML_Escape(t *testing.T) {
 		t.Errorf("expected '&lt;' in output, got %q", out)
 	}
 }
+
+func TestXML_Unescape(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("xml", "-u", "&lt;tag&gt;")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "<tag>") {
+		t.Errorf("expected '<tag>' in output, got %q", out)
+	}
+}
+
+func TestShell_Unescape(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	// Escape first
+	escaped, err := executeCommand("shell", "it's a test")
+	if err != nil {
+		t.Fatalf("escape error: %v", err)
+	}
+	escaped = strings.TrimSpace(escaped)
+
+	resetAllFlags()
+
+	// Then unescape
+	out, err := executeCommand("shell", "-u", escaped)
+	if err != nil {
+		t.Fatalf("unescape error: %v", err)
+	}
+	if !strings.Contains(out, "it's a test") {
+		t.Errorf("expected roundtrip to original, got %q", out)
+	}
+}
+
+func TestURL_ComponentDecode(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("url", "-u", "--component", "hello+world")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "hello world") {
+		t.Errorf("expected 'hello world', got %q", out)
+	}
+}
