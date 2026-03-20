@@ -10,9 +10,9 @@ import (
 )
 
 var uuidCmd = &cobra.Command{
-	Use:     "uuid",
+	Use:   "uuid",
 	Short: "Generate UUIDs",
-	Long:    "Generate UUIDs of various versions (1, 4, 5, 7).",
+	Long:  "Generate UUIDs of various versions (1, 4, 5, 7).",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		uuidVersion := ioutil.MustGetInt(cmd, "version")
 		uuidCount := ioutil.MustGetInt(cmd, "count")

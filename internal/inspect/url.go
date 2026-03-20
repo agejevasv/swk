@@ -9,13 +9,13 @@ import (
 
 // URLInfo holds parsed URL components.
 type URLInfo struct {
-	Scheme   string            `json:"scheme"`
-	Host     string            `json:"host"`
-	Port     string            `json:"port,omitempty"`
-	Path     string            `json:"path,omitempty"`
+	Scheme   string              `json:"scheme"`
+	Host     string              `json:"host"`
+	Port     string              `json:"port,omitempty"`
+	Path     string              `json:"path,omitempty"`
 	Query    map[string][]string `json:"query,omitempty"`
-	Fragment string            `json:"fragment,omitempty"`
-	User     string            `json:"user,omitempty"`
+	Fragment string              `json:"fragment,omitempty"`
+	User     string              `json:"user,omitempty"`
 }
 
 // ParseURL parses a URL string into its components.

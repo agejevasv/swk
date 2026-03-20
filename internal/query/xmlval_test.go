@@ -74,7 +74,7 @@ func TestValidateXML(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:  "multiple root-level elements",
+			name: "multiple root-level elements",
 			// Go xml decoder processes tokens sequentially; multiple roots are fine token-by-token.
 			input: "<a/><b/>",
 		},
@@ -92,4 +92,3 @@ func TestValidateXML(t *testing.T) {
 		})
 	}
 }
-

@@ -17,9 +17,15 @@ test-cover:
 	go test -coverprofile=coverage.out $$(go list ./... | grep -v 'github.com/agejevasv/swk$$' | grep -v 'github.com/agejevasv/swk/cmd$$')
 	go tool cover -func=coverage.out
 
-lint:
+STATICCHECK := $(shell go env GOPATH)/bin/staticcheck
+
+lint: $(STATICCHECK)
+	@test -z "$$(gofmt -s -l .)" || (gofmt -s -l . && exit 1)
 	go vet ./...
-	staticcheck ./...
+	$(STATICCHECK) ./...
+
+$(STATICCHECK):
+	go install honnef.co/go/tools/cmd/staticcheck@latest
 
 clean:
 	rm -f $(BINARY) coverage.out

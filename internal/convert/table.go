@@ -80,6 +80,8 @@ func parseJSONData(input []byte) ([]string, [][]string, error) {
 		return nil, nil, fmt.Errorf("expected JSON array, got object (use 'swk query json' to extract an array field first)")
 	}
 
+	input = unwrapSingleArray(input)
+
 	var rawArray []json.RawMessage
 	if err := json.Unmarshal(input, &rawArray); err != nil {
 		return nil, nil, fmt.Errorf("expected JSON array: %w", err)
@@ -272,4 +274,17 @@ func dataLine(cells []string, widths []int, sep string, plain bool) string {
 		}
 	}
 	return buf.String()
+}
+
+// unwrapSingleArray handles [[...]] → [...] so JSONPath output pipes into table rendering.
+func unwrapSingleArray(input []byte) []byte {
+	var outer []json.RawMessage
+	if err := json.Unmarshal(input, &outer); err != nil || len(outer) != 1 {
+		return input
+	}
+	inner := bytes.TrimSpace(outer[0])
+	if len(inner) > 0 && inner[0] == '[' {
+		return inner
+	}
+	return input
 }

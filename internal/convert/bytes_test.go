@@ -7,143 +7,143 @@ import (
 
 func TestBytesToHuman(t *testing.T) {
 	tests := []struct {
-		name   string
-		bytes  int64
+		name    string
+		bytes   int64
 		decimal bool
-		want   string
+		want    string
 	}{
 		// Zero.
 		{
-			name:   "zero_binary_false",
-			bytes:  0,
+			name:    "zero_binary_false",
+			bytes:   0,
 			decimal: false,
-			want:   "0 B",
+			want:    "0 B",
 		},
 		{
-			name:   "zero_binary_true",
-			bytes:  0,
+			name:    "zero_binary_true",
+			bytes:   0,
 			decimal: true,
-			want:   "0 B",
+			want:    "0 B",
 		},
 
 		// Small values (stays as bytes).
 		{
-			name:   "one_byte",
-			bytes:  1,
+			name:    "one_byte",
+			bytes:   1,
 			decimal: false,
-			want:   "1 B",
+			want:    "1 B",
 		},
 		{
-			name:   "small_bytes",
-			bytes:  512,
+			name:    "small_bytes",
+			bytes:   512,
 			decimal: false,
-			want:   "512 B",
+			want:    "512 B",
 		},
 
 		// 1024-based units (decimal=false uses binaryUnits with IEC labels).
 		{
-			name:   "exactly_1KiB_1024",
-			bytes:  1024,
+			name:    "exactly_1KiB_1024",
+			bytes:   1024,
 			decimal: false,
-			want:   "1 KiB",
+			want:    "1 KiB",
 		},
 		{
-			name:   "exactly_1MiB_1024",
-			bytes:  1048576,
+			name:    "exactly_1MiB_1024",
+			bytes:   1048576,
 			decimal: false,
-			want:   "1 MiB",
+			want:    "1 MiB",
 		},
 		{
-			name:   "exactly_1GiB_1024",
-			bytes:  1073741824,
+			name:    "exactly_1GiB_1024",
+			bytes:   1073741824,
 			decimal: false,
-			want:   "1 GiB",
+			want:    "1 GiB",
 		},
 		{
-			name:   "exactly_1TiB_1024",
-			bytes:  int64(math.Pow(1024, 4)),
+			name:    "exactly_1TiB_1024",
+			bytes:   int64(math.Pow(1024, 4)),
 			decimal: false,
-			want:   "1 TiB",
+			want:    "1 TiB",
 		},
 		{
-			name:   "exactly_1PiB_1024",
-			bytes:  int64(math.Pow(1024, 5)),
+			name:    "exactly_1PiB_1024",
+			bytes:   int64(math.Pow(1024, 5)),
 			decimal: false,
-			want:   "1 PiB",
+			want:    "1 PiB",
 		},
 		{
-			name:   "fractional_KiB_1024",
-			bytes:  1536,
+			name:    "fractional_KiB_1024",
+			bytes:   1536,
 			decimal: false,
-			want:   "1.5 KiB",
+			want:    "1.5 KiB",
 		},
 
 		// 1000-based units (decimal=true uses decimalUnits).
 		{
-			name:   "exactly_1KB_1000",
-			bytes:  1000,
+			name:    "exactly_1KB_1000",
+			bytes:   1000,
 			decimal: true,
-			want:   "1 KB",
+			want:    "1 KB",
 		},
 		{
-			name:   "exactly_1MB_1000",
-			bytes:  1000000,
+			name:    "exactly_1MB_1000",
+			bytes:   1000000,
 			decimal: true,
-			want:   "1 MB",
+			want:    "1 MB",
 		},
 		{
-			name:   "exactly_1GB_1000",
-			bytes:  1000000000,
+			name:    "exactly_1GB_1000",
+			bytes:   1000000000,
 			decimal: true,
-			want:   "1 GB",
+			want:    "1 GB",
 		},
 		{
-			name:   "fractional_KB_1000",
-			bytes:  1500,
+			name:    "fractional_KB_1000",
+			bytes:   1500,
 			decimal: true,
-			want:   "1.5 KB",
+			want:    "1.5 KB",
 		},
 
 		// Large value.
 		{
-			name:   "large_value_1024",
-			bytes:  5368709120,
+			name:    "large_value_1024",
+			bytes:   5368709120,
 			decimal: false,
-			want:   "5 GiB",
+			want:    "5 GiB",
 		},
 		{
-			name:   "large_value_1000",
-			bytes:  5000000000,
+			name:    "large_value_1000",
+			bytes:   5000000000,
 			decimal: true,
-			want:   "5 GB",
+			want:    "5 GB",
 		},
 
 		// Non-round values.
 		{
-			name:   "non_round_MiB",
-			bytes:  1572864,
+			name:    "non_round_MiB",
+			bytes:   1572864,
 			decimal: false,
-			want:   "1.5 MiB",
+			want:    "1.5 MiB",
 		},
 		{
-			name:   "non_round_decimal",
-			bytes:  1234567890,
+			name:    "non_round_decimal",
+			bytes:   1234567890,
 			decimal: true,
-			want:   "1.23 GB",
+			want:    "1.23 GB",
 		},
 
 		// Negative values.
 		{
-			name:   "negative_bytes",
-			bytes:  -1024,
+			name:    "negative_bytes",
+			bytes:   -1024,
 			decimal: false,
-			want:   "-1 KiB",
+			want:    "-1 KiB",
 		},
 		{
-			name:   "negative_large",
-			bytes:  -1073741824,
+			name:    "negative_large",
+			bytes:   -1073741824,
 			decimal: false,
-			want:   "-1 GiB",
+			want:    "-1 GiB",
 		},
 	}
 
@@ -349,114 +349,114 @@ func TestBytesConvert(t *testing.T) {
 	}{
 		// Pure number -> human-readable (auto-detects direction).
 		{
-			name:   "number_to_human_1024",
-			input:  "1024",
+			name:    "number_to_human_1024",
+			input:   "1024",
 			decimal: false,
-			want:   "1 KiB",
+			want:    "1 KiB",
 		},
 		{
-			name:   "number_to_human_1000",
-			input:  "1000",
+			name:    "number_to_human_1000",
+			input:   "1000",
 			decimal: true,
-			want:   "1 KB",
+			want:    "1 KB",
 		},
 		{
-			name:   "number_to_human_zero",
-			input:  "0",
+			name:    "number_to_human_zero",
+			input:   "0",
 			decimal: false,
-			want:   "0 B",
+			want:    "0 B",
 		},
 		{
-			name:   "number_to_human_large",
-			input:  "1073741824",
+			name:    "number_to_human_large",
+			input:   "1073741824",
 			decimal: false,
-			want:   "1 GiB",
+			want:    "1 GiB",
 		},
 		{
-			name:   "number_to_human_small",
-			input:  "42",
+			name:    "number_to_human_small",
+			input:   "42",
 			decimal: false,
-			want:   "42 B",
+			want:    "42 B",
 		},
 
 		// Human-readable -> bytes (auto-detects direction).
 		{
-			name:   "human_to_bytes_KB",
-			input:  "1KB",
+			name:    "human_to_bytes_KB",
+			input:   "1KB",
 			decimal: false,
-			want:   "1000",
+			want:    "1000",
 		},
 		{
-			name:   "human_to_bytes_MB",
-			input:  "1MB",
+			name:    "human_to_bytes_MB",
+			input:   "1MB",
 			decimal: false,
-			want:   "1000000",
+			want:    "1000000",
 		},
 		{
-			name:   "human_to_bytes_GiB",
-			input:  "1GiB",
+			name:    "human_to_bytes_GiB",
+			input:   "1GiB",
 			decimal: false,
-			want:   "1073741824",
+			want:    "1073741824",
 		},
 		{
-			name:   "human_to_bytes_fractional",
-			input:  "1.5MB",
+			name:    "human_to_bytes_fractional",
+			input:   "1.5MB",
 			decimal: false,
-			want:   "1500000",
+			want:    "1500000",
 		},
 		{
-			name:   "human_to_bytes_with_space",
-			input:  "100 GB",
+			name:    "human_to_bytes_with_space",
+			input:   "100 GB",
 			decimal: false,
-			want:   "100000000000",
+			want:    "100000000000",
 		},
 
 		// isPureNumber tested indirectly: signs make it a pure number.
 		{
-			name:   "negative_number_to_human",
-			input:  "-1024",
+			name:    "negative_number_to_human",
+			input:   "-1024",
 			decimal: false,
-			want:   "-1 KiB",
+			want:    "-1 KiB",
 		},
 		{
-			name:   "positive_sign_number",
-			input:  "+1048576",
+			name:    "positive_sign_number",
+			input:   "+1048576",
 			decimal: false,
-			want:   "1 MiB",
+			want:    "1 MiB",
 		},
 
 		// formatFloat tested indirectly: fractional formatting.
 		{
-			name:   "format_float_whole_number",
-			input:  "1048576",
+			name:    "format_float_whole_number",
+			input:   "1048576",
 			decimal: false,
-			want:   "1 MiB",
+			want:    "1 MiB",
 		},
 		{
-			name:   "format_float_one_decimal",
-			input:  "1536",
+			name:    "format_float_one_decimal",
+			input:   "1536",
 			decimal: false,
-			want:   "1.5 KiB",
+			want:    "1.5 KiB",
 		},
 		{
-			name:   "format_float_two_decimals",
-			input:  "1234567890",
+			name:    "format_float_two_decimals",
+			input:   "1234567890",
 			decimal: true,
-			want:   "1.23 GB",
+			want:    "1.23 GB",
 		},
 
 		// Whitespace handling.
 		{
-			name:   "whitespace_around_number",
-			input:  "  1024  ",
+			name:    "whitespace_around_number",
+			input:   "  1024  ",
 			decimal: false,
-			want:   "1 KiB",
+			want:    "1 KiB",
 		},
 		{
-			name:   "whitespace_around_human",
-			input:  "  1KB  ",
+			name:    "whitespace_around_human",
+			input:   "  1KB  ",
 			decimal: false,
-			want:   "1000",
+			want:    "1000",
 		},
 
 		// Error cases.

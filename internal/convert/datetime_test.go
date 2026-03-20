@@ -246,7 +246,6 @@ func TestConvertDateTime(t *testing.T) {
 			tz:      "UTC",
 			wantErr: true,
 		},
-
 	}
 
 	for _, tt := range tests {

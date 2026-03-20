@@ -13,7 +13,7 @@ import (
 
 var dateCmd = &cobra.Command{
 	Use:   "date [input]",
-	Short:   "Convert between date/time formats",
+	Short: "Convert between date/time formats",
 	Long: `Convert between unix timestamps, ISO 8601, RFC 2822, and human-readable formats.
 Also accepts Go time layouts (e.g. "2006-01-02", "15:04:05") as custom formats.`,
 	RunE: func(cmd *cobra.Command, args []string) error {

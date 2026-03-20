@@ -15,9 +15,9 @@ import (
 type JWTInfo struct {
 	Header    map[string]any `json:"header"`
 	Payload   map[string]any `json:"payload"`
-	Signature string                 `json:"signature"`
-	Valid     bool                   `json:"valid"`
-	ExpiredAt *time.Time             `json:"expired_at,omitempty"`
+	Signature string         `json:"signature"`
+	Valid     bool           `json:"valid"`
+	ExpiredAt *time.Time     `json:"expired_at,omitempty"`
 }
 
 func JWTEncode(payloadJSON string, secret string, keyPEM []byte, algo string) (string, error) {

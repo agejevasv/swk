@@ -21,6 +21,9 @@ jobs:
         with:
           go-version-file: go.mod
 
+      - name: Format check
+        run: test -z "$(gofmt -s -l .)" || (gofmt -s -l . && exit 1)
+
       - name: Vet
         run: go vet ./...
 
