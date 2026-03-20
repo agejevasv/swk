@@ -79,7 +79,7 @@ swk format json - < data.json
 
 ```bash
 # Number base conversion
-swk convert base --from dec --to hex 255
+swk convert base 255 --from dec --to hex
 
 # Byte sizes (default: 1024-based with IEC labels)
 swk convert bytes 1073741824           # 1 GiB
@@ -98,13 +98,13 @@ swk convert chmod 4755                 # setuid support
 
 # Color format conversion
 swk convert color '#FF5733'
-swk convert color --from rgb --to hex '255,87,51'
+swk convert color '255,87,51' --from rgb --to hex
 
 # Date/time conversion
-swk convert date --from unix --to iso 1700000000
+swk convert date 1700000000 --from unix --to iso
 swk convert date now
-swk convert date --from unix --to '2006-01-02' --tz UTC 1700000000   # 2023-11-14
-swk convert date --from '2006-01-02' --to unix '2023-11-14'
+swk convert date 1700000000 --from unix --to '2006-01-02' --tz UTC   # 2023-11-14
+swk convert date '2023-11-14' --from '2006-01-02' --to unix
 
 # Duration conversion
 swk convert duration 86400             # 1d
@@ -113,8 +113,8 @@ swk convert duration 31536000          # 1y
 swk convert duration '1y 6mo'         # 47088000
 
 # Image conversion (accepts file path)
-swk convert image --to jpeg photo.png -o photo.jpg
-swk convert image --to png --resize 200x200 large.png -o thumb.png
+swk convert image photo.png --to jpeg -o photo.jpg
+swk convert image large.png --to png --resize 200x200 -o thumb.png
 
 # JSON to YAML
 echo '{"name":"swk"}' | swk convert json2yaml
@@ -131,8 +131,8 @@ echo '[{"name":"alice","age":30}]' | swk convert json2csv
 printf 'name,age\nalice,30\n' | swk convert csv2json
 
 # Render markdown (accepts file path)
-swk convert markdown --html README.md > preview.html
-swk convert markdown --html --syntax-highlight README.md > highlighted.html
+swk convert markdown README.md --html > preview.html
+swk convert markdown README.md --html --syntax-highlight > highlighted.html
 ```
 
 ### Format (`swk format`, `swk fmt`, `swk f`)
@@ -147,12 +147,12 @@ swk convert markdown --html --syntax-highlight README.md > highlighted.html
 ```bash
 # JSON prettify/minify (accepts file path)
 swk format json data.json
-swk format json --minify config.json
-swk format json --indent 4 data.json
+swk format json config.json --minify
+swk format json data.json --indent 4
 
 # XML format (accepts file path)
 swk format xml messy.xml
-swk format xml --minify document.xml
+swk format xml document.xml --minify
 
 # JSON array as table
 echo '[{"name":"alice","age":30},{"name":"bob","age":25}]' | swk format json2table
@@ -186,7 +186,7 @@ echo 'data' | swk encode base64 --url-safe
 
 # Hash (accepts file path)
 swk encode hash README.md
-swk encode hash --algo md5 README.md
+swk encode hash README.md --algo md5
 echo -n 'hello' | swk encode hash --verify 2cf24dba...
 
 # JWT — create with HMAC
@@ -281,7 +281,7 @@ swk generate uuid --version 7
 ```bash
 # Certificate (accepts file path)
 swk inspect cert cert.pem
-swk inspect cert --check-expiry cert.pem
+swk inspect cert cert.pem --check-expiry
 
 # Cron
 swk inspect cron '*/5 * * * *'
