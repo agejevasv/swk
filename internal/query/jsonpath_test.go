@@ -18,16 +18,23 @@ func TestJSONPathQuery(t *testing.T) {
 		checkFunc func(t *testing.T, output []byte)
 	}{
 		{
-			name:  "root $ returns full document",
+			name:  "root $ returns full document wrapped in array",
 			input: `{"name":"Alice"}`,
 			query: "$",
 			checkFunc: func(t *testing.T, output []byte) {
-				var v map[string]any
+				var v []any
 				if err := json.Unmarshal(output, &v); err != nil {
 					t.Fatalf("failed to unmarshal output: %v", err)
 				}
-				if v["name"] != "Alice" {
-					t.Errorf("expected name=Alice, got %v", v["name"])
+				if len(v) != 1 {
+					t.Fatalf("expected 1 result, got %d", len(v))
+				}
+				obj, ok := v[0].(map[string]any)
+				if !ok {
+					t.Fatalf("expected object, got %T", v[0])
+				}
+				if obj["name"] != "Alice" {
+					t.Errorf("expected name=Alice, got %v", obj["name"])
 				}
 			},
 		},
@@ -36,9 +43,12 @@ func TestJSONPathQuery(t *testing.T) {
 			input: `{"name":"Alice"}`,
 			query: "$.name",
 			checkFunc: func(t *testing.T, output []byte) {
-				s := strings.TrimSpace(string(output))
-				if s != `"Alice"` {
-					t.Errorf("got %s, want \"Alice\"", s)
+				var v []any
+				if err := json.Unmarshal(output, &v); err != nil {
+					t.Fatalf("failed to unmarshal: %v", err)
+				}
+				if len(v) != 1 || v[0] != "Alice" {
+					t.Errorf("got %s, want [\"Alice\"]", strings.TrimSpace(string(output)))
 				}
 			},
 		},
@@ -47,9 +57,12 @@ func TestJSONPathQuery(t *testing.T) {
 			input: `{"a":{"b":{"c":42}}}`,
 			query: "$.a.b.c",
 			checkFunc: func(t *testing.T, output []byte) {
-				s := strings.TrimSpace(string(output))
-				if s != "42" {
-					t.Errorf("got %s, want 42", s)
+				var v []any
+				if err := json.Unmarshal(output, &v); err != nil {
+					t.Fatalf("failed to unmarshal: %v", err)
+				}
+				if len(v) != 1 || v[0] != float64(42) {
+					t.Errorf("got %s, want [42]", strings.TrimSpace(string(output)))
 				}
 			},
 		},
@@ -58,9 +71,12 @@ func TestJSONPathQuery(t *testing.T) {
 			input: `{"items":["a","b"]}`,
 			query: "$.items[0]",
 			checkFunc: func(t *testing.T, output []byte) {
-				s := strings.TrimSpace(string(output))
-				if s != `"a"` {
-					t.Errorf("got %s, want \"a\"", s)
+				var v []any
+				if err := json.Unmarshal(output, &v); err != nil {
+					t.Fatalf("failed to unmarshal: %v", err)
+				}
+				if len(v) != 1 || v[0] != "a" {
+					t.Errorf("got %s, want [\"a\"]", strings.TrimSpace(string(output)))
 				}
 			},
 		},
@@ -133,9 +149,12 @@ func TestJSONPathQuery(t *testing.T) {
 			input: bookstore,
 			query: "$.store.book[0].title",
 			checkFunc: func(t *testing.T, output []byte) {
-				s := strings.TrimSpace(string(output))
-				if s != `"Sayings"` {
-					t.Errorf("got %s, want \"Sayings\"", s)
+				var v []any
+				if err := json.Unmarshal(output, &v); err != nil {
+					t.Fatalf("failed to unmarshal: %v", err)
+				}
+				if len(v) != 1 || v[0] != "Sayings" {
+					t.Errorf("got %s, want [\"Sayings\"]", strings.TrimSpace(string(output)))
 				}
 			},
 		},
@@ -158,9 +177,12 @@ func TestJSONPathQuery(t *testing.T) {
 			input: bookstore,
 			query: "$.store.book[1].category",
 			checkFunc: func(t *testing.T, output []byte) {
-				s := strings.TrimSpace(string(output))
-				if s != `"fiction"` {
-					t.Errorf("got %s, want \"fiction\"", s)
+				var v []any
+				if err := json.Unmarshal(output, &v); err != nil {
+					t.Fatalf("failed to unmarshal: %v", err)
+				}
+				if len(v) != 1 || v[0] != "fiction" {
+					t.Errorf("got %s, want [\"fiction\"]", strings.TrimSpace(string(output)))
 				}
 			},
 		},
@@ -169,9 +191,12 @@ func TestJSONPathQuery(t *testing.T) {
 			input: generateLargeJSON(100),
 			query: "$.items[99].id",
 			checkFunc: func(t *testing.T, output []byte) {
-				s := strings.TrimSpace(string(output))
-				if s != "99" {
-					t.Errorf("got %s, want 99", s)
+				var v []any
+				if err := json.Unmarshal(output, &v); err != nil {
+					t.Fatalf("failed to unmarshal: %v", err)
+				}
+				if len(v) != 1 || v[0] != float64(99) {
+					t.Errorf("got %s, want [99]", strings.TrimSpace(string(output)))
 				}
 			},
 		},
@@ -180,9 +205,12 @@ func TestJSONPathQuery(t *testing.T) {
 			input: generateLargeJSON(100),
 			query: "$.items[0].name",
 			checkFunc: func(t *testing.T, output []byte) {
-				s := strings.TrimSpace(string(output))
-				if s != `"item0"` {
-					t.Errorf("got %s, want \"item0\"", s)
+				var v []any
+				if err := json.Unmarshal(output, &v); err != nil {
+					t.Fatalf("failed to unmarshal: %v", err)
+				}
+				if len(v) != 1 || v[0] != "item0" {
+					t.Errorf("got %s, want [\"item0\"]", strings.TrimSpace(string(output)))
 				}
 			},
 		},

@@ -32,7 +32,7 @@ var certCmd = &cobra.Command{
 		fmt.Fprintln(cmd.OutOrStdout(), string(output))
 
 		if certCheckExpiry && info.IsExpired {
-			return fmt.Errorf("certificate is expired (expired at %s)", info.NotAfter.Format("2006-01-02T15:04:05Z07:00"))
+			return ioutil.CheckFailedError{}
 		}
 
 		return nil

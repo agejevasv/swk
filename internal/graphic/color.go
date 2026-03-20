@@ -127,6 +127,9 @@ func parseRGB(input string) (uint8, uint8, uint8, error) {
 	if err != nil {
 		return 0, 0, 0, fmt.Errorf("invalid RGB blue value: %w", err)
 	}
+	if r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255 {
+		return 0, 0, 0, fmt.Errorf("RGB values must be 0-255, got (%d,%d,%d)", r, g, b)
+	}
 	return uint8(r), uint8(g), uint8(b), nil
 }
 
@@ -150,6 +153,9 @@ func parseHSL(input string) (float64, float64, float64, error) {
 	if err != nil {
 		return 0, 0, 0, fmt.Errorf("invalid HSL lightness: %w", err)
 	}
+	if h < 0 || h > 360 || sVal < 0 || sVal > 100 || l < 0 || l > 100 {
+		return 0, 0, 0, fmt.Errorf("HSL values out of range: hue must be 0-360, saturation/lightness must be 0-100")
+	}
 	return h, sVal / 100, l / 100, nil
 }
 
@@ -172,6 +178,9 @@ func parseHSV(input string) (float64, float64, float64, error) {
 	v, err := strconv.ParseFloat(strings.TrimSuffix(strings.TrimSpace(parts[2]), "%"), 64)
 	if err != nil {
 		return 0, 0, 0, fmt.Errorf("invalid HSV value: %w", err)
+	}
+	if h < 0 || h > 360 || sVal < 0 || sVal > 100 || v < 0 || v > 100 {
+		return 0, 0, 0, fmt.Errorf("HSV values out of range: hue must be 0-360, saturation/value must be 0-100")
 	}
 	return h, sVal / 100, v / 100, nil
 }
@@ -199,6 +208,9 @@ func parseCMYK(input string) (float64, float64, float64, float64, error) {
 	k, err := strconv.ParseFloat(strings.TrimSpace(parts[3]), 64)
 	if err != nil {
 		return 0, 0, 0, 0, fmt.Errorf("invalid CMYK key: %w", err)
+	}
+	if c < 0 || c > 100 || m < 0 || m > 100 || y < 0 || y > 100 || k < 0 || k > 100 {
+		return 0, 0, 0, 0, fmt.Errorf("CMYK values must be 0-100")
 	}
 	return c / 100, m / 100, y / 100, k / 100, nil
 }

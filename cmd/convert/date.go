@@ -15,7 +15,7 @@ var dateCmd = &cobra.Command{
 	Use:   "date [input]",
 	Short:   "Convert between date/time formats",
 	Long: `Convert between unix timestamps, ISO 8601, RFC 2822, and human-readable formats.
-Also accepts strftime format strings (e.g. "%Y-%m-%d", "%H:%M:%S") as custom formats.`,
+Also accepts Go time layouts (e.g. "2006-01-02", "15:04:05") as custom formats.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dtFrom := ioutil.MustGetString(cmd, "from")
 		dtTo := ioutil.MustGetString(cmd, "to")
@@ -45,8 +45,8 @@ Also accepts strftime format strings (e.g. "%Y-%m-%d", "%H:%M:%S") as custom for
 }
 
 func init() {
-	dateCmd.Flags().StringP("from", "f", "auto", "input format (unix, unixms, iso, rfc2822, human, auto, or strftime)")
-	dateCmd.Flags().StringP("to", "t", "iso", "output format (unix, unixms, iso, rfc2822, human, or strftime)")
+	dateCmd.Flags().StringP("from", "f", "auto", "input format (unix, unixms, iso, rfc2822, human, auto, or Go layout)")
+	dateCmd.Flags().StringP("to", "t", "iso", "output format (unix, unixms, iso, rfc2822, human, or Go layout)")
 	dateCmd.Flags().String("tz", "Local", "target timezone (e.g. UTC, America/New_York)")
 	Cmd.AddCommand(dateCmd)
 }

@@ -27,49 +27,41 @@ func RegexTest(input, pattern string, global bool) (*RegexResult, error) {
 
 	result := &RegexResult{}
 
+	var allLocs [][]int
 	if global {
-		allMatches := re.FindAllStringSubmatchIndex(input, -1)
-		if len(allMatches) == 0 {
-			return result, nil
-		}
-		result.Matched = true
-		for _, loc := range allMatches {
-			m := Match{
-				Value: input[loc[0]:loc[1]],
-				Start: loc[0],
-				End:   loc[1],
-			}
-			for i := 2; i < len(loc); i += 2 {
-				if loc[i] >= 0 {
-					m.Groups = append(m.Groups, input[loc[i]:loc[i+1]])
-				} else {
-					m.Groups = append(m.Groups, "")
-				}
-			}
-			result.Matches = append(result.Matches, m)
-		}
+		allLocs = re.FindAllStringSubmatchIndex(input, -1)
 	} else {
-		loc := re.FindStringSubmatchIndex(input)
-		if loc == nil {
-			return result, nil
+		if loc := re.FindStringSubmatchIndex(input); loc != nil {
+			allLocs = [][]int{loc}
 		}
-		result.Matched = true
-		m := Match{
-			Value: input[loc[0]:loc[1]],
-			Start: loc[0],
-			End:   loc[1],
-		}
-		for i := 2; i < len(loc); i += 2 {
-			if loc[i] >= 0 {
-				m.Groups = append(m.Groups, input[loc[i]:loc[i+1]])
-			} else {
-				m.Groups = append(m.Groups, "")
-			}
-		}
-		result.Matches = append(result.Matches, m)
+	}
+
+	if len(allLocs) == 0 {
+		return result, nil
+	}
+
+	result.Matched = true
+	for _, loc := range allLocs {
+		result.Matches = append(result.Matches, buildMatch(input, loc))
 	}
 
 	return result, nil
+}
+
+func buildMatch(input string, loc []int) Match {
+	m := Match{
+		Value: input[loc[0]:loc[1]],
+		Start: loc[0],
+		End:   loc[1],
+	}
+	for i := 2; i < len(loc); i += 2 {
+		if loc[i] >= 0 {
+			m.Groups = append(m.Groups, input[loc[i]:loc[i+1]])
+		} else {
+			m.Groups = append(m.Groups, "")
+		}
+	}
+	return m
 }
 
 func RegexReplace(input, pattern, replacement string) (string, error) {

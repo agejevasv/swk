@@ -82,12 +82,13 @@ func TestCert_CheckExpiry_Expired(t *testing.T) {
 	t.Cleanup(resetAllFlags)
 	now := time.Now()
 	certPEM := generateTestCert(now.Add(-48*time.Hour), now.Add(-24*time.Hour))
-	_, err := executeCommandWithStdin(certPEM, "cert", "--check-expiry")
+	out, err := executeCommandWithStdin(certPEM, "cert", "--check-expiry")
 	if err == nil {
 		t.Fatal("expected error for expired cert, got nil")
 	}
-	if !strings.Contains(strings.ToLower(err.Error()), "expired") {
-		t.Errorf("expected 'expired' in error message, got %q", err.Error())
+	// JSON output still goes to stdout; the error is silent (exit code only).
+	if !strings.Contains(out, "test.example.com") {
+		t.Errorf("expected JSON output on stdout, got %q", out)
 	}
 }
 

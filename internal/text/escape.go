@@ -16,19 +16,16 @@ func Escape(input string, mode string) (string, error) {
 		return escapeXML(input), nil
 	case "html":
 		return html.EscapeString(input), nil
-	case "c":
-		q := strconv.Quote(input)
-		return q[1 : len(q)-1], nil
 	case "shell":
 		return escapeShell(input), nil
 	default:
-		return "", fmt.Errorf("unsupported escape mode: %s (supported: json, xml, html, c, shell)", mode)
+		return "", fmt.Errorf("unsupported escape mode: %s (supported: json, xml, html, shell)", mode)
 	}
 }
 
 func Unescape(input string, mode string) (string, error) {
 	switch mode {
-	case "json", "c":
+	case "json":
 		s, err := strconv.Unquote(`"` + input + `"`)
 		if err != nil {
 			return "", fmt.Errorf("invalid escaped string: %w", err)
@@ -41,7 +38,7 @@ func Unescape(input string, mode string) (string, error) {
 	case "shell":
 		return unescapeShell(input), nil
 	default:
-		return "", fmt.Errorf("unsupported unescape mode: %s (supported: json, xml, html, c, shell)", mode)
+		return "", fmt.Errorf("unsupported unescape mode: %s (supported: json, xml, html, shell)", mode)
 	}
 }
 

@@ -158,37 +158,37 @@ func TestConvertDateTime(t *testing.T) {
 			want:    "1700000000",
 		},
 
-		// Custom strftime as --to format.
+		// Custom Go layout as --to format.
 		{
-			name:    "unix_to_strftime_date",
+			name:    "unix_to_go_layout_date",
 			input:   "1700000000",
 			fromFmt: "unix",
-			toFmt:   "%Y-%m-%d",
+			toFmt:   "2006-01-02",
 			tz:      "UTC",
 			want:    "2023-11-14",
 		},
 		{
-			name:    "unix_to_strftime_time",
+			name:    "unix_to_go_layout_time",
 			input:   "1700000000",
 			fromFmt: "unix",
-			toFmt:   "%H:%M:%S",
+			toFmt:   "15:04:05",
 			tz:      "UTC",
 			want:    "22:13:20",
 		},
 		{
-			name:    "unix_to_strftime_full",
+			name:    "unix_to_go_layout_full",
 			input:   "1700000000",
 			fromFmt: "unix",
-			toFmt:   "%Y-%m-%d %H:%M:%S",
+			toFmt:   "2006-01-02 15:04:05",
 			tz:      "UTC",
 			want:    "2023-11-14 22:13:20",
 		},
 
-		// Custom strftime as --from format.
+		// Custom Go layout as --from format.
 		{
-			name:    "strftime_to_iso",
+			name:    "go_layout_to_iso",
 			input:   "2023-11-14",
-			fromFmt: "%Y-%m-%d",
+			fromFmt: "2006-01-02",
 			toFmt:   "iso",
 			tz:      "UTC",
 			want:    "2023-11-14T00:00:00Z",
@@ -229,11 +229,11 @@ func TestConvertDateTime(t *testing.T) {
 			tz:      "Invalid/Zone",
 			wantErr: true,
 		},
-		// Custom strftime: a layout that doesn't match the input will error.
+		// Custom Go layout: a layout that doesn't match the input will error.
 		{
-			name:    "strftime_from_mismatch",
+			name:    "go_layout_from_mismatch",
 			input:   "not-a-date",
-			fromFmt: "%Y-%m-%d",
+			fromFmt: "2006-01-02",
 			toFmt:   "iso",
 			tz:      "UTC",
 			wantErr: true,

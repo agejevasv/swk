@@ -32,7 +32,8 @@ var hashCmd = &cobra.Command{
 				fmt.Fprintln(cmd.OutOrStdout(), "OK")
 			} else {
 				computed, _ := encLib.Hash(input, hashAlgo)
-				return fmt.Errorf("hash mismatch\nexpected: %s\ngot:      %s", hashVerify, computed)
+				fmt.Fprintf(cmd.OutOrStdout(), "FAILED\nexpected: %s\ngot:      %s\n", hashVerify, computed)
+				return ioutil.CheckFailedError{}
 			}
 			return nil
 		}

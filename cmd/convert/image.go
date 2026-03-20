@@ -41,7 +41,7 @@ var imageCmd = &cobra.Command{
 		}
 
 		if imageOutput != "" {
-			return os.WriteFile(imageOutput, output, 0644)
+			return os.WriteFile(imageOutput, output, 0o666)
 		}
 		_, err = cmd.OutOrStdout().Write(output)
 		return err

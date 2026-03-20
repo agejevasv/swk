@@ -24,14 +24,7 @@ func JSONPathQuery(input []byte, query string) ([]byte, error) {
 		return nil, nil
 	}
 
-	var output any
-	if len(results) == 1 {
-		output = results[0]
-	} else {
-		output = results
-	}
-
-	out, err := json.MarshalIndent(output, "", "  ")
+	out, err := json.MarshalIndent(results, "", "  ")
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal result: %w", err)
 	}

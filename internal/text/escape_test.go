@@ -35,11 +35,6 @@ func TestEscape(t *testing.T) {
 		{name: "html gt", input: ">", mode: "html", want: "&gt;"},
 		{name: "html empty", input: "", mode: "html", want: ""},
 
-		// C escaping
-		{name: "c newline", input: "hello\nworld", mode: "c", want: `hello\nworld`},
-		{name: "c tab", input: "hello\tworld", mode: "c", want: `hello\tworld`},
-		{name: "c empty", input: "", mode: "c", want: ""},
-
 		// Shell escaping
 		{name: "shell simple space", input: "hello world", mode: "shell", want: "'hello world'"},
 		{name: "shell single quote", input: "it's", mode: "shell", want: `'it'\''s'`},
@@ -83,8 +78,6 @@ func TestUnescape(t *testing.T) {
 		{name: "xml unescape all", input: "&amp; &lt; &gt; &quot; &apos;", mode: "xml", want: `& < > " '`},
 		{name: "html unescape", input: "&amp; &lt; &gt;", mode: "html", want: "& < >"},
 		{name: "shell unescape", input: "'hello world'", mode: "shell", want: "hello world"},
-		{name: "c unescape backslash", input: `hello\\world`, mode: "c", want: `hello\world`},
-		{name: "c unescape tab", input: `hello\tworld`, mode: "c", want: "hello\tworld"},
 		{name: "invalid mode", input: "test", mode: "bogus", wantErr: true},
 	}
 
@@ -108,7 +101,7 @@ func TestUnescape(t *testing.T) {
 }
 
 func TestEscapeUnescapeRoundtrip(t *testing.T) {
-	modes := []string{"json", "xml", "html", "c", "shell"}
+	modes := []string{"json", "xml", "html", "shell"}
 	inputs := []string{
 		"hello world",
 		"line1\nline2",
