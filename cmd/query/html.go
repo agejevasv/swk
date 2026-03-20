@@ -2,17 +2,11 @@ package query
 
 import (
 	"fmt"
-	"strings"
 
-	"github.com/PuerkitoBio/goquery"
 	"github.com/spf13/cobra"
 
 	"github.com/agejevasv/swk/internal/ioutil"
-)
-
-var (
-	htmlQuerySelector string
-	htmlQueryAttr     string
+	queryLib "github.com/agejevasv/swk/internal/query"
 )
 
 var htmlCmd = &cobra.Command{
@@ -27,33 +21,30 @@ var htmlCmd = &cobra.Command{
   # Extract specific element
   echo '<div class="x"><span>hi</span></div>' | swk query html -q 'div.x span'`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		input, err := ioutil.ReadInputString(args, cmd.InOrStdin())
+		input, err := ioutil.ReadFileInputString(args, cmd.InOrStdin())
 		if err != nil {
 			return err
 		}
 
-		doc, err := goquery.NewDocumentFromReader(strings.NewReader(input))
+		htmlQuerySelector, _ := cmd.Flags().GetString("query")
+		htmlQueryAttr, _ := cmd.Flags().GetString("attr")
+
+		results, err := queryLib.HTMLQuery(input, htmlQuerySelector, htmlQueryAttr)
 		if err != nil {
-			return fmt.Errorf("parsing HTML: %w", err)
+			return err
 		}
 
-		doc.Find(htmlQuerySelector).Each(func(i int, s *goquery.Selection) {
-			if htmlQueryAttr != "" {
-				if val, exists := s.Attr(htmlQueryAttr); exists {
-					fmt.Fprintln(cmd.OutOrStdout(), val)
-				}
-			} else {
-				fmt.Fprintln(cmd.OutOrStdout(), strings.TrimSpace(s.Text()))
-			}
-		})
+		for _, r := range results {
+			fmt.Fprintln(cmd.OutOrStdout(), r)
+		}
 
 		return nil
 	},
 }
 
 func init() {
-	htmlCmd.Flags().StringVarP(&htmlQuerySelector, "query", "q", "", "CSS selector")
-	htmlCmd.Flags().StringVar(&htmlQueryAttr, "attr", "", "extract attribute value instead of text")
+	htmlCmd.Flags().StringP("query", "q", "", "CSS selector")
+	htmlCmd.Flags().String("attr", "", "extract attribute value instead of text")
 	htmlCmd.MarkFlagRequired("query")
 	Cmd.AddCommand(htmlCmd)
 }

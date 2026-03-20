@@ -10,11 +10,6 @@ import (
 	"github.com/agejevasv/swk/internal/ioutil"
 )
 
-var (
-	cronNext    int
-	cronExplain bool
-)
-
 var cronCmd = &cobra.Command{
 	Use:     "cron [expression]",
 	Aliases: []string{"cr"},
@@ -24,6 +19,9 @@ var cronCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+
+		cronNext, _ := cmd.Flags().GetInt("next")
+		cronExplain, _ := cmd.Flags().GetBool("explain")
 
 		showExplain := cronExplain || !cmd.Flags().Changed("next")
 		showNext := cmd.Flags().Changed("next") || !cronExplain
@@ -55,7 +53,7 @@ var cronCmd = &cobra.Command{
 }
 
 func init() {
-	cronCmd.Flags().IntVarP(&cronNext, "next", "n", 5, "show next N scheduled runs")
-	cronCmd.Flags().BoolVarP(&cronExplain, "explain", "e", false, "show human-readable explanation only")
+	cronCmd.Flags().IntP("next", "n", 5, "show next N scheduled runs")
+	cronCmd.Flags().BoolP("explain", "e", false, "show human-readable explanation only")
 	Cmd.AddCommand(cronCmd)
 }

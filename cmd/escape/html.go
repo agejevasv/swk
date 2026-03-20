@@ -9,8 +9,6 @@ import (
 	"github.com/agejevasv/swk/internal/ioutil"
 )
 
-var htmlDecode bool
-
 var htmlCmd = &cobra.Command{
 	Use:   "html [input]",
 	Short: "HTML entity escape or unescape",
@@ -19,6 +17,8 @@ var htmlCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+
+		htmlDecode, _ := cmd.Flags().GetBool("unescape")
 
 		if htmlDecode {
 			fmt.Fprintln(cmd.OutOrStdout(), encLib.HTMLDecode(input))
@@ -31,6 +31,6 @@ var htmlCmd = &cobra.Command{
 }
 
 func init() {
-	htmlCmd.Flags().BoolVarP(&htmlDecode, "unescape", "u", false, "unescape HTML entities")
+	htmlCmd.Flags().BoolP("unescape", "u", false, "unescape HTML entities")
 	Cmd.AddCommand(htmlCmd)
 }

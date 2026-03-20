@@ -32,16 +32,35 @@ a:hover { text-decoration: underline; }
 img { max-width: 100%%; }
 hr { border: none; border-top: 1px solid #ddd; margin: 2em 0; }
 </style>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/{{theme}}.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-<script>hljs.highlightAll();</script>
-</head>
+%s</head>
 <body>
 %s
 </body>
 </html>`
 
-func RenderMarkdown(input []byte, toHTML bool, theme string) ([]byte, error) {
+const highlightSnippet = `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/{{theme}}.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+`
+
+// Precompiled regexes for markdown stripping.
+var (
+	reHeading    = regexp.MustCompile(`(?m)^#{1,6}\s+`)
+	reBold       = regexp.MustCompile(`\*\*(.+?)\*\*`)
+	reBold2      = regexp.MustCompile(`__(.+?)__`)
+	reItalic     = regexp.MustCompile(`\*(.+?)\*`)
+	reItalic2    = regexp.MustCompile(`_(.+?)_`)
+	reStrike     = regexp.MustCompile(`~~(.+?)~~`)
+	reCode       = regexp.MustCompile("`([^`]+)`")
+	reCodeBlock  = regexp.MustCompile("(?s)```[a-z]*\n?(.*?)```")
+	reLink       = regexp.MustCompile(`\[([^\]]+)\]\([^)]+\)`)
+	reImg        = regexp.MustCompile(`!\[([^\]]*)\]\([^)]+\)`)
+	reHR         = regexp.MustCompile(`(?m)^[-*_]{3,}\s*$`)
+	reBlockquote = regexp.MustCompile(`(?m)^>\s?`)
+	reBlankLines = regexp.MustCompile(`\n{3,}`)
+)
+
+func RenderMarkdown(input []byte, toHTML bool, syntaxHighlight bool, theme string) ([]byte, error) {
 	if toHTML {
 		var buf bytes.Buffer
 		md := goldmark.New(goldmark.WithExtensions(
@@ -53,53 +72,33 @@ func RenderMarkdown(input []byte, toHTML bool, theme string) ([]byte, error) {
 		if err := md.Convert(input, &buf); err != nil {
 			return nil, err
 		}
-		if theme == "" {
-			theme = "github"
+
+		highlight := ""
+		if syntaxHighlight {
+			if theme == "" {
+				theme = "github"
+			}
+			highlight = strings.ReplaceAll(highlightSnippet, "{{theme}}", theme)
 		}
-		tmpl := strings.ReplaceAll(htmlTemplate, "{{theme}}", theme)
-		page := fmt.Sprintf(tmpl, buf.String())
+		page := fmt.Sprintf(htmlTemplate, highlight, buf.String())
 		return []byte(page), nil
 	}
 	return []byte(stripMarkdown(string(input))), nil
 }
 
 func stripMarkdown(s string) string {
-	re := regexp.MustCompile(`(?m)^#{1,6}\s+`)
-	s = re.ReplaceAllString(s, "")
-
-	reBold := regexp.MustCompile(`\*\*(.+?)\*\*`)
+	s = reHeading.ReplaceAllString(s, "")
 	s = reBold.ReplaceAllString(s, "$1")
-	reBold2 := regexp.MustCompile(`__(.+?)__`)
 	s = reBold2.ReplaceAllString(s, "$1")
-
-	reItalic := regexp.MustCompile(`\*(.+?)\*`)
 	s = reItalic.ReplaceAllString(s, "$1")
-	reItalic2 := regexp.MustCompile(`_(.+?)_`)
 	s = reItalic2.ReplaceAllString(s, "$1")
-
-	reStrike := regexp.MustCompile(`~~(.+?)~~`)
 	s = reStrike.ReplaceAllString(s, "$1")
-
-	reCode := regexp.MustCompile("`([^`]+)`")
 	s = reCode.ReplaceAllString(s, "$1")
-
-	reCodeBlock := regexp.MustCompile("(?s)```[a-z]*\n?(.*?)```")
 	s = reCodeBlock.ReplaceAllString(s, "$1")
-
-	reLink := regexp.MustCompile(`\[([^\]]+)\]\([^)]+\)`)
 	s = reLink.ReplaceAllString(s, "$1")
-
-	reImg := regexp.MustCompile(`!\[([^\]]*)\]\([^)]+\)`)
 	s = reImg.ReplaceAllString(s, "$1")
-
-	reHR := regexp.MustCompile(`(?m)^[-*_]{3,}\s*$`)
 	s = reHR.ReplaceAllString(s, "")
-
-	reBlockquote := regexp.MustCompile(`(?m)^>\s?`)
 	s = reBlockquote.ReplaceAllString(s, "")
-
-	reBlankLines := regexp.MustCompile(`\n{3,}`)
 	s = reBlankLines.ReplaceAllString(s, "\n\n")
-
 	return strings.TrimSpace(s) + "\n"
 }

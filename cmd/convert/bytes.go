@@ -9,8 +9,6 @@ import (
 	"github.com/agejevasv/swk/internal/ioutil"
 )
 
-var bytesDecimal bool
-
 var bytesCmd = &cobra.Command{
 	Use:   "bytes [input]",
 	Short: "Convert between byte sizes and human-readable formats",
@@ -21,6 +19,7 @@ var bytesCmd = &cobra.Command{
 			return err
 		}
 
+		bytesDecimal, _ := cmd.Flags().GetBool("decimal")
 		result, err := convLib.BytesConvert(input, bytesDecimal)
 		if err != nil {
 			return err
@@ -32,6 +31,6 @@ var bytesCmd = &cobra.Command{
 }
 
 func init() {
-	bytesCmd.Flags().BoolVarP(&bytesDecimal, "decimal", "d", false, "use decimal units (1000-based)")
+	bytesCmd.Flags().BoolP("decimal", "d", false, "use decimal units (1000-based)")
 	Cmd.AddCommand(bytesCmd)
 }

@@ -15,8 +15,6 @@ import (
 	queryCmd "github.com/agejevasv/swk/cmd/query"
 )
 
-var showVersion bool
-
 // Version is set via ldflags: -X github.com/agejevasv/swk/cmd.Version=v1.0.0
 var Version = "dev"
 
@@ -26,6 +24,7 @@ var rootCmd = &cobra.Command{
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	Run: func(cmd *cobra.Command, args []string) {
+		showVersion, _ := cmd.Flags().GetBool("version")
 		if showVersion {
 			commit, date, dirty := vcsInfo()
 			dirtyMark := ""
@@ -40,7 +39,7 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.Flags().BoolVarP(&showVersion, "version", "v", false, "print version")
+	rootCmd.Flags().BoolP("version", "v", false, "print version")
 
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})

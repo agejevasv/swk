@@ -9,9 +9,6 @@ import (
 	"github.com/agejevasv/swk/internal/ioutil"
 )
 
-var urlDecode bool
-var urlComponent bool
-
 var urlCmd = &cobra.Command{
 	Use:   "url [input]",
 	Short: "URL percent-encode or decode",
@@ -20,6 +17,9 @@ var urlCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+
+		urlDecode, _ := cmd.Flags().GetBool("unescape")
+		urlComponent, _ := cmd.Flags().GetBool("component")
 
 		if urlDecode {
 			result, err := encLib.URLDecode(input, urlComponent)
@@ -37,7 +37,7 @@ var urlCmd = &cobra.Command{
 }
 
 func init() {
-	urlCmd.Flags().BoolVarP(&urlDecode, "unescape", "u", false, "decode URL-encoded input")
-	urlCmd.Flags().BoolVarP(&urlComponent, "component", "c", false, "use component encoding (QueryEscape)")
+	urlCmd.Flags().BoolP("unescape", "u", false, "decode URL-encoded input")
+	urlCmd.Flags().BoolP("component", "c", false, "use component encoding (QueryEscape)")
 	Cmd.AddCommand(urlCmd)
 }

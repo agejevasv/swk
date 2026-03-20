@@ -9,13 +9,6 @@ import (
 )
 
 func resetAllFlags() {
-	htmlDecode = false
-	jsonUnescape = false
-	shellUnescape = false
-	urlDecode = false
-	urlComponent = false
-	xmlUnescape = false
-
 	for _, sub := range Cmd.Commands() {
 		sub.Flags().VisitAll(func(f *pflag.Flag) {
 			f.Value.Set(f.DefValue)

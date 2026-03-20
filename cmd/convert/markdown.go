@@ -9,22 +9,21 @@ import (
 	textLib "github.com/agejevasv/swk/internal/text"
 )
 
-var (
-	mdHTML  bool
-	mdTheme string
-)
-
 var markdownCmd = &cobra.Command{
 	Use:     "markdown [text]",
 	Aliases: []string{"md"},
 	Short:   "Render markdown to HTML or plain text",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		input, err := ioutil.ReadInputString(args, cmd.InOrStdin())
+		input, err := ioutil.ReadFileInputString(args, cmd.InOrStdin())
 		if err != nil {
 			return err
 		}
 
-		result, err := textLib.RenderMarkdown([]byte(input), mdHTML, mdTheme)
+		mdHTML, _ := cmd.Flags().GetBool("html")
+		syntaxHL, _ := cmd.Flags().GetBool("syntax-highlight")
+		theme, _ := cmd.Flags().GetString("theme")
+
+		result, err := textLib.RenderMarkdown([]byte(input), mdHTML, syntaxHL, theme)
 		if err != nil {
 			return err
 		}
@@ -35,7 +34,8 @@ var markdownCmd = &cobra.Command{
 }
 
 func init() {
-	markdownCmd.Flags().BoolVar(&mdHTML, "html", false, "Output HTML (default is plain text)")
-	markdownCmd.Flags().StringVar(&mdTheme, "theme", "github", "highlight.js theme (github, monokai, dracula, nord, tokyo-night-dark, etc.)")
+	markdownCmd.Flags().Bool("html", false, "Output HTML (default is plain text)")
+	markdownCmd.Flags().Bool("syntax-highlight", false, "Include highlight.js for syntax highlighting (requires --html)")
+	markdownCmd.Flags().String("theme", "github", "highlight.js theme (github, monokai, dracula, nord, tokyo-night-dark, etc.)")
 	Cmd.AddCommand(markdownCmd)
 }

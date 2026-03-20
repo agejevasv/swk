@@ -9,8 +9,6 @@ import (
 	"github.com/agejevasv/swk/internal/ioutil"
 )
 
-var chmodTo string
-
 var chmodCmd = &cobra.Command{
 	Use:   "chmod [input]",
 	Short: "Convert between numeric and symbolic file permissions",
@@ -21,6 +19,7 @@ var chmodCmd = &cobra.Command{
 			return err
 		}
 
+		chmodTo, _ := cmd.Flags().GetString("to")
 		switch chmodTo {
 		case "numeric":
 			result, err := convLib.ChmodToNumeric(input)
@@ -47,6 +46,6 @@ var chmodCmd = &cobra.Command{
 }
 
 func init() {
-	chmodCmd.Flags().StringVar(&chmodTo, "to", "", "output format: numeric or symbolic")
+	chmodCmd.Flags().String("to", "", "output format: numeric or symbolic")
 	Cmd.AddCommand(chmodCmd)
 }

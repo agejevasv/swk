@@ -19,6 +19,7 @@ test-cover:
 
 lint:
 	go vet ./...
+	staticcheck ./...
 
 clean:
 	rm -f $(BINARY) coverage.out

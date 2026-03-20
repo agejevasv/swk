@@ -8,22 +8,20 @@ import (
 	genLib "github.com/agejevasv/swk/internal/gen"
 )
 
-var (
-	pwLength    int
-	pwCount     int
-	pwNoUpper   bool
-	pwNoLower   bool
-	pwNoDigits  bool
-	pwNoSymbols bool
-	pwExclude   string
-)
-
 var passwordCmd = &cobra.Command{
 	Use:     "password",
 	Aliases: []string{"pw"},
 	Short:   "Generate random passwords",
 	Long:    "Generate cryptographically secure random passwords.",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		pwLength, _ := cmd.Flags().GetInt("length")
+		pwCount, _ := cmd.Flags().GetInt("count")
+		pwNoUpper, _ := cmd.Flags().GetBool("no-upper")
+		pwNoLower, _ := cmd.Flags().GetBool("no-lower")
+		pwNoDigits, _ := cmd.Flags().GetBool("no-digits")
+		pwNoSymbols, _ := cmd.Flags().GetBool("no-symbols")
+		pwExclude, _ := cmd.Flags().GetString("exclude")
+
 		opts := genLib.PasswordOpts{
 			Length:  pwLength,
 			Upper:   !pwNoUpper,
@@ -45,12 +43,12 @@ var passwordCmd = &cobra.Command{
 }
 
 func init() {
-	passwordCmd.Flags().IntVarP(&pwLength, "length", "l", 16, "password length")
-	passwordCmd.Flags().IntVarP(&pwCount, "count", "n", 1, "number of passwords to generate")
-	passwordCmd.Flags().BoolVar(&pwNoUpper, "no-upper", false, "exclude uppercase letters")
-	passwordCmd.Flags().BoolVar(&pwNoLower, "no-lower", false, "exclude lowercase letters")
-	passwordCmd.Flags().BoolVar(&pwNoDigits, "no-digits", false, "exclude digits")
-	passwordCmd.Flags().BoolVar(&pwNoSymbols, "no-symbols", false, "exclude symbols")
-	passwordCmd.Flags().StringVar(&pwExclude, "exclude", "", "specific characters to exclude")
+	passwordCmd.Flags().IntP("length", "l", 16, "password length")
+	passwordCmd.Flags().IntP("count", "n", 1, "number of passwords to generate")
+	passwordCmd.Flags().Bool("no-upper", false, "exclude uppercase letters")
+	passwordCmd.Flags().Bool("no-lower", false, "exclude lowercase letters")
+	passwordCmd.Flags().Bool("no-digits", false, "exclude digits")
+	passwordCmd.Flags().Bool("no-symbols", false, "exclude symbols")
+	passwordCmd.Flags().String("exclude", "", "specific characters to exclude")
 	Cmd.AddCommand(passwordCmd)
 }

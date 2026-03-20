@@ -37,10 +37,17 @@ make install
 ## Usage
 
 ```
-swk <category> <command> [input] [flags]
+swk <category> <command> [file|input] [flags]
 ```
 
-Every command reads from **stdin** when no argument is given, writes to **stdout**, and sends errors to **stderr**.
+Every command reads from **stdin** when no argument is given, writes to **stdout**, and sends errors to **stderr**. Document-oriented commands (json, xml, markdown, hash, etc.) accept a **file path** as the argument — if the file exists, its contents are read automatically. Use `-` to explicitly read stdin.
+
+```bash
+# These are equivalent:
+cat data.json | swk convert json
+swk convert json data.json
+swk convert json - < data.json
+```
 
 Print version:
 
@@ -65,7 +72,7 @@ swk -v
 | `convert image` | `c img` | Convert image formats, resize |
 | `convert json` | `c j` | Convert and format JSON (yaml, csv) |
 | `convert markdown` | `c md` | Render markdown to HTML or plain text |
-| `convert table` | `c table` | Render JSON or CSV as a formatted table |
+| `convert table` | `c table` | Render a JSON array or CSV as a formatted table |
 | `convert xml` | `c x` | Format (prettify/minify) XML |
 
 ```bash
@@ -100,13 +107,13 @@ swk convert duration '2d 5h 30m'      # 190200
 swk convert duration 31536000          # 1y
 swk convert duration '1y 6mo'         # 47088000
 
-# Image conversion
-swk convert image --to jpeg -i photo.png -o photo.jpg
-swk convert image --to png --resize 200x200 -i large.png -o thumb.png
+# Image conversion (accepts file path or stdin)
+swk convert image --to jpeg photo.png -o photo.jpg
+swk convert image --to png --resize 200x200 large.png -o thumb.png
 
-# JSON prettify/minify
-echo '{"a":1,"b":2}' | swk convert json
-cat config.json | swk convert json --minify
+# JSON prettify/minify (accepts file path)
+swk convert json data.json
+swk convert json --minify config.json
 
 # JSON to YAML
 echo '{"name":"swk"}' | swk convert json --to yaml
@@ -120,17 +127,23 @@ echo '[{"name":"alice","age":30}]' | swk convert json --to csv
 # CSV to JSON
 echo 'name,age\nalice,30' | swk convert json --from csv
 
-# Render markdown
-cat README.md | swk convert markdown --html > preview.html
+# Render markdown (accepts file path)
+swk convert markdown --html README.md > preview.html
+swk convert markdown --html --syntax-highlight README.md > highlighted.html
 
-# JSON/CSV as table
+# JSON array as table
 echo '[{"name":"alice","age":30},{"name":"bob","age":25}]' | swk convert table
 echo '[{"name":"alice"}]' | swk convert table --style simple
 printf 'name,age\nalice,30\n' | swk convert table --from csv
 
-# XML format
-cat messy.xml | swk convert xml
-cat document.xml | swk convert xml --minify
+# Extract nested array, then render as table
+echo '{"meta":"v1","users":[{"name":"alice"},{"name":"bob"}]}' \
+  | swk query json -q '$.users' \
+  | swk convert table
+
+# XML format (accepts file path)
+swk convert xml messy.xml
+swk convert xml --minify document.xml
 ```
 
 ### Encode (`swk encode`)
@@ -148,9 +161,9 @@ echo 'hello world' | swk encode base64
 echo 'aGVsbG8gd29ybGQ=' | swk encode base64 -d
 echo 'data' | swk encode base64 --url-safe
 
-# Hash
-echo -n 'hello' | swk encode hash
-echo -n 'hello' | swk encode hash --algo md5
+# Hash (accepts file path)
+swk encode hash README.md
+swk encode hash --algo md5 README.md
 echo -n 'hello' | swk encode hash --verify 2cf24dba...
 
 # JWT
@@ -232,17 +245,17 @@ swk generate uuid --version 7
 | `inspect url` | | Parse URL into components |
 
 ```bash
-# Certificate
-cat cert.pem | swk inspect cert
-swk inspect cert --check-expiry < cert.pem
+# Certificate (accepts file path)
+swk inspect cert cert.pem
+swk inspect cert --check-expiry cert.pem
 
 # Cron
 swk inspect cron '*/5 * * * *'
 swk inspect cron --explain '0 9 * * 1-5'
 swk inspect cron --next 3 '0 9 * * MON'
 
-# Text stats
-cat essay.txt | swk inspect text
+# Text stats (accepts file path)
+swk inspect text essay.txt
 echo 'hello world' | swk inspect text --json
 
 # URL parsing
@@ -258,14 +271,14 @@ swk inspect url 'https://example.com:8080/api/v1/users?page=1&limit=10#section'
 | `query regex` | `q re` | Match/replace with regular expressions |
 
 ```bash
-# HTML (CSS selectors)
+# HTML (CSS selectors — accepts file path)
 curl -s https://example.com | swk query html -q 'a' --attr href
-cat page.html | swk query html -q 'div.content p'
+swk query html -q 'div.content p' page.html
 
-# JSON (JSONPath)
-echo '{"users":[{"name":"Alice"},{"name":"Bob"}]}' | swk query json -q '$.users[*].name'
+# JSON (JSONPath — accepts file path)
+swk query json -q '$.users[*].name' data.json
 
-# Regex
+# Regex (accepts file path)
 echo '2024-01-15 hello 2024-02-20' | swk query regex -p '\d{4}-\d{2}-\d{2}' -g
 echo 'John:30' | swk query regex -p '(\w+):(\d+)' --groups
 echo 'foo bar baz' | swk query regex -p 'bar' -r 'qux'
@@ -288,11 +301,16 @@ cat config.yaml | swk convert json --from yaml | swk convert json -m | pbcopy
 # Fetch API → format → as table
 curl -s https://api.example.com/users | swk convert table
 
+# Extract nested array → table
+echo '{"status":"ok","items":[{"id":1,"name":"foo"},{"id":2,"name":"bar"}]}' \
+  | swk query json -q '$.items' \
+  | swk convert table
+
 # Duration roundtrip
 swk convert duration '2d 5h' --to seconds | swk convert duration --to human
 
 # CSV → JSON → query with JSONPath
-cat data.csv | swk convert json --from csv | swk query json -q '$..[?(@.age>30)]'
+swk convert json --from csv data.csv | swk query json -q '$..[?(@.age>30)]'
 
 # Scrape links from a webpage
 curl -s https://example.com | swk query html -q 'a' --attr href
@@ -316,7 +334,7 @@ swk completion fish > ~/.config/fish/completions/swk.fish
 ```bash
 make test          # run all tests
 make test-verbose  # run with verbose output
-make lint          # run go vet
+make lint          # run go vet + staticcheck
 ```
 
 ## License

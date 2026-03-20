@@ -2,7 +2,6 @@ package convert
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -10,37 +9,23 @@ import (
 	"github.com/spf13/cobra"
 
 	graphicLib "github.com/agejevasv/swk/internal/graphic"
-)
-
-var (
-	imageToFormat string
-	imageQuality  int
-	imageResize   string
-	imageInput    string
-	imageOutput   string
+	"github.com/agejevasv/swk/internal/ioutil"
 )
 
 var imageCmd = &cobra.Command{
-	Use:     "image",
+	Use:     "image [file]",
 	Aliases: []string{"img"},
 	Short:   "Convert image formats",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		var input []byte
-		var err error
-		if imageInput != "" {
-			input, err = os.ReadFile(imageInput)
-			if err != nil {
-				return fmt.Errorf("reading input file: %w", err)
-			}
-		} else {
-			input, err = io.ReadAll(cmd.InOrStdin())
-			if err != nil {
-				return fmt.Errorf("reading stdin: %w", err)
-			}
-			if len(input) == 0 {
-				return fmt.Errorf("no input provided")
-			}
+		input, err := ioutil.ReadFileInput(args, cmd.InOrStdin())
+		if err != nil {
+			return err
 		}
+
+		imageToFormat, _ := cmd.Flags().GetString("to")
+		imageQuality, _ := cmd.Flags().GetInt("quality")
+		imageResize, _ := cmd.Flags().GetString("resize")
+		imageOutput, _ := cmd.Flags().GetString("output")
 
 		var width, height int
 		if imageResize != "" {
@@ -83,11 +68,10 @@ func parseResize(s string) (int, int, error) {
 }
 
 func init() {
-	imageCmd.Flags().StringVarP(&imageToFormat, "to", "t", "", "output format: png, jpeg, gif")
-	imageCmd.Flags().IntVarP(&imageQuality, "quality", "q", 85, "JPEG quality (1-100)")
-	imageCmd.Flags().StringVarP(&imageResize, "resize", "r", "", "resize to WxH (e.g., 100x100)")
-	imageCmd.Flags().StringVarP(&imageInput, "input", "i", "", "input file (default: stdin)")
-	imageCmd.Flags().StringVarP(&imageOutput, "output", "o", "", "output file (default: stdout)")
+	imageCmd.Flags().StringP("to", "t", "", "output format: png, jpeg, gif")
+	imageCmd.Flags().IntP("quality", "q", 85, "JPEG quality (1-100)")
+	imageCmd.Flags().StringP("resize", "r", "", "resize to WxH (e.g., 100x100)")
+	imageCmd.Flags().StringP("output", "o", "", "output file (default: stdout)")
 	imageCmd.MarkFlagRequired("to")
 	Cmd.AddCommand(imageCmd)
 }

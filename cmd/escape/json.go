@@ -9,8 +9,6 @@ import (
 	textLib "github.com/agejevasv/swk/internal/text"
 )
 
-var jsonUnescape bool
-
 var jsonCmd = &cobra.Command{
 	Use:   "json [input]",
 	Short: "JSON string escape or unescape",
@@ -19,6 +17,8 @@ var jsonCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+
+		jsonUnescape, _ := cmd.Flags().GetBool("unescape")
 
 		var result string
 		if jsonUnescape {
@@ -36,6 +36,6 @@ var jsonCmd = &cobra.Command{
 }
 
 func init() {
-	jsonCmd.Flags().BoolVarP(&jsonUnescape, "unescape", "u", false, "unescape instead of escape")
+	jsonCmd.Flags().BoolP("unescape", "u", false, "unescape instead of escape")
 	Cmd.AddCommand(jsonCmd)
 }

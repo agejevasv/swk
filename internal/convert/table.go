@@ -71,26 +71,32 @@ func getStyle(name string) TableStyle {
 }
 
 func parseJSONData(input []byte) ([]string, [][]string, error) {
-	// Try array first
-	var data []map[string]interface{}
-	if err := json.Unmarshal(input, &data); err != nil {
-		// Try single object, wrap in array
-		var single map[string]interface{}
-		if err2 := json.Unmarshal(input, &single); err2 == nil {
-			data = []map[string]interface{}{single}
-		} else {
-			return nil, nil, fmt.Errorf("expected JSON array or object")
-		}
+	// Only accept JSON arrays.
+	trimmed := bytes.TrimSpace(input)
+	if len(trimmed) == 0 {
+		return nil, nil, fmt.Errorf("empty input")
 	}
-	if len(data) == 0 {
+	if trimmed[0] == '{' {
+		return nil, nil, fmt.Errorf("expected JSON array, got object (use 'swk query json' to extract an array field first)")
+	}
+
+	var rawArray []json.RawMessage
+	if err := json.Unmarshal(input, &rawArray); err != nil {
+		return nil, nil, fmt.Errorf("expected JSON array: %w", err)
+	}
+	if len(rawArray) == 0 {
 		return nil, nil, fmt.Errorf("empty JSON array")
 	}
 
-	// Collect headers preserving insertion order from first object
+	// Extract ordered keys from all objects.
 	seen := map[string]bool{}
 	var headers []string
-	for _, obj := range data {
-		for k := range obj {
+	for _, raw := range rawArray {
+		keys, err := orderedKeys(raw)
+		if err != nil {
+			return nil, nil, err
+		}
+		for _, k := range keys {
 			if !seen[k] {
 				seen[k] = true
 				headers = append(headers, k)
@@ -98,18 +104,69 @@ func parseJSONData(input []byte) ([]string, [][]string, error) {
 		}
 	}
 
+	var data []map[string]interface{}
+	if err := json.Unmarshal(input, &data); err != nil {
+		return nil, nil, fmt.Errorf("expected array of objects: %w", err)
+	}
+
 	var rows [][]string
 	for _, obj := range data {
 		row := make([]string, len(headers))
 		for i, h := range headers {
 			if v, ok := obj[h]; ok {
-				row[i] = fmt.Sprintf("%v", v)
+				row[i] = formatCellValue(v)
 			}
 		}
 		rows = append(rows, row)
 	}
 
 	return headers, rows, nil
+}
+
+// formatCellValue renders a value for display in a table cell.
+// Nested objects and arrays are JSON-serialized; scalars use simple formatting.
+func formatCellValue(v interface{}) string {
+	switch v.(type) {
+	case map[string]interface{}, []interface{}:
+		b, err := json.Marshal(v)
+		if err != nil {
+			return fmt.Sprintf("%v", v)
+		}
+		return string(b)
+	default:
+		return fmt.Sprintf("%v", v)
+	}
+}
+
+// orderedKeys extracts object keys in their original JSON order.
+func orderedKeys(raw json.RawMessage) ([]string, error) {
+	dec := json.NewDecoder(bytes.NewReader(raw))
+	tok, err := dec.Token()
+	if err != nil {
+		return nil, fmt.Errorf("expected JSON object: %w", err)
+	}
+	if delim, ok := tok.(json.Delim); !ok || delim != '{' {
+		return nil, fmt.Errorf("expected JSON object")
+	}
+
+	var keys []string
+	for dec.More() {
+		tok, err := dec.Token()
+		if err != nil {
+			return nil, err
+		}
+		key, ok := tok.(string)
+		if !ok {
+			return nil, fmt.Errorf("expected string key")
+		}
+		keys = append(keys, key)
+		// Skip the value
+		var skip json.RawMessage
+		if err := dec.Decode(&skip); err != nil {
+			return nil, err
+		}
+	}
+	return keys, nil
 }
 
 func parseCSVData(input []byte, delimiter rune) ([]string, [][]string, error) {

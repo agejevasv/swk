@@ -10,18 +10,6 @@ import (
 )
 
 func resetAllFlags() {
-	base64Decode = false
-	base64URLSafe = false
-	base64NoPadding = false
-	hashAlgo = "sha256"
-	hashVerify = ""
-	jwtDecode = false
-	jwtSecret = ""
-	jwtAlgo = "HS256"
-	qrOutput = "terminal"
-	qrSize = 256
-	qrLevel = "M"
-
 	for _, sub := range Cmd.Commands() {
 		sub.Flags().VisitAll(func(f *pflag.Flag) {
 			f.Value.Set(f.DefValue)

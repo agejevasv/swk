@@ -9,21 +9,19 @@ import (
 	"github.com/agejevasv/swk/internal/ioutil"
 )
 
-var (
-	hashAlgo   string
-	hashVerify string
-)
-
 var hashCmd = &cobra.Command{
 	Use:     "hash [input]",
 	Aliases: []string{"h"},
 	Short:   "Generate hash/checksum",
 	Long:    "Compute hash of input using md5, sha1, sha256, sha384, or sha512.",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		input, err := ioutil.ReadInput(args, cmd.InOrStdin())
+		input, err := ioutil.ReadFileInput(args, cmd.InOrStdin())
 		if err != nil {
 			return err
 		}
+
+		hashAlgo, _ := cmd.Flags().GetString("algo")
+		hashVerify, _ := cmd.Flags().GetString("verify")
 
 		if hashVerify != "" {
 			ok, err := genLib.HashVerify(input, hashAlgo, hashVerify)
@@ -49,7 +47,7 @@ var hashCmd = &cobra.Command{
 }
 
 func init() {
-	hashCmd.Flags().StringVarP(&hashAlgo, "algo", "a", "sha256", "hash algorithm (md5, sha1, sha256, sha384, sha512)")
-	hashCmd.Flags().StringVarP(&hashVerify, "verify", "V", "", "hash to verify against")
+	hashCmd.Flags().StringP("algo", "a", "sha256", "hash algorithm (md5, sha1, sha256, sha384, sha512)")
+	hashCmd.Flags().StringP("verify", "V", "", "hash to verify against")
 	Cmd.AddCommand(hashCmd)
 }

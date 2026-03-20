@@ -10,14 +10,6 @@ import (
 	"github.com/agejevasv/swk/internal/ioutil"
 )
 
-var (
-	jsonFrom      string
-	jsonTo        string
-	jsonMinify    bool
-	jsonIndent    int
-	jsonDelimiter string
-)
-
 var jsonCmd = &cobra.Command{
 	Use:     "json [input]",
 	Aliases: []string{"j"},
@@ -43,10 +35,16 @@ When --from and --to are both json (the default), it formats the input.`,
   # CSV to JSON
   echo 'name,age\nalice,30' | swk convert json --from csv`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		input, err := ioutil.ReadInputString(args, cmd.InOrStdin())
+		input, err := ioutil.ReadFileInputString(args, cmd.InOrStdin())
 		if err != nil {
 			return err
 		}
+
+		jsonFrom, _ := cmd.Flags().GetString("from")
+		jsonTo, _ := cmd.Flags().GetString("to")
+		jsonMinify, _ := cmd.Flags().GetBool("minify")
+		jsonIndent, _ := cmd.Flags().GetInt("indent")
+		jsonDelimiter, _ := cmd.Flags().GetString("delimiter")
 
 		switch {
 		case jsonFrom == "yaml":
@@ -103,10 +101,10 @@ When --from and --to are both json (the default), it formats the input.`,
 }
 
 func init() {
-	jsonCmd.Flags().StringVar(&jsonFrom, "from", "json", "input format (json, yaml, csv)")
-	jsonCmd.Flags().StringVar(&jsonTo, "to", "json", "output format (json, yaml, csv)")
-	jsonCmd.Flags().BoolVarP(&jsonMinify, "minify", "m", false, "minify JSON output")
-	jsonCmd.Flags().IntVarP(&jsonIndent, "indent", "i", 2, "indentation spaces")
-	jsonCmd.Flags().StringVarP(&jsonDelimiter, "delimiter", "d", ",", "CSV delimiter character")
+	jsonCmd.Flags().String("from", "json", "input format (json, yaml, csv)")
+	jsonCmd.Flags().String("to", "json", "output format (json, yaml, csv)")
+	jsonCmd.Flags().BoolP("minify", "m", false, "minify JSON output")
+	jsonCmd.Flags().IntP("indent", "i", 2, "indentation spaces")
+	jsonCmd.Flags().StringP("delimiter", "d", ",", "CSV delimiter character")
 	Cmd.AddCommand(jsonCmd)
 }

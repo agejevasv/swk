@@ -9,8 +9,6 @@ import (
 	textLib "github.com/agejevasv/swk/internal/text"
 )
 
-var shellUnescape bool
-
 var shellCmd = &cobra.Command{
 	Use:   "shell [input]",
 	Short: "Shell escape or unescape",
@@ -19,6 +17,8 @@ var shellCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+
+		shellUnescape, _ := cmd.Flags().GetBool("unescape")
 
 		var result string
 		if shellUnescape {
@@ -36,6 +36,6 @@ var shellCmd = &cobra.Command{
 }
 
 func init() {
-	shellCmd.Flags().BoolVarP(&shellUnescape, "unescape", "u", false, "unescape instead of escape")
+	shellCmd.Flags().BoolP("unescape", "u", false, "unescape instead of escape")
 	Cmd.AddCommand(shellCmd)
 }

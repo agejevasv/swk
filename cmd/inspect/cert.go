@@ -9,13 +9,11 @@ import (
 	"github.com/agejevasv/swk/internal/ioutil"
 )
 
-var certCheckExpiry bool
-
 var certCmd = &cobra.Command{
 	Use:   "cert [input]",
 	Short: "Inspect an X.509 PEM certificate",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		input, err := ioutil.ReadInputString(args, cmd.InOrStdin())
+		input, err := ioutil.ReadFileInputString(args, cmd.InOrStdin())
 		if err != nil {
 			return err
 		}
@@ -31,6 +29,8 @@ var certCmd = &cobra.Command{
 		}
 		fmt.Fprintln(cmd.OutOrStdout(), string(output))
 
+		certCheckExpiry, _ := cmd.Flags().GetBool("check-expiry")
+
 		if certCheckExpiry && info.IsExpired {
 			return fmt.Errorf("certificate is expired (expired at %s)", info.NotAfter.Format("2006-01-02T15:04:05Z07:00"))
 		}
@@ -40,6 +40,6 @@ var certCmd = &cobra.Command{
 }
 
 func init() {
-	certCmd.Flags().BoolVar(&certCheckExpiry, "check-expiry", false, "exit with code 1 if certificate is expired")
+	certCmd.Flags().Bool("check-expiry", false, "exit with code 1 if certificate is expired")
 	Cmd.AddCommand(certCmd)
 }

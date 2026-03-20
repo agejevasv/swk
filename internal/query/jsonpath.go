@@ -1,4 +1,4 @@
-package test
+package query
 
 import (
 	"encoding/json"

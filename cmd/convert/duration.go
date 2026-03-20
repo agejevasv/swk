@@ -9,8 +9,6 @@ import (
 	"github.com/agejevasv/swk/internal/ioutil"
 )
 
-var durationTo string
-
 var durationCmd = &cobra.Command{
 	Use:     "duration [input]",
 	Aliases: []string{"dur"},
@@ -22,6 +20,7 @@ var durationCmd = &cobra.Command{
 			return err
 		}
 
+		durationTo, _ := cmd.Flags().GetString("to")
 		result, err := convLib.DurationConvert(input, durationTo)
 		if err != nil {
 			return err
@@ -33,6 +32,6 @@ var durationCmd = &cobra.Command{
 }
 
 func init() {
-	durationCmd.Flags().StringVar(&durationTo, "to", "", "target format: human, seconds, minutes, hours (default: auto)")
+	durationCmd.Flags().String("to", "", "target format: human, seconds, minutes, hours (default: auto)")
 	Cmd.AddCommand(durationCmd)
 }

@@ -9,12 +9,6 @@ import (
 	"github.com/agejevasv/swk/internal/ioutil"
 )
 
-var (
-	tableStyle     string
-	tableFrom      string
-	tableDelimiter string
-)
-
 var tableCmd = &cobra.Command{
 	Use:   "table [input]",
 	Short: "Render JSON or CSV as a formatted table",
@@ -30,10 +24,14 @@ var tableCmd = &cobra.Command{
   # CSV input
   echo 'name,age\nalice,30' | swk convert table --from csv`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		input, err := ioutil.ReadInputString(args, cmd.InOrStdin())
+		input, err := ioutil.ReadFileInputString(args, cmd.InOrStdin())
 		if err != nil {
 			return err
 		}
+
+		tableStyle, _ := cmd.Flags().GetString("style")
+		tableFrom, _ := cmd.Flags().GetString("from")
+		tableDelimiter, _ := cmd.Flags().GetString("delimiter")
 
 		delimiter := ','
 		if len(tableDelimiter) > 0 {
@@ -51,8 +49,8 @@ var tableCmd = &cobra.Command{
 }
 
 func init() {
-	tableCmd.Flags().StringVar(&tableStyle, "style", "box", "table style (box, simple, plain)")
-	tableCmd.Flags().StringVar(&tableFrom, "from", "json", "input format (json, csv)")
-	tableCmd.Flags().StringVarP(&tableDelimiter, "delimiter", "d", ",", "CSV delimiter character")
+	tableCmd.Flags().String("style", "box", "table style (box, simple, plain)")
+	tableCmd.Flags().String("from", "json", "input format (json, csv)")
+	tableCmd.Flags().StringP("delimiter", "d", ",", "CSV delimiter character")
 	Cmd.AddCommand(tableCmd)
 }

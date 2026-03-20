@@ -18,11 +18,6 @@ import (
 )
 
 func resetAllFlags() {
-	certCheckExpiry = false
-	cronNext = 5
-	cronExplain = false
-	inspectJSON = false
-
 	for _, sub := range Cmd.Commands() {
 		sub.Flags().VisitAll(func(f *pflag.Flag) {
 			f.Value.Set(f.DefValue)

@@ -7,14 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/agejevasv/swk/internal/ioutil"
-	testLib "github.com/agejevasv/swk/internal/test"
-)
-
-var (
-	regexPattern string
-	regexGlobal  bool
-	regexGroups  bool
-	regexReplace string
+	queryLib "github.com/agejevasv/swk/internal/query"
 )
 
 var regexCmd = &cobra.Command{
@@ -22,13 +15,18 @@ var regexCmd = &cobra.Command{
 	Aliases: []string{"re"},
 	Short:   "Test regular expressions against input",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		input, err := ioutil.ReadInputString(args, cmd.InOrStdin())
+		input, err := ioutil.ReadFileInputString(args, cmd.InOrStdin())
 		if err != nil {
 			return err
 		}
 
+		regexPattern, _ := cmd.Flags().GetString("pattern")
+		regexGlobal, _ := cmd.Flags().GetBool("global")
+		regexGroups, _ := cmd.Flags().GetBool("groups")
+		regexReplace, _ := cmd.Flags().GetString("replace")
+
 		if regexReplace != "" {
-			result, err := testLib.RegexReplace(input, regexPattern, regexReplace)
+			result, err := queryLib.RegexReplace(input, regexPattern, regexReplace)
 			if err != nil {
 				return err
 			}
@@ -36,7 +34,7 @@ var regexCmd = &cobra.Command{
 			return nil
 		}
 
-		result, err := testLib.RegexTest(input, regexPattern, regexGlobal)
+		result, err := queryLib.RegexTest(input, regexPattern, regexGlobal)
 		if err != nil {
 			return err
 		}
@@ -61,10 +59,10 @@ var regexCmd = &cobra.Command{
 }
 
 func init() {
-	regexCmd.Flags().StringVarP(&regexPattern, "pattern", "p", "", "Regex pattern")
-	regexCmd.Flags().BoolVarP(&regexGlobal, "global", "g", false, "Find all matches")
-	regexCmd.Flags().BoolVar(&regexGroups, "groups", false, "Show capture groups as JSON")
-	regexCmd.Flags().StringVarP(&regexReplace, "replace", "r", "", "Replacement string")
+	regexCmd.Flags().StringP("pattern", "p", "", "Regex pattern")
+	regexCmd.Flags().BoolP("global", "g", false, "Find all matches")
+	regexCmd.Flags().Bool("groups", false, "Show capture groups as JSON")
+	regexCmd.Flags().StringP("replace", "r", "", "Replacement string")
 	regexCmd.MarkFlagRequired("pattern")
 	Cmd.AddCommand(regexCmd)
 }

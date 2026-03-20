@@ -17,11 +17,6 @@ var baseNameMap = map[string]int{
 	"hex": 16,
 }
 
-var (
-	nbFrom string
-	nbTo   string
-)
-
 var baseCmd = &cobra.Command{
 	Use:     "base [input]",
 	Aliases: []string{"nb"},
@@ -32,6 +27,9 @@ var baseCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+
+		nbFrom, _ := cmd.Flags().GetString("from")
+		nbTo, _ := cmd.Flags().GetString("to")
 
 		fromBase, ok := baseNameMap[strings.ToLower(nbFrom)]
 		if !ok {
@@ -53,7 +51,7 @@ var baseCmd = &cobra.Command{
 }
 
 func init() {
-	baseCmd.Flags().StringVarP(&nbFrom, "from", "f", "dec", "source base (bin, oct, dec, hex)")
-	baseCmd.Flags().StringVarP(&nbTo, "to", "t", "hex", "target base (bin, oct, dec, hex)")
+	baseCmd.Flags().StringP("from", "f", "dec", "source base (bin, oct, dec, hex)")
+	baseCmd.Flags().StringP("to", "t", "hex", "target base (bin, oct, dec, hex)")
 	Cmd.AddCommand(baseCmd)
 }

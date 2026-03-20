@@ -9,8 +9,6 @@ import (
 	textLib "github.com/agejevasv/swk/internal/text"
 )
 
-var xmlUnescape bool
-
 var xmlCmd = &cobra.Command{
 	Use:   "xml [input]",
 	Short: "XML escape or unescape",
@@ -19,6 +17,8 @@ var xmlCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+
+		xmlUnescape, _ := cmd.Flags().GetBool("unescape")
 
 		var result string
 		if xmlUnescape {
@@ -36,6 +36,6 @@ var xmlCmd = &cobra.Command{
 }
 
 func init() {
-	xmlCmd.Flags().BoolVarP(&xmlUnescape, "unescape", "u", false, "unescape instead of escape")
+	xmlCmd.Flags().BoolP("unescape", "u", false, "unescape instead of escape")
 	Cmd.AddCommand(xmlCmd)
 }

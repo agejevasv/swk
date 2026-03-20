@@ -2,6 +2,8 @@ package ioutil
 
 import (
 	"io"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -61,6 +63,18 @@ func TestReadInput(t *testing.T) {
 			args:  nil,
 			stdin: strings.NewReader("line1\nline2\nline3\n"),
 			want:  "line1\nline2\nline3\n",
+		},
+		{
+			name:  "dash reads stdin",
+			args:  []string{"-"},
+			stdin: strings.NewReader("from-stdin"),
+			want:  "from-stdin",
+		},
+		{
+			name:    "dash with nil stdin returns error",
+			args:    []string{"-"},
+			stdin:   nil,
+			wantErr: true,
 		},
 	}
 
@@ -156,6 +170,149 @@ func TestReadInputString(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := ReadInputString(tt.args, tt.stdin)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestReadFileInput(t *testing.T) {
+	// Create a temp file for file-based tests.
+	dir := t.TempDir()
+	filePath := filepath.Join(dir, "test.txt")
+	if err := os.WriteFile(filePath, []byte("file content\n"), 0644); err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+
+	tests := []struct {
+		name    string
+		args    []string
+		stdin   io.Reader
+		want    string
+		wantErr bool
+	}{
+		{
+			name:  "file path reads file content",
+			args:  []string{filePath},
+			stdin: nil,
+			want:  "file content\n",
+		},
+		{
+			name:  "dash reads stdin",
+			args:  []string{"-"},
+			stdin: strings.NewReader("from-stdin"),
+			want:  "from-stdin",
+		},
+		{
+			name:    "dash with nil stdin returns error",
+			args:    []string{"-"},
+			stdin:   nil,
+			wantErr: true,
+		},
+		{
+			name:  "non-existent path treated as literal",
+			args:  []string{"/no/such/path/file.txt"},
+			stdin: nil,
+			want:  "/no/such/path/file.txt",
+		},
+		{
+			name:  "directory path treated as literal",
+			args:  []string{dir},
+			stdin: nil,
+			want:  dir,
+		},
+		{
+			name:  "no args reads stdin",
+			args:  nil,
+			stdin: strings.NewReader("from-stdin"),
+			want:  "from-stdin",
+		},
+		{
+			name:    "no args nil stdin returns error",
+			args:    nil,
+			stdin:   nil,
+			wantErr: true,
+		},
+		{
+			name:  "literal content still works",
+			args:  []string{`{"key":"value"}`},
+			stdin: nil,
+			want:  `{"key":"value"}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ReadFileInput(tt.args, tt.stdin)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if string(got) != tt.want {
+				t.Errorf("got %q, want %q", string(got), tt.want)
+			}
+		})
+	}
+}
+
+func TestReadFileInputString(t *testing.T) {
+	dir := t.TempDir()
+	filePath := filepath.Join(dir, "test.txt")
+	if err := os.WriteFile(filePath, []byte("file content\n"), 0644); err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+
+	tests := []struct {
+		name    string
+		args    []string
+		stdin   io.Reader
+		want    string
+		wantErr bool
+	}{
+		{
+			name:  "file path reads and trims content",
+			args:  []string{filePath},
+			stdin: nil,
+			want:  "file content",
+		},
+		{
+			name:  "dash reads stdin and trims",
+			args:  []string{"-"},
+			stdin: strings.NewReader("from-stdin\n"),
+			want:  "from-stdin",
+		},
+		{
+			name:  "non-existent path treated as literal",
+			args:  []string{"not-a-file"},
+			stdin: nil,
+			want:  "not-a-file",
+		},
+		{
+			name:  "literal JSON content still works",
+			args:  []string{`{"a":1}`},
+			stdin: nil,
+			want:  `{"a":1}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ReadFileInputString(tt.args, tt.stdin)
 			if tt.wantErr {
 				if err == nil {
 					t.Fatal("expected error, got nil")

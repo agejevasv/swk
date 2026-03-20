@@ -9,17 +9,16 @@ import (
 	textLib "github.com/agejevasv/swk/internal/text"
 )
 
-var caseTo string
-
 var caseCmd = &cobra.Command{
 	Use:   "case [text]",
 	Short: "Convert text between case conventions",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		input, err := ioutil.ReadInputString(args, cmd.InOrStdin())
+		input, err := ioutil.ReadFileInputString(args, cmd.InOrStdin())
 		if err != nil {
 			return err
 		}
 
+		caseTo, _ := cmd.Flags().GetString("to")
 		result, err := textLib.ConvertCase(input, caseTo)
 		if err != nil {
 			return err
@@ -31,7 +30,7 @@ var caseCmd = &cobra.Command{
 }
 
 func init() {
-	caseCmd.Flags().StringVarP(&caseTo, "to", "t", "", "Target case (camel, pascal, snake, kebab, upper, lower, title, sentence, dot, path)")
+	caseCmd.Flags().StringP("to", "t", "", "Target case (camel, pascal, snake, kebab, upper, lower, title, sentence, dot, path)")
 	caseCmd.MarkFlagRequired("to")
 	Cmd.AddCommand(caseCmd)
 }

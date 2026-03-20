@@ -9,11 +9,6 @@ import (
 	"github.com/agejevasv/swk/internal/ioutil"
 )
 
-var (
-	colorFrom string
-	colorTo   string
-)
-
 var colorCmd = &cobra.Command{
 	Use:     "color [input]",
 	Aliases: []string{"col"},
@@ -24,6 +19,8 @@ var colorCmd = &cobra.Command{
 			return err
 		}
 
+		colorFrom, _ := cmd.Flags().GetString("from")
+		colorTo, _ := cmd.Flags().GetString("to")
 		result, err := graphicLib.ConvertColor(input, colorFrom, colorTo)
 		if err != nil {
 			return err
@@ -35,7 +32,7 @@ var colorCmd = &cobra.Command{
 }
 
 func init() {
-	colorCmd.Flags().StringVarP(&colorFrom, "from", "f", "auto", "input format: hex, rgb, hsl, hsv, cmyk, auto")
-	colorCmd.Flags().StringVarP(&colorTo, "to", "t", "all", "output format: hex, rgb, hsl, hsv, cmyk, all")
+	colorCmd.Flags().StringP("from", "f", "auto", "input format: hex, rgb, hsl, hsv, cmyk, auto")
+	colorCmd.Flags().StringP("to", "t", "all", "output format: hex, rgb, hsl, hsv, cmyk, all")
 	Cmd.AddCommand(colorCmd)
 }

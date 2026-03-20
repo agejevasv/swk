@@ -9,25 +9,6 @@ import (
 )
 
 func resetAllFlags() {
-	genWidth = 800
-	genHeight = 600
-	genStyle = "mixed"
-	genOutput = ""
-	pwLength = 16
-	pwCount = 1
-	pwNoUpper = false
-	pwNoLower = false
-	pwNoDigits = false
-	pwNoSymbols = false
-	pwExclude = ""
-	textWords = 0
-	textSentences = 0
-	textParagraphs = 0
-	uuidVersion = 4
-	uuidCount = 1
-	uuidNamespace = ""
-	uuidName = ""
-
 	for _, sub := range Cmd.Commands() {
 		sub.Flags().VisitAll(func(f *pflag.Flag) {
 			f.Value.Set(f.DefValue)

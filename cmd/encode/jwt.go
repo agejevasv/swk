@@ -9,12 +9,6 @@ import (
 	"github.com/agejevasv/swk/internal/ioutil"
 )
 
-var (
-	jwtDecode bool
-	jwtSecret string
-	jwtAlgo   string
-)
-
 var jwtCmd = &cobra.Command{
 	Use:   "jwt [input]",
 	Short: "Encode or decode JWT tokens",
@@ -29,23 +23,27 @@ Decode: pass a JWT token with -d to inspect header and payload.`,
   # Decode and verify signature
   swk encode jwt -d --secret mykey 'eyJhbGciOiJIUzI1NiIs...'`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		input, err := ioutil.ReadInputString(args, cmd.InOrStdin())
+		input, err := ioutil.ReadFileInputString(args, cmd.InOrStdin())
 		if err != nil {
 			return err
 		}
 
-		if jwtDecode {
-			return jwtDecodeRun(cmd, input)
+		decode, _ := cmd.Flags().GetBool("decode")
+		secret, _ := cmd.Flags().GetString("secret")
+		algo, _ := cmd.Flags().GetString("algo")
+
+		if decode {
+			return jwtDecodeRun(cmd, input, secret)
 		}
-		return jwtEncodeRun(cmd, input)
+		return jwtEncodeRun(cmd, input, secret, algo)
 	},
 }
 
-func jwtEncodeRun(cmd *cobra.Command, payload string) error {
-	if jwtSecret == "" {
+func jwtEncodeRun(cmd *cobra.Command, payload, secret, algo string) error {
+	if secret == "" {
 		return fmt.Errorf("--secret is required to create a JWT")
 	}
-	token, err := encLib.JWTEncode(payload, jwtSecret, jwtAlgo)
+	token, err := encLib.JWTEncode(payload, secret, algo)
 	if err != nil {
 		return err
 	}
@@ -53,12 +51,12 @@ func jwtEncodeRun(cmd *cobra.Command, payload string) error {
 	return nil
 }
 
-func jwtDecodeRun(cmd *cobra.Command, tokenStr string) error {
+func jwtDecodeRun(cmd *cobra.Command, tokenStr, secret string) error {
 	var info *encLib.JWTInfo
 	var err error
 
-	if jwtSecret != "" {
-		info, err = encLib.JWTVerify(tokenStr, jwtSecret)
+	if secret != "" {
+		info, err = encLib.JWTVerify(tokenStr, secret)
 		if err != nil {
 			if info != nil {
 				output, jsonErr := encLib.JWTInfoJSON(info)
@@ -84,8 +82,8 @@ func jwtDecodeRun(cmd *cobra.Command, tokenStr string) error {
 }
 
 func init() {
-	jwtCmd.Flags().BoolVarP(&jwtDecode, "decode", "d", false, "decode/inspect a JWT token")
-	jwtCmd.Flags().StringVarP(&jwtSecret, "secret", "s", "", "HMAC secret for signing or verification")
-	jwtCmd.Flags().StringVarP(&jwtAlgo, "algo", "a", "HS256", "signing algorithm (HS256, HS384, HS512)")
+	jwtCmd.Flags().BoolP("decode", "d", false, "decode/inspect a JWT token")
+	jwtCmd.Flags().StringP("secret", "s", "", "HMAC secret for signing or verification")
+	jwtCmd.Flags().StringP("algo", "a", "HS256", "signing algorithm (HS256, HS384, HS512)")
 	Cmd.AddCommand(jwtCmd)
 }

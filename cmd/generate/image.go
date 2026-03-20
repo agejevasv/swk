@@ -8,13 +8,6 @@ import (
 	graphicLib "github.com/agejevasv/swk/internal/graphic"
 )
 
-var (
-	genWidth  int
-	genHeight int
-	genStyle  string
-	genOutput string
-)
-
 var imageCmd = &cobra.Command{
 	Use:   "image",
 	Short: "Generate abstract placeholder images",
@@ -22,6 +15,11 @@ var imageCmd = &cobra.Command{
   swk generate image --width 800 --height 600 --style circles -o out.png
   swk generate image --style mixed > art.png`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		genWidth, _ := cmd.Flags().GetInt("width")
+		genHeight, _ := cmd.Flags().GetInt("height")
+		genStyle, _ := cmd.Flags().GetString("style")
+		genOutput, _ := cmd.Flags().GetString("output")
+
 		data, err := graphicLib.GenerateImage(genWidth, genHeight, genStyle)
 		if err != nil {
 			return err
@@ -36,9 +34,9 @@ var imageCmd = &cobra.Command{
 }
 
 func init() {
-	imageCmd.Flags().IntVar(&genWidth, "width", 800, "image width in pixels")
-	imageCmd.Flags().IntVar(&genHeight, "height", 600, "image height in pixels")
-	imageCmd.Flags().StringVar(&genStyle, "style", "mixed", "art style (circles, squares, lines, mixed)")
-	imageCmd.Flags().StringVarP(&genOutput, "output", "o", "", "output file (default: stdout)")
+	imageCmd.Flags().Int("width", 800, "image width in pixels")
+	imageCmd.Flags().Int("height", 600, "image height in pixels")
+	imageCmd.Flags().String("style", "mixed", "art style (circles, squares, lines, mixed)")
+	imageCmd.Flags().StringP("output", "o", "", "output file (default: stdout)")
 	Cmd.AddCommand(imageCmd)
 }

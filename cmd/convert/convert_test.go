@@ -9,29 +9,6 @@ import (
 )
 
 func resetAllFlags() {
-	nbFrom = "dec"
-	nbTo = "hex"
-	caseTo = ""
-	colorFrom = "auto"
-	colorTo = "all"
-	dtFrom = "auto"
-	dtTo = "iso"
-	dtTz = "Local"
-	imageToFormat = ""
-	imageQuality = 85
-	imageResize = ""
-	imageInput = ""
-	imageOutput = ""
-	jsonFrom = "json"
-	jsonTo = "json"
-	jsonMinify = false
-	jsonIndent = 2
-	jsonDelimiter = ","
-	mdHTML = false
-	mdTheme = "github"
-	xmlMinify = false
-	xmlIndent = 2
-
 	for _, sub := range Cmd.Commands() {
 		sub.Flags().VisitAll(func(f *pflag.Flag) {
 			f.Value.Set(f.DefValue)

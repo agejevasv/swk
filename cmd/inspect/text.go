@@ -11,19 +11,19 @@ import (
 	textLib "github.com/agejevasv/swk/internal/text"
 )
 
-var inspectJSON bool
-
 var textCmd = &cobra.Command{
 	Use:     "text [input]",
 	Aliases: []string{"txt"},
 	Short:   "Analyze text and show statistics",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		input, err := ioutil.ReadInputString(args, cmd.InOrStdin())
+		input, err := ioutil.ReadFileInputString(args, cmd.InOrStdin())
 		if err != nil {
 			return err
 		}
 
 		info := textLib.Inspect(input)
+
+		inspectJSON, _ := cmd.Flags().GetBool("json")
 
 		if inspectJSON {
 			enc := json.NewEncoder(cmd.OutOrStdout())
@@ -46,6 +46,6 @@ var textCmd = &cobra.Command{
 }
 
 func init() {
-	textCmd.Flags().BoolVar(&inspectJSON, "json", false, "Output as JSON")
+	textCmd.Flags().Bool("json", false, "Output as JSON")
 	Cmd.AddCommand(textCmd)
 }
