@@ -158,35 +158,111 @@ func TestConvertDateTime(t *testing.T) {
 			want:    "1700000000",
 		},
 
-		// Custom Go layout as --to format.
+		// Strftime --to format.
 		{
-			name:    "unix_to_go_layout_date",
+			name:    "unix_to_strftime_date",
 			input:   "1700000000",
 			fromFmt: "unix",
-			toFmt:   "2006-01-02",
+			toFmt:   "%Y-%m-%d",
 			tz:      "UTC",
 			want:    "2023-11-14",
 		},
 		{
-			name:    "unix_to_go_layout_time",
+			name:    "unix_to_strftime_time",
 			input:   "1700000000",
 			fromFmt: "unix",
-			toFmt:   "15:04:05",
+			toFmt:   "%H:%M:%S",
 			tz:      "UTC",
 			want:    "22:13:20",
 		},
 		{
-			name:    "unix_to_go_layout_full",
+			name:    "unix_to_strftime_full",
 			input:   "1700000000",
 			fromFmt: "unix",
-			toFmt:   "2006-01-02 15:04:05",
+			toFmt:   "%Y-%m-%d %H:%M:%S",
 			tz:      "UTC",
 			want:    "2023-11-14 22:13:20",
 		},
-
-		// Custom Go layout as --from format.
 		{
-			name:    "go_layout_to_iso",
+			name:    "unix_to_strftime_weekday_month",
+			input:   "1700000000",
+			fromFmt: "unix",
+			toFmt:   "%A, %B %d",
+			tz:      "UTC",
+			want:    "Tuesday, November 14",
+		},
+		{
+			name:    "unix_to_strftime_short_weekday_month",
+			input:   "1700000000",
+			fromFmt: "unix",
+			toFmt:   "%a, %b %d",
+			tz:      "UTC",
+			want:    "Tue, Nov 14",
+		},
+		{
+			name:    "unix_to_strftime_12h",
+			input:   "1700000000",
+			fromFmt: "unix",
+			toFmt:   "%I:%M %p",
+			tz:      "UTC",
+			want:    "10:13 PM",
+		},
+		{
+			name:    "unix_to_strftime_timezone",
+			input:   "1700000000",
+			fromFmt: "unix",
+			toFmt:   "%Y-%m-%d %Z",
+			tz:      "UTC",
+			want:    "2023-11-14 UTC",
+		},
+		{
+			name:    "unix_to_strftime_literal_percent",
+			input:   "1700000000",
+			fromFmt: "unix",
+			toFmt:   "%Y%%%m",
+			tz:      "UTC",
+			want:    "2023%11",
+		},
+
+		// Strftime --from format.
+		{
+			name:    "strftime_date_to_iso",
+			input:   "2023-11-14",
+			fromFmt: "%Y-%m-%d",
+			toFmt:   "iso",
+			tz:      "UTC",
+			want:    "2023-11-14T00:00:00Z",
+		},
+		{
+			name:    "strftime_datetime_to_unix",
+			input:   "2023-11-14 22:13:20",
+			fromFmt: "%Y-%m-%d %H:%M:%S",
+			toFmt:   "unix",
+			tz:      "UTC",
+			want:    "1700000000",
+		},
+		{
+			name:    "strftime_from_mismatch",
+			input:   "not-a-date",
+			fromFmt: "%Y-%m-%d",
+			toFmt:   "iso",
+			tz:      "UTC",
+			wantErr: true,
+		},
+
+		// Strftime roundtrip.
+		{
+			name:    "strftime_roundtrip",
+			input:   "2023-11-14",
+			fromFmt: "%Y-%m-%d",
+			toFmt:   "%Y-%m-%d",
+			tz:      "UTC",
+			want:    "2023-11-14",
+		},
+
+		// Go layouts still work as fallback.
+		{
+			name:    "go_layout_still_works",
 			input:   "2023-11-14",
 			fromFmt: "2006-01-02",
 			toFmt:   "iso",
@@ -229,7 +305,7 @@ func TestConvertDateTime(t *testing.T) {
 			tz:      "Invalid/Zone",
 			wantErr: true,
 		},
-		// Custom Go layout: a layout that doesn't match the input will error.
+		// Go layout mismatch error.
 		{
 			name:    "go_layout_from_mismatch",
 			input:   "not-a-date",

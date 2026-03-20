@@ -102,9 +102,10 @@ swk convert color '255,87,51' --from rgb --to hex
 
 # Date/time conversion
 swk convert date 1700000000 --from unix --to iso
-swk convert date now
-swk convert date 1700000000 --from unix --to '2006-01-02' --tz UTC   # 2023-11-14
-swk convert date '2023-11-14' --from '2006-01-02' --to unix
+swk convert date 1700000000 --from unix --to human --tz UTC
+swk convert date now --to unix
+swk convert date 1700000000 --from unix --to '%Y-%m-%d' --tz UTC   # 2023-11-14
+swk convert date '2023-11-14' --from '%Y-%m-%d' --to unix
 
 # Duration conversion
 swk convert duration 86400             # 1d

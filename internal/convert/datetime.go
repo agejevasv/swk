@@ -12,6 +12,34 @@ const (
 	rfc2822Format = "Mon, 02 Jan 2006 15:04:05 -0700"
 )
 
+var strftimeMap = []struct{ directive, goLayout string }{
+	{"%Y", "2006"},
+	{"%m", "01"},
+	{"%d", "02"},
+	{"%H", "15"},
+	{"%I", "03"},
+	{"%M", "04"},
+	{"%S", "05"},
+	{"%p", "PM"},
+	{"%Z", "MST"},
+	{"%z", "-0700"},
+	{"%A", "Monday"},
+	{"%a", "Mon"},
+	{"%B", "January"},
+	{"%b", "Jan"},
+	{"%n", "\n"},
+	{"%t", "\t"},
+	{"%%", "%"},
+}
+
+func strftimeToGo(format string) string {
+	result := format
+	for _, s := range strftimeMap {
+		result = strings.ReplaceAll(result, s.directive, s.goLayout)
+	}
+	return result
+}
+
 func ConvertDateTime(input string, fromFmt, toFmt, tz string) (string, error) {
 	var loc *time.Location
 	if tz == "" || strings.EqualFold(tz, "Local") {
@@ -62,8 +90,11 @@ func parseFormat(input, format string) (time.Time, error) {
 	case "human":
 		return time.Parse(humanFormat, input)
 	default:
-		// Treat as a Go time layout (e.g. "2006-01-02", "15:04:05").
-		return time.Parse(format, input)
+		layout := format
+		if strings.Contains(format, "%") {
+			layout = strftimeToGo(format)
+		}
+		return time.Parse(layout, input)
 	}
 }
 
@@ -103,7 +134,10 @@ func formatTime(t time.Time, format string) (string, error) {
 	case "human":
 		return t.Format(humanFormat), nil
 	default:
-		// Treat as a Go time layout (e.g. "2006-01-02", "15:04:05").
-		return t.Format(format), nil
+		layout := format
+		if strings.Contains(format, "%") {
+			layout = strftimeToGo(format)
+		}
+		return t.Format(layout), nil
 	}
 }
