@@ -1,5 +1,10 @@
 # swk — Developer's Swiss Army Knife
 
+[![CI](https://github.com/agejevasv/swk/actions/workflows/ci.yml/badge.svg)](https://github.com/agejevasv/swk/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/agejevasv/swk/graph/badge.svg)](https://codecov.io/gh/agejevasv/swk)
+[![Go Report Card](https://goreportcard.com/badge/github.com/agejevasv/swk)](https://goreportcard.com/report/github.com/agejevasv/swk)
+[![Go Reference](https://pkg.go.dev/badge/github.com/agejevasv/swk.svg)](https://pkg.go.dev/github.com/agejevasv/swk)
+
 A CLI toolkit for everyday developer tasks.
 
 ## Install
