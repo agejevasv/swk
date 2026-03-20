@@ -329,11 +329,27 @@ func TestReadFileInputString(t *testing.T) {
 	}
 }
 
+func TestReadFileInputString_Error(t *testing.T) {
+	_, err := ReadFileInputString(nil, nil)
+	if err == nil {
+		t.Fatal("expected error for nil stdin with no args, got nil")
+	}
+}
+
 func TestReadStdin(t *testing.T) {
 	t.Run("nil returns error", func(t *testing.T) {
 		_, err := ReadStdin(nil)
 		if err == nil {
 			t.Fatal("expected error, got nil")
+		}
+	})
+
+	t.Run("exceeds max size", func(t *testing.T) {
+		// Create a reader that returns more than MaxInputSize
+		big := strings.NewReader(strings.Repeat("x", MaxInputSize+1))
+		_, err := ReadStdin(big)
+		if err == nil {
+			t.Fatal("expected error for input exceeding max size, got nil")
 		}
 	})
 

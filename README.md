@@ -326,8 +326,8 @@ Every command reads stdin and writes stdout:
 # JSON → format → base64
 echo '{"a":1}' | swk format json | swk encode base64
 
-# Generate password → hash it
-swk generate password | swk encode hash
+# Generate password → display on stderr, hash to stdout
+swk generate password | tee /dev/stderr | swk encode hash
 
 # YAML → JSON → minify → clipboard (macOS)
 cat config.yaml | swk convert yaml2json | swk format json -m | pbcopy

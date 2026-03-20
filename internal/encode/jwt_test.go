@@ -8,6 +8,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"math/big"
 	"testing"
 	"time"
 
@@ -427,6 +428,148 @@ func TestJWT_KeyErrors(t *testing.T) {
 	_, err = JWTEncode(`{"sub":"test"}`, "", []byte("not a pem"), "RS256")
 	if err == nil {
 		t.Error("expected error for invalid PEM")
+	}
+}
+
+func TestJWT_ParsePrivateKey_PKCS1(t *testing.T) {
+	// Generate RSA key and encode as PKCS1 (not PKCS8)
+	privKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatalf("failed to generate RSA key: %v", err)
+	}
+	pkcs1PEM := pem.EncodeToMemory(&pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(privKey),
+	})
+
+	// Should succeed via PKCS1 fallback
+	token, err := JWTEncode(`{"sub":"pkcs1-test","exp":9999999999}`, "", pkcs1PEM, "RS256")
+	if err != nil {
+		t.Fatalf("JWTEncode with PKCS1 key failed: %v", err)
+	}
+
+	// Verify the token is valid
+	pubPEM := encodePEMPublicKey(t, &privKey.PublicKey)
+	info, err := JWTVerify(token, "", pubPEM)
+	if err != nil {
+		t.Fatalf("JWTVerify failed: %v", err)
+	}
+	if !info.Valid {
+		t.Error("expected Valid=true")
+	}
+}
+
+func TestJWT_ParsePrivateKey_EC(t *testing.T) {
+	// Generate EC key and encode as SEC1 (EC-specific, not PKCS8)
+	privKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatalf("failed to generate EC key: %v", err)
+	}
+	ecDER, err := x509.MarshalECPrivateKey(privKey)
+	if err != nil {
+		t.Fatalf("failed to marshal EC private key: %v", err)
+	}
+	ecPEM := pem.EncodeToMemory(&pem.Block{
+		Type:  "EC PRIVATE KEY",
+		Bytes: ecDER,
+	})
+
+	token, err := JWTEncode(`{"sub":"ec-sec1-test","exp":9999999999}`, "", ecPEM, "ES256")
+	if err != nil {
+		t.Fatalf("JWTEncode with SEC1 EC key failed: %v", err)
+	}
+
+	pubPEM := encodePEMPublicKey(t, &privKey.PublicKey)
+	info, err := JWTVerify(token, "", pubPEM)
+	if err != nil {
+		t.Fatalf("JWTVerify failed: %v", err)
+	}
+	if !info.Valid {
+		t.Error("expected Valid=true")
+	}
+}
+
+func TestJWT_ParsePublicKey_PKCS1RSA(t *testing.T) {
+	// Generate RSA key, encode public key as PKCS1 (not PKIX)
+	privKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatalf("failed to generate RSA key: %v", err)
+	}
+	pkcs1PubPEM := pem.EncodeToMemory(&pem.Block{
+		Type:  "RSA PUBLIC KEY",
+		Bytes: x509.MarshalPKCS1PublicKey(&privKey.PublicKey),
+	})
+
+	privPEM := encodePEMPrivateKey(t, privKey)
+	token, err := JWTEncode(`{"sub":"pkcs1-pub-test","exp":9999999999}`, "", privPEM, "RS256")
+	if err != nil {
+		t.Fatalf("JWTEncode failed: %v", err)
+	}
+
+	info, err := JWTVerify(token, "", pkcs1PubPEM)
+	if err != nil {
+		t.Fatalf("JWTVerify with PKCS1 public key failed: %v", err)
+	}
+	if !info.Valid {
+		t.Error("expected Valid=true")
+	}
+}
+
+func TestJWT_ParsePublicKey_FromCertificate(t *testing.T) {
+	// Generate a self-signed cert, then verify JWT using the cert PEM
+	privKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatalf("failed to generate RSA key: %v", err)
+	}
+
+	template := &x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		NotBefore:    time.Now().Add(-time.Hour),
+		NotAfter:     time.Now().Add(24 * time.Hour),
+	}
+	certDER, err := x509.CreateCertificate(rand.Reader, template, template, &privKey.PublicKey, privKey)
+	if err != nil {
+		t.Fatalf("failed to create certificate: %v", err)
+	}
+	certPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certDER})
+
+	privPEM := encodePEMPrivateKey(t, privKey)
+	token, err := JWTEncode(`{"sub":"cert-test","exp":9999999999}`, "", privPEM, "RS256")
+	if err != nil {
+		t.Fatalf("JWTEncode failed: %v", err)
+	}
+
+	info, err := JWTVerify(token, "", certPEM)
+	if err != nil {
+		t.Fatalf("JWTVerify with certificate failed: %v", err)
+	}
+	if !info.Valid {
+		t.Error("expected Valid=true")
+	}
+}
+
+func TestJWT_ParsePrivateKey_InvalidBytes(t *testing.T) {
+	// Valid PEM block but garbage DER bytes — should fail all parsers
+	badPEM := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: []byte("garbage")})
+	_, err := JWTEncode(`{"sub":"test"}`, "", badPEM, "RS256")
+	if err == nil {
+		t.Error("expected error for unparseable private key")
+	}
+}
+
+func TestJWT_ParsePublicKey_InvalidBytes(t *testing.T) {
+	badPEM := pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: []byte("garbage")})
+	privKey, _ := rsa.GenerateKey(rand.Reader, 2048)
+	privPEMBytes := encodePEMPrivateKey(t, privKey)
+	rsaToken, err := JWTEncode(`{"sub":"test","exp":9999999999}`, "", privPEMBytes, "RS256")
+	if err != nil {
+		t.Fatalf("setup: %v", err)
+	}
+
+	// Bad public key should either error or return Valid=false
+	info, err := JWTVerify(rsaToken, "", badPEM)
+	if err == nil && info != nil && info.Valid {
+		t.Error("expected either error or Valid=false for unparseable public key")
 	}
 }
 

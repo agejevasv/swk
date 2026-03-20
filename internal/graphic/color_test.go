@@ -250,6 +250,91 @@ func TestConvertColorHSVInvalid(t *testing.T) {
 	}
 }
 
+func TestConvertColorRGBInvalid(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{name: "wrong parts", input: "255,0"},
+		{name: "bad red", input: "abc,0,0"},
+		{name: "bad green", input: "0,abc,0"},
+		{name: "bad blue", input: "0,0,abc"},
+		{name: "out of range", input: "256,0,0"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := ConvertColor(tt.input, "rgb", "hex")
+			if err == nil {
+				t.Fatal("expected error, got nil")
+			}
+		})
+	}
+}
+
+func TestConvertColorHSLInvalid(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{name: "wrong parts", input: "hsl(0,100%)"},
+		{name: "bad hue", input: "hsl(abc,100%,50%)"},
+		{name: "bad saturation", input: "hsl(0,xyz%,50%)"},
+		{name: "bad lightness", input: "hsl(0,100%,bad%)"},
+		{name: "out of range", input: "hsl(400,100%,50%)"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := ConvertColor(tt.input, "hsl", "hex")
+			if err == nil {
+				t.Fatal("expected error, got nil")
+			}
+		})
+	}
+}
+
+func TestConvertColorCMYKInvalid(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{name: "wrong parts", input: "cmyk(0,0,0)"},
+		{name: "bad cyan", input: "cmyk(abc,0,0,0)"},
+		{name: "bad magenta", input: "cmyk(0,abc,0,0)"},
+		{name: "bad yellow", input: "cmyk(0,0,abc,0)"},
+		{name: "bad key", input: "cmyk(0,0,0,abc)"},
+		{name: "out of range", input: "cmyk(101,0,0,0)"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := ConvertColor(tt.input, "cmyk", "hex")
+			if err == nil {
+				t.Fatal("expected error, got nil")
+			}
+		})
+	}
+}
+
+func TestConvertColorCMYKAutoDetect(t *testing.T) {
+	got, err := ConvertColor("cmyk(0,100,100,0)", "auto", "hex")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != "#FF0000" {
+		t.Errorf("got %q, want #FF0000", got)
+	}
+}
+
+func TestConvertColorHSLToHSV(t *testing.T) {
+	// Test a conversion path through RGB: hsl -> rgb -> hsv
+	got, err := ConvertColor("hsl(0,100%,50%)", "hsl", "hsv")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(got, "hsv(") {
+		t.Errorf("expected hsv output, got %q", got)
+	}
+}
+
 func TestConvertColorRGBFuncToHex(t *testing.T) {
 	got, err := ConvertColor("rgb(0,255,0)", "rgb", "hex")
 	if err != nil {

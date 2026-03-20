@@ -195,6 +195,61 @@ func TestJSONYAMLRoundtrip(t *testing.T) {
 	}
 }
 
+func TestConvertMaps(t *testing.T) {
+	// Test the map[any]any branch directly since yaml.v3 doesn't produce it
+	input := map[any]any{
+		"key":    "value",
+		42:       "numeric key",
+		"nested": map[any]any{"inner": "data"},
+	}
+	result := convertMaps(input)
+	m, ok := result.(map[string]any)
+	if !ok {
+		t.Fatalf("expected map[string]any, got %T", result)
+	}
+	if m["key"] != "value" {
+		t.Errorf("expected key=value, got %v", m["key"])
+	}
+	if m["42"] != "numeric key" {
+		t.Errorf("expected 42=numeric key, got %v", m["42"])
+	}
+	nested, ok := m["nested"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected nested map[string]any, got %T", m["nested"])
+	}
+	if nested["inner"] != "data" {
+		t.Errorf("expected inner=data, got %v", nested["inner"])
+	}
+}
+
+func TestConvertMaps_Slice(t *testing.T) {
+	input := []any{"a", map[any]any{"k": "v"}}
+	result := convertMaps(input)
+	arr, ok := result.([]any)
+	if !ok {
+		t.Fatalf("expected []any, got %T", result)
+	}
+	if arr[0] != "a" {
+		t.Errorf("expected arr[0]=a, got %v", arr[0])
+	}
+	m, ok := arr[1].(map[string]any)
+	if !ok {
+		t.Fatalf("expected map[string]any, got %T", arr[1])
+	}
+	if m["k"] != "v" {
+		t.Errorf("expected k=v, got %v", m["k"])
+	}
+}
+
+func TestConvertMaps_Scalar(t *testing.T) {
+	if convertMaps(42) != 42 {
+		t.Error("scalar should pass through unchanged")
+	}
+	if convertMaps("hello") != "hello" {
+		t.Error("string should pass through unchanged")
+	}
+}
+
 func TestYAMLToJSON_HTMLNotEscaped(t *testing.T) {
 	// Verify SetEscapeHTML(false) works: & < > should not be escaped.
 	input := "url: https://example.com?a=1&b=2\n"

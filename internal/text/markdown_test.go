@@ -101,6 +101,39 @@ func TestRenderMarkdown(t *testing.T) {
 		},
 	}
 
+	// Syntax highlight tests
+	highlightTests := []struct {
+		name  string
+		input string
+		theme string
+		want  string
+	}{
+		{
+			name:  "syntax highlight default theme",
+			input: "# Hello\n```go\nfmt.Println()\n```",
+			theme: "",
+			want:  "highlight.js",
+		},
+		{
+			name:  "syntax highlight custom theme",
+			input: "# Hello",
+			theme: "monokai",
+			want:  "monokai",
+		},
+	}
+
+	for _, tt := range highlightTests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := RenderMarkdown([]byte(tt.input), true, true, tt.theme)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if !strings.Contains(string(got), tt.want) {
+				t.Errorf("expected output to contain %q", tt.want)
+			}
+		})
+	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := RenderMarkdown([]byte(tt.input), tt.toHTML, false, "github")
