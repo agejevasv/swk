@@ -249,6 +249,22 @@ func TestConvertDateTime(t *testing.T) {
 			tz:      "UTC",
 			wantErr: true,
 		},
+		{
+			name:    "strftime_unknown_directive_in_to",
+			input:   "1700000000",
+			fromFmt: "unix",
+			toFmt:   "%Q",
+			tz:      "UTC",
+			wantErr: true,
+		},
+		{
+			name:    "strftime_unknown_directive_in_from",
+			input:   "2023",
+			fromFmt: "%Q",
+			toFmt:   "iso",
+			tz:      "UTC",
+			wantErr: true,
+		},
 
 		// Strftime roundtrip.
 		{

@@ -32,12 +32,26 @@ var strftimeMap = []struct{ directive, goLayout string }{
 	{"%%", "%"},
 }
 
-func strftimeToGo(format string) string {
-	result := format
+func strftimeToGo(format string) (string, error) {
+	known := make(map[string]string, len(strftimeMap))
 	for _, s := range strftimeMap {
-		result = strings.ReplaceAll(result, s.directive, s.goLayout)
+		known[s.directive] = s.goLayout
 	}
-	return result
+
+	var result strings.Builder
+	for i := 0; i < len(format); i++ {
+		if format[i] == '%' && i+1 < len(format) {
+			directive := format[i : i+2]
+			if goLayout, ok := known[directive]; ok {
+				result.WriteString(goLayout)
+				i++
+				continue
+			}
+			return "", fmt.Errorf("unsupported strftime directive %q", directive)
+		}
+		result.WriteByte(format[i])
+	}
+	return result.String(), nil
 }
 
 func ConvertDateTime(input string, fromFmt, toFmt, tz string) (string, error) {
@@ -92,7 +106,11 @@ func parseFormat(input, format string) (time.Time, error) {
 	default:
 		layout := format
 		if strings.Contains(format, "%") {
-			layout = strftimeToGo(format)
+			var err error
+			layout, err = strftimeToGo(format)
+			if err != nil {
+				return time.Time{}, err
+			}
 		}
 		return time.Parse(layout, input)
 	}
@@ -136,7 +154,11 @@ func formatTime(t time.Time, format string) (string, error) {
 	default:
 		layout := format
 		if strings.Contains(format, "%") {
-			layout = strftimeToGo(format)
+			var err error
+			layout, err = strftimeToGo(format)
+			if err != nil {
+				return "", err
+			}
 		}
 		return t.Format(layout), nil
 	}
