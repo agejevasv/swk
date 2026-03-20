@@ -150,6 +150,106 @@ func TestConvertColorCMYKRoundtrip(t *testing.T) {
 	}
 }
 
+func TestConvertColorHSVToFormats(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		toFmt string
+		want  string
+	}{
+		// Pure red: hsv(0, 100%, 100%) -> rgb(255,0,0)
+		{name: "red to hex", input: "hsv(0, 100%, 100%)", toFmt: "hex", want: "#FF0000"},
+		{name: "red to rgb", input: "hsv(0, 100%, 100%)", toFmt: "rgb", want: "rgb(255,0,0)"},
+
+		// Green: hsv(120, 100%, 50%) -> rgb(0,128,0) approximately
+		{name: "green to hex", input: "hsv(120, 100%, 50%)", toFmt: "hex", want: "#008000"},
+		{name: "green to rgb", input: "hsv(120, 100%, 50%)", toFmt: "rgb", want: "rgb(0,128,0)"},
+
+		// Pure green: hsv(120, 100%, 100%) -> rgb(0,255,0)
+		{name: "pure green to hex", input: "hsv(120, 100%, 100%)", toFmt: "hex", want: "#00FF00"},
+
+		// Pure blue: hsv(240, 100%, 100%) -> rgb(0,0,255)
+		{name: "blue to hex", input: "hsv(240, 100%, 100%)", toFmt: "hex", want: "#0000FF"},
+		{name: "blue to rgb", input: "hsv(240, 100%, 100%)", toFmt: "rgb", want: "rgb(0,0,255)"},
+
+		// Yellow: hsv(60, 100%, 100%) -> rgb(255,255,0)
+		{name: "yellow to hex", input: "hsv(60, 100%, 100%)", toFmt: "hex", want: "#FFFF00"},
+
+		// Cyan: hsv(180, 100%, 100%) -> rgb(0,255,255)
+		{name: "cyan to hex", input: "hsv(180, 100%, 100%)", toFmt: "hex", want: "#00FFFF"},
+
+		// Magenta: hsv(300, 100%, 100%) -> rgb(255,0,255)
+		{name: "magenta to hex", input: "hsv(300, 100%, 100%)", toFmt: "hex", want: "#FF00FF"},
+
+		// White: hsv(0, 0%, 100%) -> rgb(255,255,255)
+		{name: "white to hex", input: "hsv(0, 0%, 100%)", toFmt: "hex", want: "#FFFFFF"},
+
+		// Black: hsv(0, 0%, 0%) -> rgb(0,0,0)
+		{name: "black to hex", input: "hsv(0, 0%, 0%)", toFmt: "hex", want: "#000000"},
+
+		// Gray (zero saturation): hsv(0, 0%, 50%) -> rgb(128,128,128)
+		{name: "gray to hex", input: "hsv(0, 0%, 50%)", toFmt: "hex", want: "#808080"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ConvertColor(tt.input, "hsv", tt.toFmt)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if got != tt.want {
+				t.Errorf("ConvertColor(%q, hsv, %q) = %q, want %q", tt.input, tt.toFmt, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestConvertColorHSVAutoDetect(t *testing.T) {
+	got, err := ConvertColor("hsv(0, 100%, 100%)", "auto", "hex")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != "#FF0000" {
+		t.Errorf("got %q, want #FF0000", got)
+	}
+}
+
+func TestConvertColorHSVRoundtrip(t *testing.T) {
+	// Convert red: hex -> hsv -> hex
+	hsv, err := ConvertColor("#FF0000", "hex", "hsv")
+	if err != nil {
+		t.Fatalf("hex->hsv: %v", err)
+	}
+	hex, err := ConvertColor(hsv, "hsv", "hex")
+	if err != nil {
+		t.Fatalf("hsv->hex: %v", err)
+	}
+	if hex != "#FF0000" {
+		t.Errorf("roundtrip got %q, want #FF0000", hex)
+	}
+}
+
+func TestConvertColorHSVInvalid(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{name: "wrong part count", input: "hsv(0, 100%)"},
+		{name: "invalid hue", input: "hsv(abc, 100%, 100%)"},
+		{name: "invalid saturation", input: "hsv(0, xyz%, 100%)"},
+		{name: "invalid value", input: "hsv(0, 100%, bad%)"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := ConvertColor(tt.input, "hsv", "hex")
+			if err == nil {
+				t.Fatal("expected error, got nil")
+			}
+		})
+	}
+}
+
 func TestConvertColorRGBFuncToHex(t *testing.T) {
 	got, err := ConvertColor("rgb(0,255,0)", "rgb", "hex")
 	if err != nil {

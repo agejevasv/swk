@@ -228,3 +228,42 @@ func TestXML_Minify(t *testing.T) {
 		t.Errorf("expected no newlines in minified output, got %q", trimmed)
 	}
 }
+
+func TestParseResize(t *testing.T) {
+	tests := []struct {
+		input   string
+		wantW   int
+		wantH   int
+		wantErr bool
+	}{
+		// Valid cases
+		{input: "800x600", wantW: 800, wantH: 600},
+		{input: "1920x1080", wantW: 1920, wantH: 1080},
+		{input: "1x1", wantW: 1, wantH: 1},
+		// Invalid cases
+		{input: "abc", wantErr: true},
+		{input: "800", wantErr: true},
+		{input: "0x600", wantErr: true},
+		{input: "800x0", wantErr: true},
+		{input: "-1x100", wantErr: true},
+		{input: "axb", wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			w, h, err := parseResize(tt.input)
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("parseResize(%q) expected error, got w=%d h=%d", tt.input, w, h)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("parseResize(%q) unexpected error: %v", tt.input, err)
+			}
+			if w != tt.wantW || h != tt.wantH {
+				t.Errorf("parseResize(%q) = (%d, %d), want (%d, %d)", tt.input, w, h, tt.wantW, tt.wantH)
+			}
+		})
+	}
+}

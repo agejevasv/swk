@@ -18,6 +18,8 @@ var certCmd = &cobra.Command{
 			return err
 		}
 
+		certCheckExpiry := ioutil.MustGetBool(cmd, "check-expiry")
+
 		info, err := inspectLib.CertDecode([]byte(input))
 		if err != nil {
 			return err
@@ -28,8 +30,6 @@ var certCmd = &cobra.Command{
 			return err
 		}
 		fmt.Fprintln(cmd.OutOrStdout(), string(output))
-
-		certCheckExpiry := ioutil.MustGetBool(cmd, "check-expiry")
 
 		if certCheckExpiry && info.IsExpired {
 			return fmt.Errorf("certificate is expired (expired at %s)", info.NotAfter.Format("2006-01-02T15:04:05Z07:00"))

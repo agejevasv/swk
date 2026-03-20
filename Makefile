@@ -14,7 +14,7 @@ test-verbose:
 	go test -v ./...
 
 test-cover:
-	go test -coverprofile=coverage.out ./internal/...
+	go test -coverprofile=coverage.out $$(go list ./... | grep -v 'github.com/agejevasv/swk$$' | grep -v 'github.com/agejevasv/swk/cmd$$')
 	go tool cover -func=coverage.out
 
 lint:

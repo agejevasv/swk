@@ -46,6 +46,14 @@ When --from and --to are both json (the default), it formats the input.`,
 		jsonIndent := ioutil.MustGetInt(cmd, "indent")
 		jsonDelimiter := ioutil.MustGetString(cmd, "delimiter")
 
+		validFormats := map[string]bool{"json": true, "yaml": true, "csv": true}
+		if !validFormats[jsonFrom] {
+			return fmt.Errorf("unsupported --from format: %s", jsonFrom)
+		}
+		if !validFormats[jsonTo] {
+			return fmt.Errorf("unsupported --to format: %s", jsonTo)
+		}
+
 		switch {
 		case jsonFrom == "yaml":
 			output, err := convLib.YAMLToJSON([]byte(input), jsonIndent)
