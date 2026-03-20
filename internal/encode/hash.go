@@ -1,4 +1,4 @@
-package gen
+package encode
 
 import (
 	"crypto/md5"

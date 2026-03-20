@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	genLib "github.com/agejevasv/swk/internal/gen"
+	encLib "github.com/agejevasv/swk/internal/encode"
 	"github.com/agejevasv/swk/internal/ioutil"
 )
 
@@ -24,20 +24,20 @@ var hashCmd = &cobra.Command{
 		hashVerify := ioutil.MustGetString(cmd, "verify")
 
 		if hashVerify != "" {
-			ok, err := genLib.HashVerify(input, hashAlgo, hashVerify)
+			ok, err := encLib.HashVerify(input, hashAlgo, hashVerify)
 			if err != nil {
 				return err
 			}
 			if ok {
 				fmt.Fprintln(cmd.OutOrStdout(), "OK")
 			} else {
-				computed, _ := genLib.Hash(input, hashAlgo)
+				computed, _ := encLib.Hash(input, hashAlgo)
 				return fmt.Errorf("hash mismatch\nexpected: %s\ngot:      %s", hashVerify, computed)
 			}
 			return nil
 		}
 
-		hash, err := genLib.Hash(input, hashAlgo)
+		hash, err := encLib.Hash(input, hashAlgo)
 		if err != nil {
 			return err
 		}
