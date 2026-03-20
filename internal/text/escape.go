@@ -66,15 +66,16 @@ func escapeXML(s string) string {
 	return b.String()
 }
 
+var xmlUnescaper = strings.NewReplacer(
+	"&amp;", "&",
+	"&lt;", "<",
+	"&gt;", ">",
+	"&quot;", `"`,
+	"&apos;", "'",
+)
+
 func unescapeXML(s string) string {
-	r := strings.NewReplacer(
-		"&amp;", "&",
-		"&lt;", "<",
-		"&gt;", ">",
-		"&quot;", `"`,
-		"&apos;", "'",
-	)
-	return r.Replace(s)
+	return xmlUnescaper.Replace(s)
 }
 
 func escapeShell(s string) string {

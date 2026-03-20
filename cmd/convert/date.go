@@ -25,26 +25,13 @@ var dateCmd = &cobra.Command{
 		var err error
 
 		if len(args) > 0 && strings.EqualFold(args[0], "now") {
-			now := time.Now()
-			if dtTz != "" && !strings.EqualFold(dtTz, "Local") {
-				loc, err := time.LoadLocation(dtTz)
-				if err != nil {
-					return fmt.Errorf("invalid timezone %q: %w", dtTz, err)
-				}
-				now = now.In(loc)
-			}
-			inputStr = fmt.Sprintf("%d", now.Unix())
-			result, err := convLib.ConvertDateTime(inputStr, "unix", dtTo, dtTz)
+			inputStr = fmt.Sprintf("%d", time.Now().Unix())
+			dtFrom = "unix"
+		} else {
+			inputStr, err = ioutil.ReadInputString(args, cmd.InOrStdin())
 			if err != nil {
 				return err
 			}
-			fmt.Fprintln(cmd.OutOrStdout(), result)
-			return nil
-		}
-
-		inputStr, err = ioutil.ReadInputString(args, cmd.InOrStdin())
-		if err != nil {
-			return err
 		}
 
 		result, err := convLib.ConvertDateTime(inputStr, dtFrom, dtTo, dtTz)

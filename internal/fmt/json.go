@@ -22,9 +22,7 @@ func FormatJSON(input []byte, opts JSONOptions) ([]byte, error) {
 		if err := json.NewEncoder(&buf).Encode(data); err != nil {
 			return nil, err
 		}
-		// json.Encoder.Encode adds a trailing newline; trim it
-		result := bytes.TrimRight(buf.Bytes(), "\n")
-		return result, nil
+		return buf.Bytes(), nil
 	}
 
 	indent := "  "
@@ -40,5 +38,5 @@ func FormatJSON(input []byte, opts JSONOptions) ([]byte, error) {
 		return nil, err
 	}
 
-	return result, nil
+	return append(result, '\n'), nil
 }

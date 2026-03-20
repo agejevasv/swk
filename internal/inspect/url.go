@@ -13,7 +13,7 @@ type URLInfo struct {
 	Host     string            `json:"host"`
 	Port     string            `json:"port,omitempty"`
 	Path     string            `json:"path,omitempty"`
-	Query    map[string]string `json:"query,omitempty"`
+	Query    map[string][]string `json:"query,omitempty"`
 	Fragment string            `json:"fragment,omitempty"`
 	User     string            `json:"user,omitempty"`
 }
@@ -46,9 +46,9 @@ func ParseURL(input string) (*URLInfo, error) {
 
 	// Query parameters
 	if u.RawQuery != "" {
-		info.Query = make(map[string]string)
+		info.Query = make(map[string][]string)
 		for key, values := range u.Query() {
-			info.Query[key] = strings.Join(values, ",")
+			info.Query[key] = values
 		}
 	}
 
@@ -78,10 +78,11 @@ func URLInfoTable(info *URLInfo) string {
 		fmt.Fprintf(&sb, "Path:      %s\n", info.Path)
 	}
 	if len(info.Query) > 0 {
-		// Reconstruct query string
 		var parts []string
-		for k, v := range info.Query {
-			parts = append(parts, k+"="+v)
+		for k, vals := range info.Query {
+			for _, v := range vals {
+				parts = append(parts, k+"="+v)
+			}
 		}
 		fmt.Fprintf(&sb, "Query:     %s\n", strings.Join(parts, "&"))
 	}

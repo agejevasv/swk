@@ -3,6 +3,8 @@ package convert
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -34,20 +36,12 @@ func YAMLToJSON(input []byte, indent int) ([]byte, error) {
 
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
-	enc.SetIndent("", spaces(indent))
+	enc.SetIndent("", strings.Repeat(" ", indent))
 	enc.SetEscapeHTML(false)
 	if err := enc.Encode(data); err != nil {
 		return nil, err
 	}
 	return buf.Bytes(), nil
-}
-
-func spaces(n int) string {
-	b := make([]byte, n)
-	for i := range b {
-		b[i] = ' '
-	}
-	return string(b)
 }
 
 func convertMaps(v interface{}) interface{} {
@@ -60,7 +54,10 @@ func convertMaps(v interface{}) interface{} {
 	case map[interface{}]interface{}:
 		m := make(map[string]interface{}, len(v))
 		for key, val := range v {
-			k, _ := key.(string)
+			k, ok := key.(string)
+			if !ok {
+				k = fmt.Sprintf("%v", key)
+			}
 			m[k] = convertMaps(val)
 		}
 		return m

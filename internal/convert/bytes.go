@@ -53,14 +53,14 @@ var unitMap = map[string]float64{
 }
 
 // BytesToHuman converts a byte count to a human-readable string.
-func BytesToHuman(bytes int64, binary bool) string {
+func BytesToHuman(bytes int64, decimal bool) string {
 	if bytes == 0 {
 		return "0 B"
 	}
 
 	b := float64(bytes)
 	units := binaryUnits
-	if binary {
+	if decimal {
 		units = decimalUnits
 	}
 
@@ -110,7 +110,7 @@ func HumanToBytes(input string) (int64, error) {
 
 // BytesConvert auto-detects direction. If input is a plain number, converts to human.
 // If input has units, converts to bytes.
-func BytesConvert(input string, binary bool) (string, error) {
+func BytesConvert(input string, decimal bool) (string, error) {
 	input = strings.TrimSpace(input)
 
 	if isPureNumber(input) {
@@ -118,7 +118,7 @@ func BytesConvert(input string, binary bool) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("invalid number %q: %w", input, err)
 		}
-		return BytesToHuman(n, binary), nil
+		return BytesToHuman(n, decimal), nil
 	}
 
 	bytes, err := HumanToBytes(input)

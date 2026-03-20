@@ -166,8 +166,8 @@ func TestFormatJSON(t *testing.T) {
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("FormatJSON() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			if !tt.wantErr && string(got) != tt.want {
-				t.Errorf("FormatJSON() =\n%s\nwant:\n%s", string(got), tt.want)
+			if !tt.wantErr && string(got) != tt.want+"\n" {
+				t.Errorf("FormatJSON() =\n%s\nwant:\n%s", string(got), tt.want+"\n")
 			}
 		})
 	}

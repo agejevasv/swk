@@ -57,20 +57,11 @@ func jwtDecodeRun(cmd *cobra.Command, tokenStr, secret string) error {
 
 	if secret != "" {
 		info, err = encLib.JWTVerify(tokenStr, secret)
-		if err != nil {
-			if info != nil {
-				output, jsonErr := encLib.JWTInfoJSON(info)
-				if jsonErr == nil {
-					fmt.Fprintln(cmd.OutOrStdout(), string(output))
-				}
-			}
-			return err
-		}
 	} else {
 		info, err = encLib.JWTDecode(tokenStr)
-		if err != nil {
-			return err
-		}
+	}
+	if err != nil {
+		return err
 	}
 
 	output, err := encLib.JWTInfoJSON(info)

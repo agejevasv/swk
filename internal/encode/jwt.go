@@ -96,25 +96,25 @@ func JWTVerify(tokenStr string, secret string) (*JWTInfo, error) {
 		Signature: sig,
 	}
 
-	if token != nil {
-		info.Header = token.Header
-		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-			info.Payload = map[string]interface{}(claims)
+	// If token is nil, the JWT was malformed — that's a hard error.
+	if token == nil {
+		return nil, fmt.Errorf("invalid JWT: %w", err)
+	}
 
-			if exp, ok := claims["exp"]; ok {
-				if expFloat, ok := exp.(float64); ok {
-					expTime := time.Unix(int64(expFloat), 0)
-					info.ExpiredAt = &expTime
-				}
+	info.Header = token.Header
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		info.Payload = map[string]interface{}(claims)
+
+		if exp, ok := claims["exp"]; ok {
+			if expFloat, ok := exp.(float64); ok {
+				expTime := time.Unix(int64(expFloat), 0)
+				info.ExpiredAt = &expTime
 			}
 		}
-		info.Valid = token.Valid
 	}
+	info.Valid = token.Valid
 
-	if err != nil {
-		return info, fmt.Errorf("verification failed: %w", err)
-	}
-
+	// Signature mismatch or expiry is not an error — it's represented by Valid=false.
 	return info, nil
 }
 

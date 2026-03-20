@@ -101,7 +101,7 @@ When --from and --to are both json (the default), it formats the input.`,
 			if err != nil {
 				return err
 			}
-			fmt.Fprintln(cmd.OutOrStdout(), string(result))
+			fmt.Fprint(cmd.OutOrStdout(), string(result))
 		}
 
 		return nil

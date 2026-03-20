@@ -9,20 +9,20 @@ func TestBytesToHuman(t *testing.T) {
 	tests := []struct {
 		name   string
 		bytes  int64
-		binary bool
+		decimal bool
 		want   string
 	}{
 		// Zero.
 		{
 			name:   "zero_binary_false",
 			bytes:  0,
-			binary: false,
+			decimal: false,
 			want:   "0 B",
 		},
 		{
 			name:   "zero_binary_true",
 			bytes:  0,
-			binary: true,
+			decimal: true,
 			want:   "0 B",
 		},
 
@@ -30,77 +30,77 @@ func TestBytesToHuman(t *testing.T) {
 		{
 			name:   "one_byte",
 			bytes:  1,
-			binary: false,
+			decimal: false,
 			want:   "1 B",
 		},
 		{
 			name:   "small_bytes",
 			bytes:  512,
-			binary: false,
+			decimal: false,
 			want:   "512 B",
 		},
 
-		// 1024-based units (binary=false uses binaryUnits).
+		// 1024-based units (decimal=false uses binaryUnits).
 		{
 			name:   "exactly_1KB_1024",
 			bytes:  1024,
-			binary: false,
+			decimal: false,
 			want:   "1 KB",
 		},
 		{
 			name:   "exactly_1MB_1024",
 			bytes:  1048576,
-			binary: false,
+			decimal: false,
 			want:   "1 MB",
 		},
 		{
 			name:   "exactly_1GB_1024",
 			bytes:  1073741824,
-			binary: false,
+			decimal: false,
 			want:   "1 GB",
 		},
 		{
 			name:   "exactly_1TB_1024",
 			bytes:  int64(math.Pow(1024, 4)),
-			binary: false,
+			decimal: false,
 			want:   "1 TB",
 		},
 		{
 			name:   "exactly_1PB_1024",
 			bytes:  int64(math.Pow(1024, 5)),
-			binary: false,
+			decimal: false,
 			want:   "1 PB",
 		},
 		{
 			name:   "fractional_KB_1024",
 			bytes:  1536,
-			binary: false,
+			decimal: false,
 			want:   "1.5 KB",
 		},
 
-		// 1000-based units (binary=true uses decimalUnits).
+		// 1000-based units (decimal=true uses decimalUnits).
 		{
 			name:   "exactly_1KB_1000",
 			bytes:  1000,
-			binary: true,
+			decimal: true,
 			want:   "1 KB",
 		},
 		{
 			name:   "exactly_1MB_1000",
 			bytes:  1000000,
-			binary: true,
+			decimal: true,
 			want:   "1 MB",
 		},
 		{
 			name:   "exactly_1GB_1000",
 			bytes:  1000000000,
-			binary: true,
+			decimal: true,
 			want:   "1 GB",
 		},
 		{
 			name:   "fractional_KB_1000",
 			bytes:  1500,
-			binary: true,
+			decimal: true,
 			want:   "1.5 KB",
 		},
 
@@ -108,13 +108,13 @@ func TestBytesToHuman(t *testing.T) {
 		{
 			name:   "large_value_1024",
 			bytes:  5368709120,
-			binary: false,
+			decimal: false,
 			want:   "5 GB",
 		},
 		{
 			name:   "large_value_1000",
 			bytes:  5000000000,
-			binary: true,
+			decimal: true,
 			want:   "5 GB",
 		},
 
@@ -122,13 +122,13 @@ func TestBytesToHuman(t *testing.T) {
 		{
 			name:   "non_round_MB",
 			bytes:  1572864,
-			binary: false,
+			decimal: false,
 			want:   "1.5 MB",
 		},
 		{
 			name:   "non_round_decimal",
 			bytes:  1234567890,
-			binary: true,
+			decimal: true,
 			want:   "1.23 GB",
 		},
 
@@ -136,22 +136,22 @@ func TestBytesToHuman(t *testing.T) {
 		{
 			name:   "negative_bytes",
 			bytes:  -1024,
-			binary: false,
+			decimal: false,
 			want:   "-1 KB",
 		},
 		{
 			name:   "negative_large",
 			bytes:  -1073741824,
-			binary: false,
+			decimal: false,
 			want:   "-1 GB",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := BytesToHuman(tt.bytes, tt.binary)
+			got := BytesToHuman(tt.bytes, tt.decimal)
 			if got != tt.want {
-				t.Errorf("BytesToHuman(%d, %v) = %q, want %q", tt.bytes, tt.binary, got, tt.want)
+				t.Errorf("BytesToHuman(%d, %v) = %q, want %q", tt.bytes, tt.decimal, got, tt.want)
 			}
 		})
 	}
@@ -343,7 +343,7 @@ func TestBytesConvert(t *testing.T) {
 	tests := []struct {
 		name    string
 		input   string
-		binary  bool
+		decimal bool
 		want    string
 		wantErr bool
 	}{
@@ -351,31 +351,31 @@ func TestBytesConvert(t *testing.T) {
 		{
 			name:   "number_to_human_1024",
 			input:  "1024",
-			binary: false,
+			decimal: false,
 			want:   "1 KB",
 		},
 		{
 			name:   "number_to_human_1000",
 			input:  "1000",
-			binary: true,
+			decimal: true,
 			want:   "1 KB",
 		},
 		{
 			name:   "number_to_human_zero",
 			input:  "0",
-			binary: false,
+			decimal: false,
 			want:   "0 B",
 		},
 		{
 			name:   "number_to_human_large",
 			input:  "1073741824",
-			binary: false,
+			decimal: false,
 			want:   "1 GB",
 		},
 		{
 			name:   "number_to_human_small",
 			input:  "42",
-			binary: false,
+			decimal: false,
 			want:   "42 B",
 		},
 
@@ -383,31 +383,31 @@ func TestBytesConvert(t *testing.T) {
 		{
 			name:   "human_to_bytes_KB",
 			input:  "1KB",
-			binary: false,
+			decimal: false,
 			want:   "1000",
 		},
 		{
 			name:   "human_to_bytes_MB",
 			input:  "1MB",
-			binary: false,
+			decimal: false,
 			want:   "1000000",
 		},
 		{
 			name:   "human_to_bytes_GiB",
 			input:  "1GiB",
-			binary: false,
+			decimal: false,
 			want:   "1073741824",
 		},
 		{
 			name:   "human_to_bytes_fractional",
 			input:  "1.5MB",
-			binary: false,
+			decimal: false,
 			want:   "1500000",
 		},
 		{
 			name:   "human_to_bytes_with_space",
 			input:  "100 GB",
-			binary: false,
+			decimal: false,
 			want:   "100000000000",
 		},
 
@@ -415,13 +415,13 @@ func TestBytesConvert(t *testing.T) {
 		{
 			name:   "negative_number_to_human",
 			input:  "-1024",
-			binary: false,
+			decimal: false,
 			want:   "-1 KB",
 		},
 		{
 			name:   "positive_sign_number",
 			input:  "+1048576",
-			binary: false,
+			decimal: false,
 			want:   "1 MB",
 		},
 
@@ -429,19 +429,19 @@ func TestBytesConvert(t *testing.T) {
 		{
 			name:   "format_float_whole_number",
 			input:  "1048576",
-			binary: false,
+			decimal: false,
 			want:   "1 MB",
 		},
 		{
 			name:   "format_float_one_decimal",
 			input:  "1536",
-			binary: false,
+			decimal: false,
 			want:   "1.5 KB",
 		},
 		{
 			name:   "format_float_two_decimals",
 			input:  "1234567890",
-			binary: true,
+			decimal: true,
 			want:   "1.23 GB",
 		},
 
@@ -449,13 +449,13 @@ func TestBytesConvert(t *testing.T) {
 		{
 			name:   "whitespace_around_number",
 			input:  "  1024  ",
-			binary: false,
+			decimal: false,
 			want:   "1 KB",
 		},
 		{
 			name:   "whitespace_around_human",
 			input:  "  1KB  ",
-			binary: false,
+			decimal: false,
 			want:   "1000",
 		},
 
@@ -463,31 +463,31 @@ func TestBytesConvert(t *testing.T) {
 		{
 			name:    "empty_input",
 			input:   "",
-			binary:  false,
+			decimal: false,
 			wantErr: true,
 		},
 		{
 			name:    "invalid_unit",
 			input:   "5XB",
-			binary:  false,
+			decimal: false,
 			wantErr: true,
 		},
 		{
 			name:    "non_numeric_non_unit",
 			input:   "hello",
-			binary:  false,
+			decimal: false,
 			wantErr: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := BytesConvert(tt.input, tt.binary)
+			got, err := BytesConvert(tt.input, tt.decimal)
 			if (err != nil) != tt.wantErr {
-				t.Fatalf("BytesConvert(%q, %v) error = %v, wantErr %v", tt.input, tt.binary, err, tt.wantErr)
+				t.Fatalf("BytesConvert(%q, %v) error = %v, wantErr %v", tt.input, tt.decimal, err, tt.wantErr)
 			}
 			if !tt.wantErr && got != tt.want {
-				t.Errorf("BytesConvert(%q, %v) = %q, want %q", tt.input, tt.binary, got, tt.want)
+				t.Errorf("BytesConvert(%q, %v) = %q, want %q", tt.input, tt.decimal, got, tt.want)
 			}
 		})
 	}

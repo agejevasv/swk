@@ -150,18 +150,16 @@ func TestJWTVerify(t *testing.T) {
 			wantValid: true,
 		},
 		{
-			name:      "wrong_secret_returns_error",
+			name:      "wrong_secret_returns_invalid",
 			token:     validFutureToken,
 			secret:    "wrong-secret",
 			wantValid: false,
-			wantErr:   true,
 		},
 		{
-			name:      "expired_token_returns_error",
+			name:      "expired_token_returns_invalid",
 			token:     expiredToken,
 			secret:    secret,
 			wantValid: false,
-			wantErr:   true,
 		},
 	}
 
@@ -178,7 +176,7 @@ func TestJWTVerify(t *testing.T) {
 	}
 }
 
-func TestJWTVerify_WrongSecret_StillReturnsInfo(t *testing.T) {
+func TestJWTVerify_WrongSecret_ReturnsInvalidInfo(t *testing.T) {
 	secret := "correct-secret"
 	token := createTestJWT(t, jwt.MapClaims{
 		"sub": "user1",
@@ -186,18 +184,17 @@ func TestJWTVerify_WrongSecret_StillReturnsInfo(t *testing.T) {
 	}, secret)
 
 	info, err := JWTVerify(token, "wrong-secret")
-	if err == nil {
-		t.Fatal("expected error for wrong secret")
-	}
-	// Info should still be populated even on verification failure.
-	if info == nil {
-		t.Fatal("expected info to be non-nil even on verification failure")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
 	if info.Valid {
 		t.Error("expected Valid=false for wrong secret")
 	}
 	if info.Header == nil {
 		t.Error("expected Header to be populated")
+	}
+	if info.Payload["sub"] != "user1" {
+		t.Errorf("expected sub=user1, got %v", info.Payload["sub"])
 	}
 }
 

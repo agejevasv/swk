@@ -35,11 +35,11 @@ func TestParseURL(t *testing.T) {
 				if info.User != "user" {
 					t.Errorf("User = %q, want user", info.User)
 				}
-				if info.Query["key"] != "value" {
-					t.Errorf("Query[key] = %q, want value", info.Query["key"])
+				if len(info.Query["key"]) != 1 || info.Query["key"][0] != "value" {
+					t.Errorf("Query[key] = %v, want [value]", info.Query["key"])
 				}
-				if info.Query["foo"] != "bar" {
-					t.Errorf("Query[foo] = %q, want bar", info.Query["foo"])
+				if len(info.Query["foo"]) != 1 || info.Query["foo"][0] != "bar" {
+					t.Errorf("Query[foo] = %v, want [bar]", info.Query["foo"])
 				}
 			},
 		},
@@ -95,11 +95,11 @@ func TestParseURL(t *testing.T) {
 				if len(info.Query) != 2 {
 					t.Fatalf("expected 2 query params, got %d", len(info.Query))
 				}
-				if info.Query["q"] != "hello" {
-					t.Errorf("Query[q] = %q, want hello", info.Query["q"])
+				if len(info.Query["q"]) != 1 || info.Query["q"][0] != "hello" {
+					t.Errorf("Query[q] = %v, want [hello]", info.Query["q"])
 				}
-				if info.Query["lang"] != "en" {
-					t.Errorf("Query[lang] = %q, want en", info.Query["lang"])
+				if len(info.Query["lang"]) != 1 || info.Query["lang"][0] != "en" {
+					t.Errorf("Query[lang] = %v, want [en]", info.Query["lang"])
 				}
 			},
 		},
@@ -153,8 +153,8 @@ func TestParseURL(t *testing.T) {
 				if info.Path != "/path with spaces" {
 					t.Errorf("Path = %q, want '/path with spaces'", info.Path)
 				}
-				if info.Query["name"] != "hello world" {
-					t.Errorf("Query[name] = %q, want 'hello world'", info.Query["name"])
+				if len(info.Query["name"]) != 1 || info.Query["name"][0] != "hello world" {
+					t.Errorf("Query[name] = %v, want [hello world]", info.Query["name"])
 				}
 			},
 		},
@@ -162,8 +162,8 @@ func TestParseURL(t *testing.T) {
 			name:  "url_with_multiple_query_values_same_key",
 			input: "https://example.com?tag=a&tag=b",
 			checkFn: func(t *testing.T, info *URLInfo) {
-				if info.Query["tag"] != "a,b" {
-					t.Errorf("Query[tag] = %q, want a,b", info.Query["tag"])
+				if len(info.Query["tag"]) != 2 || info.Query["tag"][0] != "a" || info.Query["tag"][1] != "b" {
+					t.Errorf("Query[tag] = %v, want [a b]", info.Query["tag"])
 				}
 			},
 		},
@@ -248,7 +248,7 @@ func TestURLInfoJSON(t *testing.T) {
 				Host:     "example.com",
 				Port:     "443",
 				Path:     "/api",
-				Query:    map[string]string{"key": "value"},
+				Query:    map[string][]string{"key": {"value"}},
 				Fragment: "section",
 				User:     "admin",
 			},
@@ -259,7 +259,8 @@ func TestURLInfoJSON(t *testing.T) {
 				`"path": "/api"`,
 				`"fragment": "section"`,
 				`"user": "admin"`,
-				`"key": "value"`,
+				`"key"`,
+				`"value"`,
 			},
 		},
 		{
@@ -330,7 +331,7 @@ func TestURLInfoTable(t *testing.T) {
 				Host:     "example.com",
 				Port:     "8080",
 				Path:     "/api/v1",
-				Query:    map[string]string{"key": "value"},
+				Query:    map[string][]string{"key": {"value"}},
 				Fragment: "top",
 				User:     "admin",
 			},
