@@ -32,13 +32,8 @@ make build
 ### Shell completion
 
 ```bash
-# Bash
 swk completion bash > /etc/bash_completion.d/swk
-
-# Zsh
 swk completion zsh > "${fpath[1]}/_swk"
-
-# Fish
 swk completion fish > ~/.config/fish/completions/swk.fish
 ```
 
