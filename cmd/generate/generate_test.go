@@ -181,3 +181,63 @@ func TestUUID_InvalidVersion(t *testing.T) {
 		t.Fatal("expected error for invalid UUID version, got nil")
 	}
 }
+
+func TestCron_Every5m(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("cron", "--every", "5m")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if strings.TrimSpace(out) != "*/5 * * * *" {
+		t.Errorf("expected '*/5 * * * *', got %q", strings.TrimSpace(out))
+	}
+}
+
+func TestCron_DailyAt(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("cron", "--daily", "--at", "9:00")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if strings.TrimSpace(out) != "0 9 * * *" {
+		t.Errorf("expected '0 9 * * *', got %q", strings.TrimSpace(out))
+	}
+}
+
+func TestCron_Weekdays(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("cron", "--weekdays", "--at", "9:00")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if strings.TrimSpace(out) != "0 9 * * 1-5" {
+		t.Errorf("expected '0 9 * * 1-5', got %q", strings.TrimSpace(out))
+	}
+}
+
+func TestCron_Weekly(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("cron", "--weekly", "--day", "FRI", "--at", "17:00")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if strings.TrimSpace(out) != "0 17 * * 5" {
+		t.Errorf("expected '0 17 * * 5', got %q", strings.TrimSpace(out))
+	}
+}
+
+func TestCron_NoSchedule(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	_, err := executeCommand("cron")
+	if err == nil {
+		t.Fatal("expected error with no schedule flag")
+	}
+}
+
+func TestCron_DailyWithDay(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	_, err := executeCommand("cron", "--daily", "--day", "MON")
+	if err == nil {
+		t.Fatal("expected error for --daily with --day")
+	}
+}

@@ -245,12 +245,24 @@ echo '<tag attr="val">' | swk escape xml
 
 | Command | Description |
 |---------|-------------|
+| `generate cron` | Generate cron expressions from flags |
 | `generate image` | Generate placeholder images |
 | `generate password` / `pw` | Generate random passwords |
 | `generate text` | Generate lorem ipsum text |
 | `generate uuid` | Generate UUIDs (v1, v4, v5, v7) |
 
 ```bash
+# Cron expressions
+swk generate cron --every 5m                     # */5 * * * *
+swk generate cron --daily --at 9:00              # 0 9 * * *
+swk generate cron --weekdays --at 9:00           # 0 9 * * 1-5
+swk generate cron --weekly --day MON --at 9:00   # 0 9 * * 1
+swk generate cron --monthly --day 15             # 0 0 15 * *
+swk generate cron --yearly --month JUN --day 1   # 0 0 1 6 *
+
+# Generate and verify
+swk generate cron --daily --at 9:00 | swk inspect cron
+
 # Placeholder image
 swk generate image -o placeholder.png
 swk generate image --style circles --width 1920 --height 1080 -o wallpaper.png
