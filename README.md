@@ -276,6 +276,7 @@ swk generate uuid --version 7
 |---------|-------------|
 | `inspect cert` | Inspect X.509 PEM certificates |
 | `inspect cron` | Explain cron expressions |
+| `inspect jwt` | Inspect JWT token claims and expiry |
 | `inspect net` | List processes listening on network ports (Linux) |
 | `inspect text` / `txt` | Character, word, line, byte counts |
 | `inspect url` | Parse URL into components |
@@ -289,6 +290,12 @@ swk inspect cert cert.pem --check-expiry
 swk inspect cron '*/5 * * * *'
 swk inspect cron --explain '0 9 * * 1-5'
 swk inspect cron --next 3 '0 9 * * MON'
+
+# JWT token inspection
+swk inspect jwt 'eyJhbGciOiJIUzI1NiIs...'
+echo 'eyJhbGciOiJIUzI1NiIs...' | swk inspect jwt
+swk inspect jwt --check-expiry 'eyJhbGciOiJIUzI1NiIs...'
+swk inspect jwt --json 'eyJhbGciOiJIUzI1NiIs...'
 
 # Network ports (Linux only — parses /proc, no external commands)
 swk inspect net
