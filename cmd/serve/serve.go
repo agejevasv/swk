@@ -2,6 +2,7 @@ package serve
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net"
 	"net/http"
@@ -21,7 +22,7 @@ import (
 var Cmd = &cobra.Command{
 	Use:   "serve [dir]",
 	Short: "Start a local static file server",
-	Long:  "Serve a directory over HTTP. Defaults to the current directory on port 8080.",
+	Long:  "Serve a directory over HTTP (or HTTPS with --tls). Defaults to the current directory on port 8080.",
 	Args:  cobra.MaximumNArgs(1),
 	RunE:  runServe,
 }
@@ -32,6 +33,9 @@ func init() {
 	Cmd.Flags().Bool("cors", false, "enable permissive CORS headers")
 	Cmd.Flags().Bool("no-index", false, "disable directory listing")
 	Cmd.Flags().Bool("no-log", false, "disable access logging")
+	Cmd.Flags().Bool("tls", false, "enable HTTPS")
+	Cmd.Flags().String("cert", "cert.pem", "TLS certificate file")
+	Cmd.Flags().String("key", "cert-key.pem", "TLS private key file")
 }
 
 func runServe(cmd *cobra.Command, args []string) error {
@@ -73,12 +77,26 @@ func runServe(cmd *cobra.Command, args []string) error {
 
 	handler := serveLib.Handler(opts)
 
+	useTLS := ioutil.MustGetBool(cmd, "tls")
+
 	ln, err := net.Listen("tcp", fmt.Sprintf("%s:%d", host, port))
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(cmd.ErrOrStderr(), "Serving %s on http://%s\n", dir, ln.Addr())
+	scheme := "http"
+	if useTLS {
+		scheme = "https"
+		certFile := ioutil.MustGetString(cmd, "cert")
+		keyFile := ioutil.MustGetString(cmd, "key")
+		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+		if err != nil {
+			return fmt.Errorf("failed to load TLS certificate: %w", err)
+		}
+		ln = tls.NewListener(ln, &tls.Config{Certificates: []tls.Certificate{cert}})
+	}
+
+	fmt.Fprintf(cmd.ErrOrStderr(), "Serving %s on %s://%s\n", dir, scheme, ln.Addr())
 
 	server := &http.Server{Handler: handler}
 

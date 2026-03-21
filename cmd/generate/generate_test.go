@@ -2,6 +2,7 @@ package generate
 
 import (
 	"bytes"
+	"os"
 	"strings"
 	"testing"
 
@@ -239,5 +240,35 @@ func TestCron_DailyWithDay(t *testing.T) {
 	_, err := executeCommand("cron", "--daily", "--day", "MON")
 	if err == nil {
 		t.Fatal("expected error for --daily with --day")
+	}
+}
+
+func TestCert_Default(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	dir := t.TempDir()
+	out, err := executeCommand("cert", "-o", dir+"/test")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "test.pem") {
+		t.Errorf("expected cert path in output, got %q", out)
+	}
+	if !strings.Contains(out, "test-key.pem") {
+		t.Errorf("expected key path in output, got %q", out)
+	}
+	// Verify files exist
+	for _, f := range []string{dir + "/test.pem", dir + "/test-key.pem"} {
+		if _, err := os.Stat(f); err != nil {
+			t.Errorf("expected file %s to exist: %v", f, err)
+		}
+	}
+}
+
+func TestCert_CustomCN(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	dir := t.TempDir()
+	_, err := executeCommand("cert", "--cn", "myapp.local", "--dns", "myapp.local", "--ip", "127.0.0.1", "-o", dir+"/test")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }

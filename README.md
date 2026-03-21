@@ -245,6 +245,7 @@ echo '<tag attr="val">' | swk escape xml
 
 | Command | Description |
 |---------|-------------|
+| `generate cert` | Generate self-signed TLS certificates |
 | `generate cron` | Generate cron expressions from flags |
 | `generate image` | Generate placeholder images |
 | `generate password` / `pw` | Generate random passwords |
@@ -252,6 +253,12 @@ echo '<tag attr="val">' | swk escape xml
 | `generate uuid` | Generate UUIDs (v1, v4, v5, v7) |
 
 ```bash
+# Self-signed TLS certificate
+swk generate cert
+swk generate cert --cn myapp.local --days 30
+swk generate cert --dns localhost --dns myapp.local --ip 127.0.0.1
+swk generate cert --key-type rsa -o ./certs/server
+
 # Cron expressions
 swk generate cron --every 5m                     # */5 * * * *
 swk generate cron --daily --at 9:00              # 0 9 * * *
@@ -366,6 +373,10 @@ swk serve --no-index
 
 # Bind to localhost only, random port
 swk serve --host 127.0.0.1 --port 0
+
+# HTTPS with self-signed cert
+swk generate cert
+swk serve --tls
 ```
 
 ## Piping and chaining
