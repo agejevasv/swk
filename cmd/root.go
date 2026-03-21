@@ -14,6 +14,7 @@ import (
 	generateCmd "github.com/agejevasv/swk/cmd/generate"
 	inspectCmd "github.com/agejevasv/swk/cmd/inspect"
 	queryCmd "github.com/agejevasv/swk/cmd/query"
+	serveCmd "github.com/agejevasv/swk/cmd/serve"
 )
 
 // Version is set via ldflags: -X github.com/agejevasv/swk/cmd.Version=v1.0.0
@@ -50,6 +51,7 @@ func init() {
 	rootCmd.AddCommand(generateCmd.Cmd)
 	rootCmd.AddCommand(inspectCmd.Cmd)
 	rootCmd.AddCommand(queryCmd.Cmd)
+	rootCmd.AddCommand(serveCmd.Cmd)
 }
 
 func vcsInfo() (commit, date string, dirty bool) {

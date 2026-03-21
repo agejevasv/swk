@@ -326,6 +326,29 @@ echo 'John:30' | swk query regex --groups '(\w+):(\d+)'
 echo 'foo bar baz' | swk query regex -r 'qux' 'bar'
 ```
 
+### Serve (`swk serve`)
+
+| Command | Description |
+|---------|-------------|
+| `serve` | Start a local static file server |
+
+```bash
+# Serve current directory on port 8080
+swk serve
+
+# Serve a specific directory on a custom port
+swk serve ./dist --port 3000
+
+# Enable CORS headers for local API development
+swk serve --cors
+
+# Disable directory listing
+swk serve --no-index
+
+# Bind to localhost only, random port
+swk serve --host 127.0.0.1 --port 0
+```
+
 ## Piping and chaining
 
 Every command reads stdin and writes stdout:
