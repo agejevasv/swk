@@ -406,6 +406,36 @@ func TestJWT_AudArray(t *testing.T) {
 	}
 }
 
+func TestDNS_Localhost(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("dns", "localhost")
+	if err != nil {
+		t.Skipf("DNS not available: %v", err)
+	}
+	if !strings.Contains(out, "A:") && !strings.Contains(out, "AAAA:") {
+		t.Errorf("expected A or AAAA record, got %q", out)
+	}
+}
+
+func TestDNS_JSON(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("dns", "--json", "localhost")
+	if err != nil {
+		t.Skipf("DNS not available: %v", err)
+	}
+	if !strings.Contains(out, `"name"`) || !strings.Contains(out, `"records"`) {
+		t.Errorf("expected JSON with name and records, got %q", out)
+	}
+}
+
+func TestDNS_InvalidType(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	_, err := executeCommand("dns", "--type", "INVALID", "localhost")
+	if err == nil {
+		t.Fatal("expected error for invalid record type")
+	}
+}
+
 func TestJWT_RegisteredClaimsOrder(t *testing.T) {
 	t.Cleanup(resetAllFlags)
 	token := createTestJWT(t, jwt.MapClaims{

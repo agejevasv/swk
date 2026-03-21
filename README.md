@@ -295,6 +295,7 @@ swk generate uuid --version 7
 |---------|-------------|
 | `inspect cert` | Inspect X.509 PEM certificates |
 | `inspect cron` | Explain cron expressions |
+| `inspect dns` | DNS lookups (A, AAAA, MX, NS, TXT, CNAME) |
 | `inspect jwt` | Inspect JWT token claims and expiry |
 | `inspect net` | List processes listening on network ports (Linux) |
 | `inspect text` / `txt` | Character, word, line, byte counts |
@@ -309,6 +310,12 @@ swk inspect cert cert.pem --check-expiry
 swk inspect cron '*/5 * * * *'
 swk inspect cron --explain '0 9 * * 1-5'
 swk inspect cron --next 3 '0 9 * * MON'
+
+# DNS lookups
+swk inspect dns example.com
+swk inspect dns example.com --type MX
+swk inspect dns 8.8.8.8                # reverse lookup
+swk inspect dns --json example.com
 
 # JWT token inspection
 swk inspect jwt 'eyJhbGciOiJIUzI1NiIs...'
