@@ -48,7 +48,7 @@ swk completion fish > ~/.config/fish/completions/swk.fish
 swk <category> <command> [file|input] [flags]
 ```
 
-Every command reads from **stdin** when no argument is given, writes to **stdout**, and sends errors to **stderr**. Document-oriented commands (json, xml, markdown, hash, etc.) accept a **file path** as the argument — if the file exists, its contents are read automatically. Use `-` to explicitly read stdin.
+Most commands read from **stdin** when no argument is given, write to **stdout**, and send errors to **stderr**. Document-oriented commands (json, xml, markdown, hash, etc.) accept a **file path** as the argument — if the file exists, its contents are read automatically. Use `-` to explicitly read stdin.
 
 ```bash
 # These are equivalent:
@@ -389,7 +389,6 @@ swk diff text old.txt new.txt
 swk diff json old.json new.json
 swk diff json <(curl -s api/v1) <(curl -s api/v2)
 curl -s api/v1 | swk diff json - saved.json
-
 ```
 
 ### Serve (`swk serve`)
@@ -438,7 +437,7 @@ swk listen --no-body
 
 ## Piping and chaining
 
-Every command reads stdin and writes stdout:
+Commands read stdin and write stdout, making them composable:
 
 ```bash
 # JSON → format → base64
