@@ -435,7 +435,7 @@ swk listen --port 9000 --status 201 --body '{"ok":true}'
 swk listen --no-body
 ```
 
-## Piping and chaining
+## Piping
 
 Commands read stdin and write stdout, making them composable:
 
