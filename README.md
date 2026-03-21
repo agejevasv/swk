@@ -43,7 +43,7 @@ swk completion fish > ~/.config/fish/completions/swk.fish
 swk <category> <command> [file|input] [flags]
 ```
 
-Most commands read from **stdin** when no argument is given, write to **stdout**, and send errors to **stderr**. Document-oriented commands (json, xml, markdown, hash, etc.) accept a **file path** as the argument — if the file exists, its contents are read automatically. Use `-` to explicitly read stdin.
+Commands read from **stdin** when no argument is given, write to **stdout**, and send errors to **stderr** (`serve`, `listen`, and `diff` are exceptions). Document-oriented commands (json, xml, markdown, hash, etc.) accept a **file path** as the argument — if the file exists, its contents are read automatically. Use `-` to explicitly read stdin.
 
 ```bash
 cat data.json | swk format json
