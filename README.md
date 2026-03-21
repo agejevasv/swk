@@ -390,8 +390,6 @@ swk diff json old.json new.json
 swk diff json <(curl -s api/v1) <(curl -s api/v2)
 curl -s api/v1 | swk diff json - saved.json
 
-# Pipe to colored diff viewer
-swk diff json old.json new.json | delta
 ```
 
 ### Serve (`swk serve`)
