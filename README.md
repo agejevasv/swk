@@ -359,6 +359,26 @@ echo 'John:30' | swk query regex --groups '(\w+):(\d+)'
 echo 'foo bar baz' | swk query regex -r 'qux' 'bar'
 ```
 
+### Diff (`swk diff`, `swk d`)
+
+| Command | Description |
+|---------|-------------|
+| `diff text` / `txt` | Unified text diff |
+| `diff json` | Semantic JSON diff (normalizes key order) |
+
+```bash
+# Text diff
+swk diff text old.txt new.txt
+
+# JSON diff (ignores key order)
+swk diff json old.json new.json
+swk diff json <(curl -s api/v1) <(curl -s api/v2)
+curl -s api/v1 | swk diff json - saved.json
+
+# Pipe to colored diff viewer
+swk diff json old.json new.json | delta
+```
+
 ### Serve (`swk serve`)
 
 | Command | Description |

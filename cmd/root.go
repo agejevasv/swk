@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	convertCmd "github.com/agejevasv/swk/cmd/convert"
+	diffCmd "github.com/agejevasv/swk/cmd/diff"
 	encodeCmd "github.com/agejevasv/swk/cmd/encode"
 	escapeCmd "github.com/agejevasv/swk/cmd/escape"
 	formatCmd "github.com/agejevasv/swk/cmd/format"
@@ -46,6 +47,7 @@ func init() {
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
 
 	rootCmd.AddCommand(convertCmd.Cmd)
+	rootCmd.AddCommand(diffCmd.Cmd)
 	rootCmd.AddCommand(encodeCmd.Cmd)
 	rootCmd.AddCommand(escapeCmd.Cmd)
 	rootCmd.AddCommand(formatCmd.Cmd)
