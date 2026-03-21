@@ -46,7 +46,6 @@ swk <category> <command> [file|input] [flags]
 Most commands read from **stdin** when no argument is given, write to **stdout**, and send errors to **stderr**. Document-oriented commands (json, xml, markdown, hash, etc.) accept a **file path** as the argument — if the file exists, its contents are read automatically. Use `-` to explicitly read stdin.
 
 ```bash
-# These are equivalent:
 cat data.json | swk format json
 swk format json data.json
 swk format json - < data.json
