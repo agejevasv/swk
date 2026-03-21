@@ -386,6 +386,23 @@ swk generate cert
 swk serve --tls
 ```
 
+### Listen (`swk listen`)
+
+| Command | Description |
+|---------|-------------|
+| `listen` | Log incoming HTTP requests (webhook receiver) |
+
+```bash
+# Log all incoming requests on port 8080
+swk listen
+
+# Custom port and response
+swk listen --port 9000 --status 201 --body '{"ok":true}'
+
+# Don't log request bodies
+swk listen --no-body
+```
+
 ## Piping and chaining
 
 Every command reads stdin and writes stdout:

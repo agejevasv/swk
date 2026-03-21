@@ -13,6 +13,7 @@ import (
 	formatCmd "github.com/agejevasv/swk/cmd/format"
 	generateCmd "github.com/agejevasv/swk/cmd/generate"
 	inspectCmd "github.com/agejevasv/swk/cmd/inspect"
+	listenCmd "github.com/agejevasv/swk/cmd/listen"
 	queryCmd "github.com/agejevasv/swk/cmd/query"
 	serveCmd "github.com/agejevasv/swk/cmd/serve"
 )
@@ -50,6 +51,7 @@ func init() {
 	rootCmd.AddCommand(formatCmd.Cmd)
 	rootCmd.AddCommand(generateCmd.Cmd)
 	rootCmd.AddCommand(inspectCmd.Cmd)
+	rootCmd.AddCommand(listenCmd.Cmd)
 	rootCmd.AddCommand(queryCmd.Cmd)
 	rootCmd.AddCommand(serveCmd.Cmd)
 }
