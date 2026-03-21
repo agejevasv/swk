@@ -59,6 +59,21 @@ swk format json - < data.json
 
 ## Commands
 
+| Category | Description |
+|----------|-------------|
+| [**convert**](#convert-swk-convert-swk-c) | Data format converters |
+| [**format**](#format-swk-format-swk-fmt-swk-f) | Prettify, minify, and render data |
+| [**encode**](#encode-swk-encode-swk-enc) | Encoders and decoders |
+| [**escape**](#escape-swk-escape-swk-esc) | Escape and unescape strings |
+| [**generate**](#generate-swk-generate-swk-g) | Data generators |
+| [**inspect**](#inspect-swk-inspect-swk-i) | Inspect and analyze data |
+| [**query**](#query-swk-query-swk-q) | Query and search data |
+| [**diff**](#diff-swk-diff-swk-d) | Compare files |
+| [**serve**](#serve-swk-serve) | Local static file server |
+| [**listen**](#listen-swk-listen) | Log incoming HTTP requests |
+
+---
+
 ### Convert (`swk convert`, `swk c`)
 
 | Command | Description |
