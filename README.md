@@ -451,7 +451,7 @@ Commands read stdin and write stdout, making them composable:
 # JSON → format → base64
 echo '{"a":1}' | swk format json | swk encode base64
 
-# Generate password → display on stderr, hash to stdout
+# Generate password, show it, and hash it
 swk generate password | tee /dev/stderr | swk encode hash
 
 # YAML → JSON → minify → clipboard (macOS)
