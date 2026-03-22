@@ -11,8 +11,9 @@ import (
 )
 
 var subnetCmd = &cobra.Command{
-	Use:   "subnet [cidr]",
-	Short: "Calculate subnet information from CIDR notation",
+	Use:     "subnet [cidr]",
+	Short:   "Calculate subnet information from CIDR notation",
+	Example: "  swk inspect subnet 192.168.0.0/24",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		input, err := ioutil.ReadInputString(args, cmd.InOrStdin())
 		if err != nil {
