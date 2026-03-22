@@ -311,7 +311,7 @@ swk generate uuid --version 7
 | `inspect domain` | Domain registration info via RDAP |
 | `inspect ip` | Show your public IP address |
 | `inspect jwt` | Inspect JWT token claims and expiry |
-| `inspect net` | List processes listening on network ports (Linux) |
+| `inspect net` | List processes listening on network ports (Linux/macOS) |
 | `inspect subnet` | Calculate subnet information from CIDR |
 | `inspect text` / `txt` | Character, word, line, byte counts |
 | `inspect url` | Parse URL into components |
@@ -345,7 +345,7 @@ echo 'eyJhbGciOiJIUzI1NiIs...' | swk inspect jwt
 swk inspect jwt --check-expiry 'eyJhbGciOiJIUzI1NiIs...'
 swk inspect jwt --json 'eyJhbGciOiJIUzI1NiIs...'
 
-# Network ports (Linux only — parses /proc, no external commands)
+# Network ports (Linux/macOS)
 swk inspect net
 swk inspect net --all                   # include established connections
 swk inspect net --tcp --port 8080       # filter by protocol and port

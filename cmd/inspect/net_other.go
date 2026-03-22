@@ -1,4 +1,4 @@
-//go:build !linux
+//go:build !(linux || darwin)
 
 package inspect
 
@@ -10,10 +10,10 @@ import (
 
 var netCmd = &cobra.Command{
 	Use:    "net",
-	Short:  "List processes listening on network ports (Linux only)",
+	Short:  "List processes listening on network ports (Linux/macOS only)",
 	Hidden: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return fmt.Errorf("inspect net is only available on Linux")
+		return fmt.Errorf("inspect net is only available on Linux and macOS")
 	},
 }
 

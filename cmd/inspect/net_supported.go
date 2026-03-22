@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || darwin
 
 package inspect
 
@@ -14,8 +14,8 @@ import (
 
 var netCmd = &cobra.Command{
 	Use:   "net",
-	Short: "List processes listening on network ports (Linux)",
-	Long:  "List processes listening on TCP/UDP ports by inspecting /proc. Linux only.",
+	Short: "List processes listening on network ports",
+	Long:  "List processes listening on TCP/UDP ports.",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := inspectLib.NetFilterOptions{
 			All:  ioutil.MustGetBool(cmd, "all"),
@@ -24,7 +24,7 @@ var netCmd = &cobra.Command{
 			Port: ioutil.MustGetInt(cmd, "port"),
 		}
 
-		entries, err := inspectLib.ListSockets("/proc", opts)
+		entries, err := inspectLib.ListSockets(opts)
 		if err != nil {
 			return err
 		}
