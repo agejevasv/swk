@@ -11,7 +11,7 @@ import (
 
 var imageCmd = &cobra.Command{
 	Use:   "image",
-	Short: "Generate abstract placeholder images",
+	Short: "Generate abstract placeholder PNG images",
 	Example: `  swk generate image -o art.png
   swk generate image --width 800 --height 600 --style circles -o out.png
   swk generate image --style mixed > art.png`,
