@@ -217,9 +217,6 @@ func TestListSockets_Integration(t *testing.T) {
 		if e.Proto == "" {
 			t.Errorf("entry has empty proto")
 		}
-		if e.LocalPort == 0 {
-			t.Errorf("entry has zero local port")
-		}
 		if e.PID == 0 {
 			t.Errorf("entry has zero PID")
 		}

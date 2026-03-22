@@ -4,10 +4,26 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
+
+// shortSocketPath returns a path short enough for Unix sockets on macOS (104-byte limit).
+func shortSocketPath(t *testing.T) string {
+	t.Helper()
+	if runtime.GOOS == "darwin" {
+		dir, err := os.MkdirTemp("/tmp", "swk")
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { os.RemoveAll(dir) })
+		return filepath.Join(dir, "s.sock")
+	}
+	return filepath.Join(t.TempDir(), "docker.sock")
+}
 
 // --- NetSocketsJSON tests ---
 
@@ -102,7 +118,7 @@ func TestSortSocketEntries(t *testing.T) {
 // --- queryDockerPortsFromSocket tests ---
 
 func TestQueryDockerPorts_FakeServer(t *testing.T) {
-	socketPath := filepath.Join(t.TempDir(), "docker.sock")
+	socketPath := shortSocketPath(t)
 
 	ln, err := net.Listen("unix", socketPath)
 	if err != nil {
@@ -149,7 +165,7 @@ func TestQueryDockerPorts_NoSocket(t *testing.T) {
 }
 
 func TestQueryDockerPorts_BadResponse(t *testing.T) {
-	socketPath := filepath.Join(t.TempDir(), "docker.sock")
+	socketPath := shortSocketPath(t)
 
 	ln, err := net.Listen("unix", socketPath)
 	if err != nil {
@@ -170,7 +186,7 @@ func TestQueryDockerPorts_BadResponse(t *testing.T) {
 }
 
 func TestQueryDockerPorts_NoPublicPorts(t *testing.T) {
-	socketPath := filepath.Join(t.TempDir(), "docker.sock")
+	socketPath := shortSocketPath(t)
 
 	ln, err := net.Listen("unix", socketPath)
 	if err != nil {
