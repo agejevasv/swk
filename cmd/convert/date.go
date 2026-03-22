@@ -15,7 +15,10 @@ var dateCmd = &cobra.Command{
 	Use:   "date [input]",
 	Short: "Convert between date/time formats",
 	Long: `Convert between unix timestamps, ISO 8601, RFC 2822, and human-readable formats.
-Custom formats use strftime syntax (e.g. "%Y-%m-%d", "%H:%M:%S").`,
+Custom formats use strftime syntax (e.g. "%Y-%m-%d", "%H:%M:%S").
+
+With --from auto (default), numeric values >1e12 are treated as milliseconds.
+Use --from unix or --from unixms to be explicit.`,
 	Example: `  swk convert date 1700000000 --from unix --to iso
   swk convert date now --to unix
   swk convert date 1700000000 --from unix --to '%Y-%m-%d' --tz UTC`,
@@ -24,17 +27,14 @@ Custom formats use strftime syntax (e.g. "%Y-%m-%d", "%H:%M:%S").`,
 		dtTo := ioutil.MustGetString(cmd, "to")
 		dtTz := ioutil.MustGetString(cmd, "tz")
 
-		var inputStr string
-		var err error
+		inputStr, err := ioutil.ReadInputString(args, cmd.InOrStdin())
+		if err != nil {
+			return err
+		}
 
-		if len(args) > 0 && strings.EqualFold(args[0], "now") {
+		if strings.EqualFold(inputStr, "now") {
 			inputStr = fmt.Sprintf("%d", time.Now().Unix())
 			dtFrom = "unix"
-		} else {
-			inputStr, err = ioutil.ReadInputString(args, cmd.InOrStdin())
-			if err != nil {
-				return err
-			}
 		}
 
 		result, err := convLib.ConvertDateTime(inputStr, dtFrom, dtTo, dtTz)

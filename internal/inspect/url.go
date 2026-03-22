@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"sort"
 	"strings"
 )
 
@@ -22,9 +23,8 @@ type URLInfo struct {
 func ParseURL(input string) (*URLInfo, error) {
 	input = strings.TrimSpace(input)
 
-	// If no scheme, prepend https:// so net/url can parse it
 	if !strings.Contains(input, "://") {
-		input = "https://" + input
+		return nil, fmt.Errorf("invalid URL %q: missing scheme (e.g. https://)", input)
 	}
 
 	u, err := url.Parse(input)
@@ -78,9 +78,14 @@ func URLInfoTable(info *URLInfo) string {
 		fmt.Fprintf(&sb, "Path:      %s\n", info.Path)
 	}
 	if len(info.Query) > 0 {
+		keys := make([]string, 0, len(info.Query))
+		for k := range info.Query {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
 		var parts []string
-		for k, vals := range info.Query {
-			for _, v := range vals {
+		for _, k := range keys {
+			for _, v := range info.Query[k] {
 				parts = append(parts, k+"="+v)
 			}
 		}

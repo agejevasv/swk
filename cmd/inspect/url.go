@@ -24,11 +24,21 @@ var urlCmd = &cobra.Command{
 			return err
 		}
 
+		if ioutil.MustGetBool(cmd, "json") {
+			out, err := inspLib.URLInfoJSON(info)
+			if err != nil {
+				return err
+			}
+			fmt.Fprintln(cmd.OutOrStdout(), string(out))
+			return nil
+		}
+
 		fmt.Fprintln(cmd.OutOrStdout(), inspLib.URLInfoTable(info))
 		return nil
 	},
 }
 
 func init() {
+	urlCmd.Flags().Bool("json", false, "output as JSON")
 	Cmd.AddCommand(urlCmd)
 }

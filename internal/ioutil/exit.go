@@ -1,6 +1,12 @@
 package ioutil
 
 // ExitCoder allows commands to signal a specific exit code.
+// Exit code 1 = negative result (no match, check failed), not a bug.
+// Exit code 2 = actual error (bad input, invalid flags, etc.).
+//
+// Convention: Error() should return "" for exit code 1 types. The root
+// command prints "Error: <msg>" to stderr for non-empty messages, so
+// returning "" suppresses that output for expected negative results.
 type ExitCoder interface {
 	error
 	ExitCode() int

@@ -54,17 +54,17 @@ func Inspect(input string) *TextInfo {
 
 func humanBytes(b int) string {
 	const (
-		KB = 1024
-		MB = 1024 * KB
-		GB = 1024 * MB
+		KiB = 1024
+		MiB = 1024 * KiB
+		GiB = 1024 * MiB
 	)
 	switch {
-	case b >= GB:
-		return fmt.Sprintf("%.1f GB", float64(b)/float64(GB))
-	case b >= MB:
-		return fmt.Sprintf("%.1f MB", float64(b)/float64(MB))
-	case b >= KB:
-		return fmt.Sprintf("%.1f KB", float64(b)/float64(KB))
+	case b >= GiB:
+		return fmt.Sprintf("%.1f GiB", float64(b)/float64(GiB))
+	case b >= MiB:
+		return fmt.Sprintf("%.1f MiB", float64(b)/float64(MiB))
+	case b >= KiB:
+		return fmt.Sprintf("%.1f KiB", float64(b)/float64(KiB))
 	default:
 		return fmt.Sprintf("%d B", b)
 	}

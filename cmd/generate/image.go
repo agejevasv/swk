@@ -27,7 +27,7 @@ var imageCmd = &cobra.Command{
 		}
 
 		if genOutput != "" {
-			return os.WriteFile(genOutput, data, 0644)
+			return os.WriteFile(genOutput, data, 0o666)
 		}
 		_, err = cmd.OutOrStdout().Write(data)
 		return err

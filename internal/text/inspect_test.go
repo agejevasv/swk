@@ -95,9 +95,9 @@ func TestInspect(t *testing.T) {
 			wantSent: 3,
 		},
 		{
-			name:       "BytesHuman for 1KB",
+			name:       "BytesHuman for 1KiB",
 			input:      strings.Repeat("a", 1024),
-			checkHuman: "1.0 KB",
+			checkHuman: "1.0 KiB",
 		},
 		{
 			name:      "only whitespace has 0 words",
@@ -137,7 +137,7 @@ func TestInspect(t *testing.T) {
 				}
 			}
 
-			if tt.name != "sentence counting" && tt.name != "BytesHuman for 1KB" && tt.name != "Chinese characters" {
+			if tt.name != "sentence counting" && tt.name != "BytesHuman for 1KiB" && tt.name != "Chinese characters" {
 				if info.Words != tt.wantWords {
 					t.Errorf("Words = %d, want %d", info.Words, tt.wantWords)
 				}
@@ -190,11 +190,11 @@ func TestHumanBytes(t *testing.T) {
 	}{
 		{0, "0 B"},
 		{500, "500 B"},
-		{1024, "1.0 KB"},
-		{1536, "1.5 KB"},
-		{1048576, "1.0 MB"},
-		{1572864, "1.5 MB"},
-		{1073741824, "1.0 GB"},
+		{1024, "1.0 KiB"},
+		{1536, "1.5 KiB"},
+		{1048576, "1.0 MiB"},
+		{1572864, "1.5 MiB"},
+		{1073741824, "1.0 GiB"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.want, func(t *testing.T) {

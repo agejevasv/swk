@@ -44,19 +44,9 @@ func TestParseURL(t *testing.T) {
 			},
 		},
 		{
-			name:  "no_scheme_adds_https",
-			input: "example.com/path",
-			checkFn: func(t *testing.T, info *URLInfo) {
-				if info.Scheme != "https" {
-					t.Errorf("Scheme = %q, want https", info.Scheme)
-				}
-				if info.Host != "example.com" {
-					t.Errorf("Host = %q, want example.com", info.Host)
-				}
-				if info.Path != "/path" {
-					t.Errorf("Path = %q, want /path", info.Path)
-				}
-			},
+			name:    "no_scheme_returns_error",
+			input:   "example.com/path",
+			wantErr: true,
 		},
 		{
 			name:  "http_scheme_preserved",
@@ -122,28 +112,9 @@ func TestParseURL(t *testing.T) {
 			},
 		},
 		{
-			name:  "minimal_url_just_host",
-			input: "example.com",
-			checkFn: func(t *testing.T, info *URLInfo) {
-				if info.Scheme != "https" {
-					t.Errorf("Scheme = %q, want https", info.Scheme)
-				}
-				if info.Host != "example.com" {
-					t.Errorf("Host = %q, want example.com", info.Host)
-				}
-				if info.Port != "" {
-					t.Errorf("Port = %q, want empty", info.Port)
-				}
-				if info.Fragment != "" {
-					t.Errorf("Fragment = %q, want empty", info.Fragment)
-				}
-				if info.User != "" {
-					t.Errorf("User = %q, want empty", info.User)
-				}
-				if len(info.Query) != 0 {
-					t.Errorf("Query = %v, want empty", info.Query)
-				}
-			},
+			name:    "minimal_url_just_host_no_scheme",
+			input:   "example.com",
+			wantErr: true,
 		},
 		{
 			name:  "url_with_encoded_characters",
@@ -212,13 +183,7 @@ func TestParseURL(t *testing.T) {
 		{
 			name:    "empty_input",
 			input:   "",
-			wantErr: false, // net/url.Parse accepts empty strings with a prepended scheme
-			checkFn: func(t *testing.T, info *URLInfo) {
-				// After prepending https://, it parses but host is empty
-				if info.Scheme != "https" {
-					t.Errorf("Scheme = %q, want https", info.Scheme)
-				}
-			},
+			wantErr: true,
 		},
 	}
 
