@@ -45,6 +45,12 @@ func TestJSONToCSV(t *testing.T) {
 			want:      "val\n42\n",
 		},
 		{
+			name:      "extra_keys_in_later_objects",
+			input:     `[{"name":"alice"},{"name":"bob","email":"bob@example.com"}]`,
+			delimiter: ',',
+			want:      "email,name\n,alice\nbob@example.com,bob\n",
+		},
+		{
 			name:      "empty_array",
 			input:     `[]`,
 			delimiter: ',',

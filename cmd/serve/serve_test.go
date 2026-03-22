@@ -1,53 +1,68 @@
 package serve
 
 import (
+	"bytes"
 	"crypto/tls"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"syscall"
 	"testing"
 	"time"
 
 	genLib "github.com/agejevasv/swk/internal/gen"
+	"github.com/spf13/pflag"
 )
 
-func TestServe_InvalidDir(t *testing.T) {
-	Cmd.SetArgs([]string{"/nonexistent/path"})
-	Cmd.SetOut(new(devNull))
-	Cmd.SetErr(new(devNull))
+func resetAllFlags() {
+	Cmd.Flags().VisitAll(func(f *pflag.Flag) {
+		f.Value.Set(f.DefValue)
+		f.Changed = false
+	})
+}
+
+func executeCommand(args ...string) (string, error) {
+	buf := new(bytes.Buffer)
+	Cmd.SetOut(buf)
+	Cmd.SetErr(buf)
+	Cmd.SetArgs(args)
 	err := Cmd.Execute()
+	return buf.String(), err
+}
+
+func TestServe_InvalidDir(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	_, err := executeCommand("/nonexistent/path")
 	if err == nil {
 		t.Fatal("expected error for nonexistent directory")
 	}
 }
 
 func TestServe_FileNotDir(t *testing.T) {
+	t.Cleanup(resetAllFlags)
 	f := filepath.Join(t.TempDir(), "file.txt")
 	os.WriteFile(f, []byte("hello"), 0o644)
 
-	Cmd.SetArgs([]string{f})
-	Cmd.SetOut(new(devNull))
-	Cmd.SetErr(new(devNull))
-	err := Cmd.Execute()
+	_, err := executeCommand(f)
 	if err == nil {
 		t.Fatal("expected error when path is a file, not a directory")
 	}
 }
 
 func TestServe_TLS_MissingCert(t *testing.T) {
+	t.Cleanup(resetAllFlags)
 	dir := t.TempDir()
-	Cmd.SetArgs([]string{dir, "--tls", "--cert", "/nonexistent/cert.pem", "--key", "/nonexistent/key.pem", "--port", "0"})
-	Cmd.SetOut(new(devNull))
-	Cmd.SetErr(new(devNull))
-	err := Cmd.Execute()
+	_, err := executeCommand(dir, "--tls", "--cert", "/nonexistent/cert.pem", "--key", "/nonexistent/key.pem", "--port", "0")
 	if err == nil {
 		t.Fatal("expected error for missing TLS cert")
 	}
 }
 
 func TestServe_TLS_Integration(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+
 	dir := t.TempDir()
 	os.WriteFile(filepath.Join(dir, "hello.txt"), []byte("hello tls"), 0o644)
 
@@ -116,6 +131,17 @@ func TestServe_TLS_Integration(t *testing.T) {
 	}
 	if resp.TLS == nil {
 		t.Error("expected TLS connection")
+	}
+
+	// Shut down the server cleanly via SIGINT
+	syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+	select {
+	case err := <-errCh:
+		if err != nil {
+			t.Errorf("server returned unexpected error: %v", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("server did not shut down within timeout")
 	}
 }
 

@@ -17,9 +17,15 @@ func JSONToCSV(input []byte, delimiter rune) ([]byte, error) {
 		return nil, fmt.Errorf("empty JSON array")
 	}
 
-	headers := make([]string, 0, len(data[0]))
-	for k := range data[0] {
-		headers = append(headers, k)
+	seen := make(map[string]bool)
+	var headers []string
+	for _, obj := range data {
+		for k := range obj {
+			if !seen[k] {
+				seen[k] = true
+				headers = append(headers, k)
+			}
+		}
 	}
 	sort.Strings(headers)
 
@@ -34,7 +40,9 @@ func JSONToCSV(input []byte, delimiter rune) ([]byte, error) {
 	for _, obj := range data {
 		row := make([]string, len(headers))
 		for i, h := range headers {
-			row[i] = fmt.Sprintf("%v", obj[h])
+			if v, ok := obj[h]; ok {
+				row[i] = fmt.Sprintf("%v", v)
+			}
 		}
 		if err := w.Write(row); err != nil {
 			return nil, err

@@ -68,8 +68,13 @@ func Colorize(diff string) string {
 	if diff == "" {
 		return ""
 	}
+	lines := strings.Split(diff, "\n")
+	// strings.Split on a trailing \n produces an empty final element; drop it.
+	if len(lines) > 0 && lines[len(lines)-1] == "" {
+		lines = lines[:len(lines)-1]
+	}
 	var sb strings.Builder
-	for _, line := range strings.Split(diff, "\n") {
+	for _, line := range lines {
 		switch {
 		case strings.HasPrefix(line, "---") || strings.HasPrefix(line, "+++"):
 			sb.WriteString(colorBold + line + colorReset)

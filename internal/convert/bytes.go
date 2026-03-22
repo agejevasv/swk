@@ -132,8 +132,11 @@ func isPureNumber(s string) bool {
 	if len(s) == 0 {
 		return false
 	}
-	for _, c := range s {
-		if !unicode.IsDigit(c) && c != '-' && c != '+' {
+	for i, c := range s {
+		if (c == '-' || c == '+') && i == 0 {
+			continue
+		}
+		if !unicode.IsDigit(c) {
 			return false
 		}
 	}

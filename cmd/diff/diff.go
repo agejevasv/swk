@@ -5,6 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
+
+	"github.com/agejevasv/swk/internal/ioutil"
 )
 
 var Cmd = &cobra.Command{
@@ -14,8 +16,7 @@ var Cmd = &cobra.Command{
 }
 
 func shouldColorize(cmd *cobra.Command) bool {
-	flag, _ := cmd.Flags().GetString("color")
-	switch flag {
+	switch ioutil.MustGetString(cmd, "color") {
 	case "always":
 		return true
 	case "never":
