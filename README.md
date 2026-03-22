@@ -309,6 +309,7 @@ swk generate uuid --version 7
 | `inspect ip` | Show your public IP address |
 | `inspect jwt` | Inspect JWT token claims and expiry |
 | `inspect net` | List processes listening on network ports (Linux) |
+| `inspect subnet` | Calculate subnet information from CIDR |
 | `inspect text` / `txt` | Character, word, line, byte counts |
 | `inspect url` | Parse URL into components |
 
@@ -346,6 +347,10 @@ swk inspect net
 swk inspect net --all                   # include established connections
 swk inspect net --tcp --port 8080       # filter by protocol and port
 swk inspect net --json
+
+# Subnet calculator
+swk inspect subnet 192.168.1.0/24
+swk inspect subnet 10.0.0.0/16
 
 # Text stats (accepts file path)
 swk inspect text essay.txt
