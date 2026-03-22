@@ -327,6 +327,43 @@ func TestPathTraversal_DotDot(t *testing.T) {
 	}
 }
 
+func TestPathTraversal_SiblingPrefix(t *testing.T) {
+	// Root is e.g. /tmp/foo; sibling /tmp/foobar should not be accessible.
+	parent := t.TempDir()
+	root := filepath.Join(parent, "serve")
+	sibling := filepath.Join(parent, "servebar")
+	os.MkdirAll(root, 0o755)
+	os.MkdirAll(sibling, 0o755)
+	os.WriteFile(filepath.Join(sibling, "secret.txt"), []byte("secret"), 0o644)
+
+	h := testHandler(t, Options{Root: root})
+
+	// A symlink inside root that points to the sibling directory
+	os.Symlink(sibling, filepath.Join(root, "escape"))
+	rec := request(t, h, "GET", "/escape/secret.txt")
+	if rec.Code != 404 {
+		t.Errorf("expected 404 for symlink to sibling with shared prefix, got %d", rec.Code)
+	}
+}
+
+func TestServeFile_SymlinkedRoot(t *testing.T) {
+	// When the root directory itself is a symlink, files should still be served.
+	dir := setupTestDir(t)
+	parent := t.TempDir()
+	link := filepath.Join(parent, "link")
+	os.Symlink(dir, link)
+
+	h := testHandler(t, Options{Root: link})
+
+	rec := request(t, h, "GET", "/hello.txt")
+	if rec.Code != 200 {
+		t.Errorf("expected 200 when root is a symlink, got %d", rec.Code)
+	}
+	if rec.Body.String() != "hello world" {
+		t.Errorf("expected 'hello world', got %q", rec.Body.String())
+	}
+}
+
 func TestPathTraversal_Encoded(t *testing.T) {
 	dir := setupTestDir(t)
 	h := testHandler(t, Options{Root: dir})

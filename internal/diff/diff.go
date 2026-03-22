@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/agejevasv/swk/internal/ioutil"
 	textLib "github.com/agejevasv/swk/internal/text"
 )
 
@@ -32,7 +33,7 @@ func ReadTwoInputs(args []string, stdin io.Reader) ([]byte, []byte, error) {
 
 func readArg(arg string, stdin io.Reader) ([]byte, error) {
 	if arg == "-" {
-		return io.ReadAll(stdin)
+		return ioutil.ReadStdin(stdin)
 	}
 	return os.ReadFile(arg)
 }

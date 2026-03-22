@@ -9,7 +9,7 @@ A CLI toolkit for everyday developer tasks.
 
 ## Install
 
-### Quick install
+### Quick install (macOS/Linux)
 
 ```bash
 curl -sL https://raw.githubusercontent.com/agejevasv/swk/main/install.sh | sh
@@ -20,6 +20,8 @@ Or specify a directory:
 ```bash
 SWK_INSTALL_DIR=~/.local/bin curl -sL https://raw.githubusercontent.com/agejevasv/swk/main/install.sh | sh
 ```
+
+**Windows:** Download the binary from [GitHub Releases](https://github.com/agejevasv/swk/releases) and add it to your PATH. On WSL, the install script above works as-is.
 
 ### From source
 
@@ -35,6 +37,7 @@ make build
 swk completion bash > /etc/bash_completion.d/swk
 swk completion zsh > "${fpath[1]}/_swk"
 swk completion fish > ~/.config/fish/completions/swk.fish
+swk completion powershell | Out-String | Invoke-Expression  # PowerShell (current session)
 ```
 
 ## Usage

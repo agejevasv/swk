@@ -39,6 +39,10 @@ func Handler(opts Options) http.Handler {
 
 func fileHandler(opts Options) http.HandlerFunc {
 	root := filepath.Clean(opts.Root)
+	// Resolve symlinks on root so the prefix check works when root is itself a symlink.
+	if resolved, err := filepath.EvalSymlinks(root); err == nil {
+		root = resolved
+	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet && r.Method != http.MethodHead {
@@ -55,7 +59,7 @@ func fileHandler(opts Options) http.HandlerFunc {
 			http.NotFound(w, r)
 			return
 		}
-		if !strings.HasPrefix(resolved, root) {
+		if resolved != root && !strings.HasPrefix(resolved, root+string(filepath.Separator)) {
 			http.NotFound(w, r)
 			return
 		}
