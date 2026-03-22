@@ -370,7 +370,7 @@ swk inspect url 'https://example.com:8080/api/v1/users?page=1&limit=10#section'
 
 ```bash
 # HTML (CSS selectors — accepts file path)
-curl -s https://example.com | swk query html 'a' --attr href
+curl -s http://example.com | swk query html 'a' --attr href
 swk query html 'div.content p' page.html
 
 # JSON (JSONPath — accepts file path)
@@ -472,7 +472,7 @@ swk convert duration '2d 5h' --to seconds | swk convert duration --to human
 swk generate cron --daily --at 9:00 | swk inspect cron
 
 # Scrape links from a webpage
-curl -s https://example.com | swk query html 'a' --attr href
+curl -s http://example.com | swk query html 'a' --attr href
 ```
 
 ## Testing
