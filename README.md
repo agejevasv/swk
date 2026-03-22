@@ -306,6 +306,7 @@ swk generate uuid --version 7
 | `inspect cron` | Explain cron expressions |
 | `inspect dns` | DNS lookups (A, AAAA, MX, NS, TXT, CNAME) |
 | `inspect domain` | Domain registration info via RDAP |
+| `inspect ip` | Show your public IP address |
 | `inspect jwt` | Inspect JWT token claims and expiry |
 | `inspect net` | List processes listening on network ports (Linux) |
 | `inspect text` / `txt` | Character, word, line, byte counts |
@@ -330,6 +331,9 @@ swk inspect dns --json example.com
 # Domain registration info
 swk inspect domain example.com
 swk inspect domain --json example.com
+
+# Public IP
+swk inspect ip
 
 # JWT token inspection
 swk inspect jwt 'eyJhbGciOiJIUzI1NiIs...'
