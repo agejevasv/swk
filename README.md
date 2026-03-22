@@ -469,7 +469,7 @@ echo '{"status":"ok","items":[{"id":1,"name":"foo"},{"id":2,"name":"bar"}]}' \
 swk convert duration '2d 5h' --to seconds | swk convert duration --to human
 
 # CSV → JSON → query with JSONPath
-swk convert csv2json data.csv | swk query json '$..[?(@.age>30)]'
+printf 'name,age\nalice,30\nbob,45\n' | swk convert csv2json | swk query json '$..[?(@.age>30)]'
 
 # Scrape links from a webpage
 curl -s https://example.com | swk query html 'a' --attr href
