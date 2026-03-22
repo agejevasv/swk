@@ -18,9 +18,10 @@ var baseNameMap = map[string]int{
 }
 
 var baseCmd = &cobra.Command{
-	Use:   "base [input]",
-	Short: "Convert numbers between bases",
-	Long:  "Convert numbers between binary, octal, decimal, and hexadecimal.",
+	Use:     "base [input]",
+	Short:   "Convert numbers between bases",
+	Long:    "Convert numbers between binary, octal, decimal, and hexadecimal.",
+	Example: "  swk convert base 255 --from dec --to hex",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		input, err := ioutil.ReadInputString(args, cmd.InOrStdin())
 		if err != nil {

@@ -13,6 +13,8 @@ import (
 var cronCmd = &cobra.Command{
 	Use:   "cron [expression]",
 	Short: "Explain cron expressions",
+	Example: `  swk inspect cron '*/5 * * * *'
+  swk inspect cron --next 3 '0 9 * * MON'`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		input, err := ioutil.ReadInputString(args, cmd.InOrStdin())
 		if err != nil {

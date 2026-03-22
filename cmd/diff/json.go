@@ -12,6 +12,8 @@ import (
 var jsonCmd = &cobra.Command{
 	Use:   "json <file1> <file2>",
 	Short: "Semantic JSON diff (normalizes key order)",
+	Example: `  swk diff json old.json new.json
+  curl -s api/v1 | swk diff json - saved.json`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		a, b, err := diffLib.ReadTwoInputs(args, cmd.InOrStdin())
 		if err != nil {

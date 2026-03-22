@@ -19,6 +19,9 @@ var regexCmd = &cobra.Command{
 	Long: `By default, prints lines that match the pattern (like grep).
 Use -o to print only the matched parts, --groups for structured JSON output,
 or --replace for substitution.`,
+	Example: `  echo '2024-01-15 hello 2024-02-20' | swk query regex -o '\d{4}-\d{2}-\d{2}'
+  echo 'John:30' | swk query regex --groups '(\w+):(\d+)'
+  echo 'foo bar' | swk query regex -r 'baz' 'bar'`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		regexPattern := args[0]

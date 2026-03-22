@@ -16,6 +16,9 @@ var dateCmd = &cobra.Command{
 	Short: "Convert between date/time formats",
 	Long: `Convert between unix timestamps, ISO 8601, RFC 2822, and human-readable formats.
 Custom formats use strftime syntax (e.g. "%Y-%m-%d", "%H:%M:%S").`,
+	Example: `  swk convert date 1700000000 --from unix --to iso
+  swk convert date now --to unix
+  swk convert date 1700000000 --from unix --to '%Y-%m-%d' --tz UTC`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dtFrom := ioutil.MustGetString(cmd, "from")
 		dtTo := ioutil.MustGetString(cmd, "to")
