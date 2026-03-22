@@ -21,6 +21,9 @@ func shouldColorize(cmd *cobra.Command) bool {
 	case "never":
 		return false
 	default: // "auto"
-		return term.IsTerminal(int(os.Stdout.Fd()))
+		if f, ok := cmd.OutOrStdout().(*os.File); ok {
+			return term.IsTerminal(int(f.Fd()))
+		}
+		return false
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -27,6 +28,8 @@ func Handler(opts Options) http.Handler {
 		opts.Status = 200
 	}
 
+	var mu sync.Mutex
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var body []byte
 		if r.Body != nil {
@@ -34,7 +37,9 @@ func Handler(opts Options) http.Handler {
 			r.Body.Close()
 		}
 
+		mu.Lock()
 		logRequest(opts.Writer, r, body, opts.NoBody)
+		mu.Unlock()
 
 		w.WriteHeader(opts.Status)
 		if opts.Body != "" {

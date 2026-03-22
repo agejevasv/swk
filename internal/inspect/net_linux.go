@@ -15,6 +15,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -406,21 +407,31 @@ func queryDockerPortsFromSocket(socketPath string) map[uint16]string {
 	return result
 }
 
-func resolveUser(uid uint32) string {
-	uidStr := strconv.FormatUint(uint64(uid), 10)
+var (
+	passwdOnce  sync.Once
+	passwdCache map[string]string // uid → username
+)
 
-	// Try /etc/passwd style lookup first since os/user.LookupId
-	// can be slow when NSS is configured
+func loadPasswd() {
+	passwdCache = make(map[string]string)
 	data, err := os.ReadFile("/etc/passwd")
-	if err == nil {
-		for _, line := range strings.Split(string(data), "\n") {
-			fields := strings.SplitN(line, ":", 4)
-			if len(fields) >= 3 && fields[2] == uidStr {
-				return fields[0]
-			}
+	if err != nil {
+		return
+	}
+	for _, line := range strings.Split(string(data), "\n") {
+		fields := strings.SplitN(line, ":", 4)
+		if len(fields) >= 3 {
+			passwdCache[fields[2]] = fields[0]
 		}
 	}
+}
 
+func resolveUser(uid uint32) string {
+	passwdOnce.Do(loadPasswd)
+	uidStr := strconv.FormatUint(uint64(uid), 10)
+	if name, ok := passwdCache[uidStr]; ok {
+		return name
+	}
 	return uidStr
 }
 
