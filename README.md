@@ -5,7 +5,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/agejevasv/swk)](https://goreportcard.com/report/github.com/agejevasv/swk)
 [![Go Reference](https://pkg.go.dev/badge/github.com/agejevasv/swk.svg)](https://pkg.go.dev/github.com/agejevasv/swk)
 
-A CLI toolkit for everyday developer tasks.
+A single-binary, zero-dependency CLI toolkit for everyday developer tasks.
 
 ## Install
 
