@@ -37,7 +37,6 @@ make build
 swk completion bash > /etc/bash_completion.d/swk
 swk completion zsh > "${fpath[1]}/_swk"
 swk completion fish > ~/.config/fish/completions/swk.fish
-swk completion powershell | Out-String | Invoke-Expression  # PowerShell (current session)
 ```
 
 ## Usage
