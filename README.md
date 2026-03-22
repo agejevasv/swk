@@ -197,7 +197,7 @@ echo 'data' | swk encode base64 --url-safe
 # Hash (accepts file path)
 swk encode hash README.md
 swk encode hash README.md --algo md5
-echo -n 'hello' | swk encode hash --verify 2cf24dba...
+echo -n 'hello' | swk encode hash --verify 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
 
 # JWT — create with HMAC
 swk encode jwt --secret mykey '{"sub":"user1","role":"admin"}'
