@@ -468,8 +468,8 @@ echo '{"status":"ok","items":[{"id":1,"name":"foo"},{"id":2,"name":"bar"}]}' \
 # Duration roundtrip
 swk convert duration '2d 5h' --to seconds | swk convert duration --to human
 
-# CSV → JSON → query with JSONPath
-printf 'name,age\nalice,30\nbob,45\n' | swk convert csv2json | swk query json '$..[?(@.age>30)]'
+# Generate cron → verify
+swk generate cron --daily --at 9:00 | swk inspect cron
 
 # Scrape links from a webpage
 curl -s https://example.com | swk query html 'a' --attr href
