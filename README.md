@@ -38,6 +38,7 @@ swk completion bash > /etc/bash_completion.d/swk
 swk completion zsh > "${fpath[1]}/_swk"
 swk completion fish > ~/.config/fish/completions/swk.fish
 ```
+Source your shell or reopen.
 
 ## Usage
 
