@@ -12,13 +12,13 @@ A single-binary, zero-dependency CLI toolkit for everyday developer tasks.
 ### Quick install (macOS/Linux)
 
 ```bash
-curl -sL https://raw.githubusercontent.com/agejevasv/swk/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/agejevasv/swk/main/install.sh | sh
 ```
 
 Or specify a directory:
 
 ```bash
-SWK_INSTALL_DIR=~/.local/bin curl -sL https://raw.githubusercontent.com/agejevasv/swk/main/install.sh | sh
+SWK_INSTALL_DIR=~/.local/bin curl -fsSL https://raw.githubusercontent.com/agejevasv/swk/main/install.sh | sh
 ```
 
 **Windows:** Download the binary from [GitHub Releases](https://github.com/agejevasv/swk/releases) and add it to your PATH. On WSL, the install script above works as-is.

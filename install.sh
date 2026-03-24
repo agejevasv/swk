@@ -20,7 +20,7 @@ case "$OS" in
   *) echo "Unsupported OS: $OS" >&2; exit 1 ;;
 esac
 
-VERSION=$(curl -sI "https://github.com/$REPO/releases/latest" | grep -i "^location:" | sed 's|.*/||' | tr -d '\r')
+VERSION=$(curl -fsSI "https://github.com/$REPO/releases/latest" | grep -i "^location:" | sed 's|.*/||' | tr -d '\r')
 
 if [ -z "$VERSION" ]; then
   echo "Failed to detect latest version" >&2
@@ -35,7 +35,7 @@ echo "Installing swk $VERSION ($OS/$ARCH)..."
 TMPFILE=$(mktemp)
 trap 'rm -f "$TMPFILE"' EXIT
 
-curl -sL "$URL" -o "$TMPFILE"
+curl -fsSL "$URL" -o "$TMPFILE"
 
 if [ ! -s "$TMPFILE" ]; then
   echo "Download failed" >&2
