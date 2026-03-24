@@ -7,8 +7,6 @@
 
 A single-binary, zero-dependency CLI toolkit for everyday developer tasks.
 
-![swk](https://github.com/user-attachments/assets/d8e8db3d-ed4a-42ea-98a2-1b473b387ae3)
-
 ## Install
 
 ### Quick install (macOS/Linux)
