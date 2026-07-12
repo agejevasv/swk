@@ -2,7 +2,6 @@
 
 [![CI](https://github.com/agejevasv/swk/actions/workflows/ci.yml/badge.svg)](https://github.com/agejevasv/swk/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/agejevasv/swk/graph/badge.svg)](https://codecov.io/gh/agejevasv/swk)
-[![Go Reference](https://pkg.go.dev/badge/github.com/agejevasv/swk.svg)](https://pkg.go.dev/github.com/agejevasv/swk)
 
 A single-binary, zero-dependency CLI toolkit for everyday developer tasks.
 
