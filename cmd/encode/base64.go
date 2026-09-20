@@ -11,6 +11,7 @@ import (
 
 var base64Cmd = &cobra.Command{
 	Use:     "base64 [input]",
+	Args:    cobra.MaximumNArgs(1),
 	Aliases: []string{"b64"},
 	Short:   "Base64 encode or decode",
 	RunE: func(cmd *cobra.Command, args []string) error {

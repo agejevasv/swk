@@ -1,6 +1,8 @@
 package ioutil
 
 import (
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -93,4 +95,74 @@ func TestParseDelimiter(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestIntInRange(t *testing.T) {
+	cmd := &cobra.Command{}
+	cmd.Flags().Int("n", 0, "")
+
+	tests := []struct {
+		name      string
+		value     string
+		low, high int
+		wantErr   bool
+	}{
+		{"inside range", "5", 0, 10, false},
+		{"at lower bound", "0", 0, 10, false},
+		{"at upper bound", "10", 0, 10, false},
+		{"below range", "-1", 0, 10, true},
+		{"above range", "11", 0, 10, true},
+		{"far below", "-999999", 0, 10, true},
+		{"negative range allows negatives", "-5", -64, 64, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := cmd.Flags().Set("n", tt.value); err != nil {
+				t.Fatalf("Set: %v", err)
+			}
+			got, err := IntInRange(cmd, "n", tt.low, tt.high)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("IntInRange(%s) error = %v, wantErr %v", tt.value, err, tt.wantErr)
+			}
+			if err == nil && got != mustAtoi(t, tt.value) {
+				t.Errorf("IntInRange returned %d, want %s", got, tt.value)
+			}
+			if err != nil && !strings.Contains(err.Error(), "--n") {
+				t.Errorf("error should name the flag, got %v", err)
+			}
+		})
+	}
+}
+
+func TestIntAtLeast(t *testing.T) {
+	cmd := &cobra.Command{}
+	cmd.Flags().Int("n", 0, "")
+
+	for _, tt := range []struct {
+		value   string
+		low     int
+		wantErr bool
+	}{
+		{"0", 0, false},
+		{"1000000", 0, false},
+		{"-1", 0, true},
+		{"-1", -5, false},
+	} {
+		if err := cmd.Flags().Set("n", tt.value); err != nil {
+			t.Fatalf("Set: %v", err)
+		}
+		if _, err := IntAtLeast(cmd, "n", tt.low); (err != nil) != tt.wantErr {
+			t.Errorf("IntAtLeast(%s, low=%d) error = %v, wantErr %v", tt.value, tt.low, err, tt.wantErr)
+		}
+	}
+}
+
+func mustAtoi(t *testing.T, s string) int {
+	t.Helper()
+	n, err := strconv.Atoi(s)
+	if err != nil {
+		t.Fatalf("Atoi(%q): %v", s, err)
+	}
+	return n
 }

@@ -14,6 +14,7 @@ import (
 
 var imageCmd = &cobra.Command{
 	Use:     "image [file]",
+	Args:    cobra.MaximumNArgs(1),
 	Aliases: []string{"img"},
 	Short:   "Convert image formats",
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -23,7 +24,11 @@ var imageCmd = &cobra.Command{
 		}
 
 		imageToFormat := ioutil.MustGetString(cmd, "to")
-		imageQuality := ioutil.MustGetInt(cmd, "quality")
+		imageQuality, err := ioutil.IntInRange(cmd, "quality", 1, 100)
+		if err != nil {
+			return err
+		}
+
 		imageResize := ioutil.MustGetString(cmd, "resize")
 		imageOutput := ioutil.MustGetString(cmd, "output")
 

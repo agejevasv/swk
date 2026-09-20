@@ -11,6 +11,7 @@ import (
 
 var urlCmd = &cobra.Command{
 	Use:   "url [input]",
+	Args:  cobra.MaximumNArgs(1),
 	Short: "Parse and inspect a URL",
 	Long:  "Parse a URL into its components (scheme, host, port, path, query, fragment).",
 	RunE: func(cmd *cobra.Command, args []string) error {

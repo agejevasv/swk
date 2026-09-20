@@ -19,6 +19,7 @@ import (
 // Cmd is the top-level listen command.
 var Cmd = &cobra.Command{
 	Use:   "listen",
+	Args:  cobra.NoArgs,
 	Short: "Log incoming HTTP requests",
 	Long:  "Start an HTTP server that logs all incoming requests. Useful for testing webhooks and callbacks.",
 	RunE:  runListen,
@@ -34,10 +35,21 @@ func init() {
 
 func runListen(cmd *cobra.Command, args []string) error {
 	host := ioutil.MustGetString(cmd, "host")
-	port := ioutil.MustGetInt(cmd, "port")
+
+	port, err := ioutil.IntInRange(cmd, "port", 0, 65535)
+	if err != nil {
+		return err
+	}
+
+	// net/http panics on a status outside 100-999.
+	// 1xx is an interim response: the client would wait for a final one.
+	status, err := ioutil.IntInRange(cmd, "status", 200, 599)
+	if err != nil {
+		return err
+	}
 
 	opts := listenLib.Options{
-		Status: ioutil.MustGetInt(cmd, "status"),
+		Status: status,
 		Body:   ioutil.MustGetString(cmd, "body"),
 		NoBody: ioutil.MustGetBool(cmd, "no-body"),
 		Writer: cmd.ErrOrStderr(),
@@ -51,7 +63,7 @@ func runListen(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Fprintf(cmd.ErrOrStderr(), "Listening on http://%s\n", ln.Addr())
+	fmt.Fprintf(cmd.ErrOrStderr(), "Listening on http://%s\n", displayAddr(ln.Addr().String()))
 
 	server := &http.Server{
 		Handler: handler,
@@ -75,4 +87,17 @@ func runListen(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 	return err
+}
+
+// displayAddr turns a wildcard bind address into one that can be pasted into
+// a browser: "[::]:8080" is where the server listens, not where to reach it.
+func displayAddr(addr string) string {
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return addr
+	}
+	if host == "" || host == "::" || host == "0.0.0.0" {
+		return net.JoinHostPort("localhost", port)
+	}
+	return net.JoinHostPort(host, port)
 }

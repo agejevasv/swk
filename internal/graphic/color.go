@@ -8,6 +8,7 @@ import (
 )
 
 func ConvertColor(input string, fromFmt, toFmt string) (string, error) {
+	fromFmt = strings.ToLower(strings.TrimSpace(fromFmt))
 	if fromFmt == "auto" {
 		fromFmt = detectColorFormat(input)
 		if fromFmt == "" {
@@ -18,6 +19,11 @@ func ConvertColor(input string, fromFmt, toFmt string) (string, error) {
 	r, g, b, err := parseToRGB(input, fromFmt)
 	if err != nil {
 		return "", err
+	}
+
+	toFmt = strings.ToLower(strings.TrimSpace(toFmt))
+	if toFmt != "all" && !ValidColorFormat(toFmt) {
+		return "", fmt.Errorf("unsupported color format %q (use hex, rgb, hsl, hsv, cmyk, all)", toFmt)
 	}
 
 	if toFmt == "all" {
@@ -408,4 +414,13 @@ func formatColor(r, g, b uint8, format string) string {
 	default:
 		return fmt.Sprintf("#%02X%02X%02X", r, g, b)
 	}
+}
+
+// ValidColorFormat reports whether a name is a supported output format.
+func ValidColorFormat(name string) bool {
+	switch name {
+	case "hex", "rgb", "hsl", "hsv", "cmyk":
+		return true
+	}
+	return false
 }

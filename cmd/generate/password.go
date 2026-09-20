@@ -11,12 +11,20 @@ import (
 
 var passwordCmd = &cobra.Command{
 	Use:     "password",
+	Args:    cobra.NoArgs,
 	Aliases: []string{"pw"},
 	Short:   "Generate random passwords",
 	Long:    "Generate cryptographically secure random passwords.",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		pwLength := ioutil.MustGetInt(cmd, "length")
-		pwCount := ioutil.MustGetInt(cmd, "count")
+		pwLength, err := ioutil.IntInRange(cmd, "length", 1, 4096)
+		if err != nil {
+			return err
+		}
+
+		pwCount, err := ioutil.IntInRange(cmd, "count", 1, 10000)
+		if err != nil {
+			return err
+		}
 		pwNoUpper := ioutil.MustGetBool(cmd, "no-upper")
 		pwNoLower := ioutil.MustGetBool(cmd, "no-lower")
 		pwNoDigits := ioutil.MustGetBool(cmd, "no-digits")

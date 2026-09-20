@@ -12,6 +12,7 @@ import (
 
 var certCmd = &cobra.Command{
 	Use:   "cert [input]",
+	Args:  cobra.MaximumNArgs(1),
 	Short: "Inspect an X.509 PEM certificate",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		input, err := ioutil.ReadFileInputString(args, cmd.InOrStdin())

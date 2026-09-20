@@ -18,7 +18,7 @@ func TestJSONToCSV(t *testing.T) {
 			name:      "basic_array_of_objects",
 			input:     `[{"name":"alice","age":"30"},{"name":"bob","age":"25"}]`,
 			delimiter: ',',
-			want:      "age,name\n30,alice\n25,bob\n",
+			want:      "name,age\nalice,30\nbob,25\n",
 		},
 		{
 			name:      "csv_with_quoted_fields_containing_commas",
@@ -48,7 +48,7 @@ func TestJSONToCSV(t *testing.T) {
 			name:      "extra_keys_in_later_objects",
 			input:     `[{"name":"alice"},{"name":"bob","email":"bob@example.com"}]`,
 			delimiter: ',',
-			want:      "email,name\n,alice\nbob@example.com,bob\n",
+			want:      "name,email\nalice,\nbob,bob@example.com\n",
 		},
 		{
 			name:      "empty_array",
@@ -211,7 +211,7 @@ func TestJSONToCSV_PreservesNumbers(t *testing.T) {
 		t.Fatalf("JSONToCSV: %v", err)
 	}
 
-	want := "big,f,id,n\n9007199254740993,0.1,12345678901234567890,1000000\n"
+	want := "id,n,big,f\n12345678901234567890,1000000,9007199254740993,0.1\n"
 	if string(got) != want {
 		t.Errorf("JSONToCSV() = %q, want %q", got, want)
 	}

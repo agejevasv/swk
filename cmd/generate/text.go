@@ -11,12 +11,24 @@ import (
 
 var textCmd = &cobra.Command{
 	Use:   "text",
+	Args:  cobra.NoArgs,
 	Short: "Generate lorem ipsum text",
 	Long:  "Generate lorem ipsum placeholder text as words, sentences, or paragraphs.",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		textWords := ioutil.MustGetInt(cmd, "words")
-		textSentences := ioutil.MustGetInt(cmd, "sentences")
-		textParagraphs := ioutil.MustGetInt(cmd, "paragraphs")
+		textWords, err := ioutil.IntInRange(cmd, "words", 0, 1000000)
+		if err != nil {
+			return err
+		}
+
+		textSentences, err := ioutil.IntInRange(cmd, "sentences", 0, 1000000)
+		if err != nil {
+			return err
+		}
+
+		textParagraphs, err := ioutil.IntInRange(cmd, "paragraphs", 0, 1000000)
+		if err != nil {
+			return err
+		}
 
 		if textWords == 0 && textSentences == 0 && textParagraphs == 0 {
 			textParagraphs = 1

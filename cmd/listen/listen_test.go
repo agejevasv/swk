@@ -1,6 +1,7 @@
 package listen
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net/http"
@@ -97,3 +98,30 @@ func TestListen_RequestLogging(t *testing.T) {
 type devNull struct{}
 
 func (devNull) Write(p []byte) (int, error) { return len(p), nil }
+
+// An out-of-range status used to reach net/http and panic on every request.
+func TestListen_RejectsInvalidStatus(t *testing.T) {
+	for _, status := range []string{"-1", "0", "99", "700", "1000"} {
+		cmd := *Cmd
+		cmd.SetOut(new(bytes.Buffer))
+		cmd.SetErr(new(bytes.Buffer))
+		cmd.SetArgs([]string{"--status", status, "--port", "0"})
+		if err := cmd.Execute(); err == nil {
+			t.Errorf("--status %s should have been rejected", status)
+		}
+		cmd.Flags().Set("status", "200")
+	}
+}
+
+func TestListen_RejectsInvalidPort(t *testing.T) {
+	for _, port := range []string{"-1", "65536", "99999"} {
+		cmd := *Cmd
+		cmd.SetOut(new(bytes.Buffer))
+		cmd.SetErr(new(bytes.Buffer))
+		cmd.SetArgs([]string{"--port", port})
+		if err := cmd.Execute(); err == nil {
+			t.Errorf("--port %s should have been rejected", port)
+		}
+		cmd.Flags().Set("port", "8080")
+	}
+}

@@ -12,6 +12,11 @@ const (
 	rfc2822Format = "Mon, 02 Jan 2006 15:04:05 -0700"
 )
 
+// probeTime differs from Go's reference time (Mon Jan 2 15:04:05 MST 2006) in
+// every component, so formatting a run of literal text with it reveals whether
+// Go read any of that text as a layout token.
+var probeTime = time.Date(2021, 7, 9, 8, 23, 47, 0, time.UTC)
+
 var strftimeMap = []struct{ directive, goLayout string }{
 	{"%Y", "2006"},
 	{"%m", "01"},
@@ -32,24 +37,78 @@ var strftimeMap = []struct{ directive, goLayout string }{
 	{"%%", "%"},
 }
 
-func strftimeToGo(format string) (string, error) {
-	known := make(map[string]string, len(strftimeMap))
+func strftimeLayout(directive string) (string, bool) {
 	for _, s := range strftimeMap {
-		known[s.directive] = s.goLayout
+		if s.directive == directive {
+			return s.goLayout, true
+		}
+	}
+	return "", false
+}
+
+// formatStrftime renders each directive on its own and copies everything else
+// through untouched. Translating the whole string into one Go layout would let
+// literal text such as "Jan", "12" or "MST" be read as layout tokens.
+func formatStrftime(t time.Time, format string) (string, error) {
+	var b strings.Builder
+
+	for i := 0; i < len(format); i++ {
+		if format[i] != '%' || i+1 >= len(format) {
+			b.WriteByte(format[i])
+			continue
+		}
+
+		directive := format[i : i+2]
+		layout, ok := strftimeLayout(directive)
+		if !ok {
+			return "", fmt.Errorf("unsupported strftime directive %q", directive)
+		}
+		b.WriteString(t.Format(layout))
+		i++
 	}
 
-	var result strings.Builder
+	return b.String(), nil
+}
+
+// strftimeToGo builds a Go layout for parsing. Parsing has to hand the whole
+// layout to time.Parse, so literal text that Go would read as a token is
+// rejected rather than silently misparsed.
+func strftimeToGo(format string) (string, error) {
+	var result, literal strings.Builder
+
+	flush := func() error {
+		lit := literal.String()
+		literal.Reset()
+		if lit == "" {
+			return nil
+		}
+		if probeTime.Format(lit) != lit {
+			return fmt.Errorf("literal text %q in a strftime format would be read as a time layout; "+
+				"use only directives and punctuation when parsing", lit)
+		}
+		result.WriteString(lit)
+		return nil
+	}
+
 	for i := 0; i < len(format); i++ {
 		if format[i] == '%' && i+1 < len(format) {
 			directive := format[i : i+2]
-			if goLayout, ok := known[directive]; ok {
-				result.WriteString(goLayout)
-				i++
-				continue
+			layout, ok := strftimeLayout(directive)
+			if !ok {
+				return "", fmt.Errorf("unsupported strftime directive %q", directive)
 			}
-			return "", fmt.Errorf("unsupported strftime directive %q", directive)
+			if err := flush(); err != nil {
+				return "", err
+			}
+			result.WriteString(layout)
+			i++
+			continue
 		}
-		result.WriteByte(format[i])
+		literal.WriteByte(format[i])
+	}
+
+	if err := flush(); err != nil {
+		return "", err
 	}
 	return result.String(), nil
 }
@@ -96,7 +155,7 @@ func parseFormat(input, format string) (time.Time, error) {
 		if err != nil {
 			return time.Time{}, fmt.Errorf("invalid unix millisecond timestamp: %w", err)
 		}
-		return time.Unix(0, n*int64(time.Millisecond)), nil
+		return time.UnixMilli(n), nil
 	case "iso":
 		return time.Parse(time.RFC3339, input)
 	case "rfc2822":
@@ -111,6 +170,9 @@ func parseFormat(input, format string) (time.Time, error) {
 			if err != nil {
 				return time.Time{}, err
 			}
+		} else if !isTimeLayout(format) {
+			return time.Time{}, fmt.Errorf("unknown format %q: use unix, unixms, iso, rfc2822, human, auto, "+
+				"a strftime format such as %%Y-%%m-%%d, or a Go layout such as 2006-01-02", format)
 		}
 		return time.Parse(layout, input)
 	}
@@ -119,7 +181,7 @@ func parseFormat(input, format string) (time.Time, error) {
 func autoDetect(input string) (time.Time, error) {
 	if n, err := strconv.ParseInt(input, 10, 64); err == nil {
 		if n > 1e12 {
-			return time.Unix(0, n*int64(time.Millisecond)), nil
+			return time.UnixMilli(n), nil
 		}
 		return time.Unix(n, 0), nil
 	}
@@ -152,14 +214,20 @@ func formatTime(t time.Time, format string) (string, error) {
 	case "human":
 		return t.Format(humanFormat), nil
 	default:
-		layout := format
 		if strings.Contains(format, "%") {
-			var err error
-			layout, err = strftimeToGo(format)
-			if err != nil {
-				return "", err
-			}
+			return formatStrftime(t, format)
 		}
-		return t.Format(layout), nil
+		if !isTimeLayout(format) {
+			return "", fmt.Errorf("unknown format %q: use unix, unixms, iso, rfc2822, human, "+
+				"a strftime format such as %%Y-%%m-%%d, or a Go layout such as 2006-01-02", format)
+		}
+		return t.Format(format), nil
 	}
+}
+
+// isTimeLayout reports whether a format carries any Go layout token. Text with
+// none of them, such as "epoch", is a typo rather than a layout: Go would
+// return it unchanged and the caller would never learn it was wrong.
+func isTimeLayout(format string) bool {
+	return probeTime.Format(format) != format
 }

@@ -77,9 +77,11 @@ func Colorize(diff string) string {
 		lines = lines[:len(lines)-1]
 	}
 	var sb strings.Builder
-	for _, line := range lines {
+	for i, line := range lines {
 		switch {
-		case strings.HasPrefix(line, "---") || strings.HasPrefix(line, "+++"):
+		// Only the first two lines are file headers; a deleted line whose text
+		// starts with "--" looks exactly like one.
+		case i < 2 && (strings.HasPrefix(line, "--- ") || strings.HasPrefix(line, "+++ ")):
 			sb.WriteString(colorBold + line + colorReset)
 		case strings.HasPrefix(line, "@@"):
 			sb.WriteString(colorCyan + line + colorReset)

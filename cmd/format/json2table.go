@@ -11,6 +11,7 @@ import (
 
 var json2tableCmd = &cobra.Command{
 	Use:   "json2table [input]",
+	Args:  cobra.MaximumNArgs(1),
 	Short: "Format JSON array as a table",
 	Example: `  echo '[{"name":"alice","age":30}]' | swk format json2table
   swk format json2table --style simple data.json

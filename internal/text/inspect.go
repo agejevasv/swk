@@ -28,10 +28,14 @@ func Inspect(input string) *TextInfo {
 	words := strings.Fields(input)
 	info.Words = len(words)
 
-	if input == "" {
-		info.Lines = 0
-	} else {
-		info.Lines = strings.Count(input, "\n") + 1
+	// A trailing newline terminates the last line rather than starting a new
+	// one, which is what wc -l counts. Text not ending in a newline still has
+	// a final partial line.
+	if input != "" {
+		info.Lines = strings.Count(input, "\n")
+		if !strings.HasSuffix(input, "\n") {
+			info.Lines++
+		}
 	}
 
 	for _, r := range input {

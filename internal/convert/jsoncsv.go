@@ -5,7 +5,6 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
-	"sort"
 
 	"github.com/agejevasv/swk/internal/jsonx"
 )
@@ -19,17 +18,27 @@ func JSONToCSV(input []byte, delimiter rune) ([]byte, error) {
 		return nil, fmt.Errorf("empty JSON array")
 	}
 
+	// Keep the order the document uses, the way json2table does. Ranging over
+	// the decoded maps would give a random order, hence the second decode.
+	var raw []json.RawMessage
+	if err := jsonx.Decode(input, &raw); err != nil {
+		return nil, fmt.Errorf("input must be a JSON array of objects: %w", err)
+	}
+
 	seen := make(map[string]bool)
 	var headers []string
-	for _, obj := range data {
-		for k := range obj {
+	for _, obj := range raw {
+		keys, err := orderedKeys(obj)
+		if err != nil {
+			return nil, err
+		}
+		for _, k := range keys {
 			if !seen[k] {
 				seen[k] = true
 				headers = append(headers, k)
 			}
 		}
 	}
-	sort.Strings(headers)
 
 	var buf bytes.Buffer
 	w := csv.NewWriter(&buf)

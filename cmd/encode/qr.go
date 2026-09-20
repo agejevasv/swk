@@ -11,6 +11,7 @@ import (
 
 var qrCmd = &cobra.Command{
 	Use:   "qr [input]",
+	Args:  cobra.MaximumNArgs(1),
 	Short: "Generate QR code",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		input, err := ioutil.ReadInputString(args, cmd.InOrStdin())
@@ -19,7 +20,10 @@ var qrCmd = &cobra.Command{
 		}
 
 		qrOutput := ioutil.MustGetString(cmd, "output")
-		qrSize := ioutil.MustGetInt(cmd, "size")
+		qrSize, err := ioutil.IntInRange(cmd, "size", -64, 4096)
+		if err != nil {
+			return err
+		}
 		qrLevel := ioutil.MustGetString(cmd, "level")
 
 		switch qrOutput {

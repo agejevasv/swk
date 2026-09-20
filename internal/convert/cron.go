@@ -52,6 +52,13 @@ func CronNext(expr string, n int, from time.Time) ([]time.Time, error) {
 	t := from
 	for i := 0; i < n; i++ {
 		t = sched.Next(t)
+		// A schedule such as "0 0 30 2 *" never fires; Next returns the zero time.
+		if t.IsZero() {
+			if i == 0 {
+				return nil, fmt.Errorf("schedule %q never fires", expr)
+			}
+			break
+		}
 		results = append(results, t)
 	}
 	return results, nil

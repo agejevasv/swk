@@ -14,14 +14,20 @@ import (
 
 var netCmd = &cobra.Command{
 	Use:   "net",
+	Args:  cobra.NoArgs,
 	Short: "List processes listening on network ports",
 	Long:  "List processes listening on TCP/UDP ports.",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		port, err := ioutil.IntInRange(cmd, "port", 0, 65535)
+		if err != nil {
+			return err
+		}
+
 		opts := inspectLib.NetFilterOptions{
 			All:  ioutil.MustGetBool(cmd, "all"),
 			TCP:  ioutil.MustGetBool(cmd, "tcp"),
 			UDP:  ioutil.MustGetBool(cmd, "udp"),
-			Port: ioutil.MustGetInt(cmd, "port"),
+			Port: port,
 		}
 
 		entries, err := inspectLib.ListSockets(opts)

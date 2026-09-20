@@ -14,6 +14,7 @@ import (
 
 var ipCmd = &cobra.Command{
 	Use:   "ip",
+	Args:  cobra.NoArgs,
 	Short: "Show your public or local IP addresses",
 	Long: `Show the public IP address of this machine, its local interface addresses,
 or both.

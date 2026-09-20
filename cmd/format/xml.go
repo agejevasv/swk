@@ -1,8 +1,6 @@
 package format
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	fmtLib "github.com/agejevasv/swk/internal/fmt"
@@ -11,6 +9,7 @@ import (
 
 var xmlCmd = &cobra.Command{
 	Use:   "xml [input]",
+	Args:  cobra.MaximumNArgs(1),
 	Short: "Prettify or minify XML",
 	Example: `  # Prettify XML
   echo '<root><a>1</a></root>' | swk format xml
@@ -23,9 +22,9 @@ var xmlCmd = &cobra.Command{
 			return err
 		}
 
-		indent := ioutil.MustGetInt(cmd, "indent")
-		if indent < 0 {
-			return fmt.Errorf("--indent must be >= 0, got %d", indent)
+		indent, err := ioutil.IntInRange(cmd, "indent", 0, 64)
+		if err != nil {
+			return err
 		}
 
 		opts := fmtLib.XMLOptions{

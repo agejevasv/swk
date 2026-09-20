@@ -12,6 +12,7 @@ import (
 
 var subnetCmd = &cobra.Command{
 	Use:     "subnet [cidr]",
+	Args:    cobra.MaximumNArgs(1),
 	Short:   "Calculate subnet information from CIDR notation",
 	Example: "  swk inspect subnet 192.168.0.0/24",
 	RunE: func(cmd *cobra.Command, args []string) error {

@@ -64,7 +64,11 @@ func runServe(cmd *cobra.Command, args []string) error {
 	}
 
 	host := ioutil.MustGetString(cmd, "host")
-	port := ioutil.MustGetInt(cmd, "port")
+
+	port, err := ioutil.IntInRange(cmd, "port", 0, 65535)
+	if err != nil {
+		return err
+	}
 
 	opts := serveLib.Options{
 		Root:      dir,
@@ -79,6 +83,11 @@ func runServe(cmd *cobra.Command, args []string) error {
 	handler := serveLib.Handler(opts)
 
 	useTLS := ioutil.MustGetBool(cmd, "tls")
+
+	// Otherwise a request for HTTPS silently serves plaintext.
+	if !useTLS && (cmd.Flags().Changed("cert") || cmd.Flags().Changed("key")) {
+		return fmt.Errorf("--cert and --key require --tls")
+	}
 
 	// JoinHostPort brackets IPv6 literals; "%s:%d" would produce "::1:8080".
 	ln, err := net.Listen("tcp", net.JoinHostPort(host, strconv.Itoa(port)))
@@ -98,7 +107,7 @@ func runServe(cmd *cobra.Command, args []string) error {
 		ln = tls.NewListener(ln, &tls.Config{Certificates: []tls.Certificate{cert}})
 	}
 
-	fmt.Fprintf(cmd.ErrOrStderr(), "Serving %s on %s://%s\n", dir, scheme, ln.Addr())
+	fmt.Fprintf(cmd.ErrOrStderr(), "Serving %s on %s://%s\n", dir, scheme, displayAddr(ln.Addr().String()))
 
 	server := &http.Server{
 		Handler: handler,
@@ -122,4 +131,17 @@ func runServe(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 	return err
+}
+
+// displayAddr turns a wildcard bind address into one that can be pasted into
+// a browser: "[::]:8080" is where the server listens, not where to reach it.
+func displayAddr(addr string) string {
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return addr
+	}
+	if host == "" || host == "::" || host == "0.0.0.0" {
+		return net.JoinHostPort("localhost", port)
+	}
+	return net.JoinHostPort(host, port)
 }

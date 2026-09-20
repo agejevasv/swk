@@ -11,8 +11,9 @@ import (
 
 var csv2jsonCmd = &cobra.Command{
 	Use:   "csv2json [input]",
+	Args:  cobra.MaximumNArgs(1),
 	Short: "Convert CSV to JSON",
-	Example: `  echo 'name,age\nalice,30' | swk convert csv2json
+	Example: `  printf 'name,age\nalice,30\n' | swk convert csv2json
   swk convert csv2json --delimiter ';' data.csv`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		input, err := ioutil.ReadFileInputString(args, cmd.InOrStdin())

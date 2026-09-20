@@ -16,6 +16,12 @@ func ConvertBase(input string, fromBase, toBase int) (string, error) {
 
 	cleaned := strings.TrimSpace(input)
 
+	// Keep the sign aside so "-0xff" parses the same as "0xff".
+	sign := ""
+	if strings.HasPrefix(cleaned, "-") || strings.HasPrefix(cleaned, "+") {
+		sign, cleaned = cleaned[:1], cleaned[1:]
+	}
+
 	// Strip only the prefix that matches the source base. "0b1" is a valid
 	// hexadecimal literal (177), so stripping "0b" from it would be wrong.
 	lower := strings.ToLower(cleaned)
@@ -26,21 +32,27 @@ func ConvertBase(input string, fromBase, toBase int) (string, error) {
 		cleaned = cleaned[2:]
 	}
 
-	n, err := strconv.ParseInt(cleaned, fromBase, 64)
+	n, err := strconv.ParseInt(sign+cleaned, fromBase, 64)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse %q as base %d: %w", input, fromBase, err)
 	}
 
-	result := strconv.FormatInt(n, toBase)
+	digits := strconv.FormatInt(n, toBase)
+
+	// FormatInt already emitted the sign, so the prefix belongs after it.
+	outSign := ""
+	if rest, ok := strings.CutPrefix(digits, "-"); ok {
+		outSign, digits = "-", rest
+	}
 
 	switch toBase {
 	case 2:
-		result = "0b" + result
+		digits = "0b" + digits
 	case 8:
-		result = "0o" + result
+		digits = "0o" + digits
 	case 16:
-		result = "0x" + result
+		digits = "0x" + digits
 	}
 
-	return result, nil
+	return outSign + digits, nil
 }

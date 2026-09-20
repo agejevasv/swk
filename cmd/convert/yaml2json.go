@@ -11,6 +11,7 @@ import (
 
 var yaml2jsonCmd = &cobra.Command{
 	Use:   "yaml2json [input]",
+	Args:  cobra.MaximumNArgs(1),
 	Short: "Convert YAML to JSON",
 	Example: `  echo 'a: 1' | swk convert yaml2json
   swk convert yaml2json config.yaml`,
@@ -20,9 +21,9 @@ var yaml2jsonCmd = &cobra.Command{
 			return err
 		}
 
-		indent := ioutil.MustGetInt(cmd, "indent")
-		if indent < 0 {
-			return fmt.Errorf("--indent must be >= 0, got %d", indent)
+		indent, err := ioutil.IntInRange(cmd, "indent", 0, 64)
+		if err != nil {
+			return err
 		}
 
 		output, err := convLib.YAMLToJSON([]byte(input), indent)

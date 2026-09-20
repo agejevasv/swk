@@ -168,8 +168,9 @@ func lookupCNAME(name string) ([]DNSRecord, error) {
 	if err != nil {
 		return nil, err
 	}
-	// LookupCNAME returns the name itself if there's no CNAME — skip that
-	if cname == name || cname == name+"." {
+	// LookupCNAME returns the name itself when there is no CNAME. DNS names are
+	// case-insensitive, so compare them that way or "EXAMPLE.COM" invents one.
+	if strings.EqualFold(strings.TrimSuffix(cname, "."), strings.TrimSuffix(name, ".")) {
 		return nil, nil
 	}
 	return []DNSRecord{{Type: "CNAME", Value: cname}}, nil

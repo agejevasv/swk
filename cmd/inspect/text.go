@@ -13,15 +13,17 @@ import (
 
 var textCmd = &cobra.Command{
 	Use:     "text [input]",
+	Args:    cobra.MaximumNArgs(1),
 	Aliases: []string{"txt"},
 	Short:   "Analyze text and show statistics",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		input, err := ioutil.ReadFileInputString(args, cmd.InOrStdin())
+		// Read raw: trimming trailing newlines would under-report bytes and lines.
+		input, err := ioutil.ReadFileInput(args, cmd.InOrStdin())
 		if err != nil {
 			return err
 		}
 
-		info := textLib.Inspect(input)
+		info := textLib.Inspect(string(input))
 
 		inspectJSON := ioutil.MustGetBool(cmd, "json")
 

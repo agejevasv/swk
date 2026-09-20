@@ -13,6 +13,7 @@ import (
 
 var domainCmd = &cobra.Command{
 	Use:   "domain [name]",
+	Args:  cobra.MaximumNArgs(1),
 	Short: "Domain registration info via RDAP",
 	Long:  "Query domain registration data (registrar, dates, nameservers) via RDAP and resolve DNS records.",
 	RunE: func(cmd *cobra.Command, args []string) error {

@@ -20,7 +20,7 @@ var htmlCmd = &cobra.Command{
 
   # Extract specific element
   echo '<div class="x"><span>hi</span></div>' | swk query html 'div.x span'`,
-	Args: cobra.MinimumNArgs(1),
+	Args: cobra.RangeArgs(1, 2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		selector := args[0]
 		input, err := ioutil.ReadFileInputString(args[1:], cmd.InOrStdin())

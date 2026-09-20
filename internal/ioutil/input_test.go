@@ -220,16 +220,16 @@ func TestReadFileInput(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:  "non-existent path treated as literal",
-			args:  []string{"/no/such/path/file.txt"},
-			stdin: nil,
-			want:  "/no/such/path/file.txt",
+			name:    "non-existent path is reported",
+			args:    []string{"/no/such/path/file.txt"},
+			stdin:   nil,
+			wantErr: true,
 		},
 		{
-			name:  "directory path treated as literal",
-			args:  []string{dir},
-			stdin: nil,
-			want:  dir,
+			name:    "directory path is reported",
+			args:    []string{dir},
+			stdin:   nil,
+			wantErr: true,
 		},
 		{
 			name:  "no args reads stdin",
@@ -297,7 +297,7 @@ func TestReadFileInputString(t *testing.T) {
 			want:  "from-stdin",
 		},
 		{
-			name:  "non-existent path treated as literal",
+			name:  "bare word with no extension stays literal",
 			args:  []string{"not-a-file"},
 			stdin: nil,
 			want:  "not-a-file",

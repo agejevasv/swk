@@ -17,6 +17,7 @@ import (
 
 var jwtCmd = &cobra.Command{
 	Use:   "jwt [token]",
+	Args:  cobra.MaximumNArgs(1),
 	Short: "Inspect a JWT token",
 	Long:  "Decode a JWT token and display its header, claims, and expiry status.",
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -117,6 +118,9 @@ func formatClaimValue(key string, v any) string {
 	switch val := v.(type) {
 	case string:
 		return val
+	case json.Number:
+		// Preserved literal: print it exactly as the token carries it.
+		return val.String()
 	case float64:
 		if val == float64(int64(val)) {
 			return fmt.Sprintf("%d", int64(val))
@@ -149,12 +153,12 @@ func isTimestampClaim(key string) bool {
 }
 
 func formatTimestamp(key string, v any) string {
-	f, ok := v.(float64)
+	secs, ok := encLib.ClaimSeconds(v)
 	if !ok {
 		return fmt.Sprintf("%v", v)
 	}
 
-	t := time.Unix(int64(f), 0).UTC()
+	t := time.Unix(secs, 0).UTC()
 	s := t.Format("2006-01-02 15:04:05 UTC")
 
 	if key == "exp" {

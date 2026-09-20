@@ -11,6 +11,7 @@ import (
 
 var colorCmd = &cobra.Command{
 	Use:   "color [input]",
+	Args:  cobra.MaximumNArgs(1),
 	Short: "Convert between color formats",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		input, err := ioutil.ReadInputString(args, cmd.InOrStdin())

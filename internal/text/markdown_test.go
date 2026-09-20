@@ -190,7 +190,9 @@ func TestStripMarkdown_Underscores(t *testing.T) {
 	}{
 		{"snake case preserved", "snake_case_name", "snake_case_name"},
 		{"identifier preserved", "foo_bar_baz", "foo_bar_baz"},
-		{"leading underscore identifier", "_private_field_", "_private_field_"},
+		// CommonMark: the outer underscores flank the word so they are emphasis,
+		// while the inner one sits between letters and stays literal.
+		{"surrounded identifier is emphasis", "_private_field_", "private_field"},
 		{"emphasis stripped", "_emphasis_", "emphasis"},
 		{"emphasis in sentence", "a _b_ c", "a b c"},
 		{"adjacent emphasis", "_a_ _b_", "a b"},

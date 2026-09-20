@@ -7,11 +7,23 @@ import (
 	"image/gif"
 	"image/jpeg"
 	"image/png"
+	"strings"
 
 	"golang.org/x/image/draw"
 )
 
 func ConvertImage(input []byte, toFormat string, quality int, width, height int) ([]byte, error) {
+	// Check the header before decoding: a small file can declare enormous
+	// dimensions and the decode would allocate all of it.
+	cfg, _, err := image.DecodeConfig(bytes.NewReader(input))
+	if err != nil {
+		return nil, fmt.Errorf("decoding image: %w", err)
+	}
+	if cfg.Width > MaxImageDim || cfg.Height > MaxImageDim {
+		return nil, fmt.Errorf("image is %dx%d, larger than the %dx%d limit",
+			cfg.Width, cfg.Height, MaxImageDim, MaxImageDim)
+	}
+
 	img, _, err := image.Decode(bytes.NewReader(input))
 	if err != nil {
 		return nil, fmt.Errorf("decoding image: %w", err)
@@ -25,7 +37,7 @@ func ConvertImage(input []byte, toFormat string, quality int, width, height int)
 
 	var buf bytes.Buffer
 
-	switch toFormat {
+	switch strings.ToLower(strings.TrimSpace(toFormat)) {
 	case "png":
 		err = png.Encode(&buf, img)
 	case "jpeg", "jpg":

@@ -13,6 +13,7 @@ import (
 func NewXMLCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "xml [input]",
+		Args:  cobra.MaximumNArgs(1),
 		Short: "XML escape or unescape",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			input, err := ioutil.ReadInputString(args, cmd.InOrStdin())

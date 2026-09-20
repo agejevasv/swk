@@ -13,6 +13,7 @@ import (
 
 var dateCmd = &cobra.Command{
 	Use:   "date [input]",
+	Args:  cobra.MaximumNArgs(1),
 	Short: "Convert between date/time formats",
 	Long: `Convert between unix timestamps, ISO 8601, RFC 2822, and human-readable formats.
 Custom formats use strftime syntax (e.g. "%Y-%m-%d", "%H:%M:%S").

@@ -110,9 +110,11 @@ func TestInspect(t *testing.T) {
 			wantWords: 3,
 		},
 		{
-			name:      "trailing newline counts extra line",
+			// A trailing newline terminates the line rather than starting a
+			// new one, which is what wc -l counts.
+			name:      "trailing newline terminates the line",
 			input:     "line1\n",
-			wantLines: 2,
+			wantLines: 1,
 			wantChars: 6,
 			wantWords: 1,
 		},
@@ -131,7 +133,7 @@ func TestInspect(t *testing.T) {
 			info := Inspect(tt.input)
 
 			// Only check fields that are explicitly set (non-zero or meaningful)
-			if tt.name == "empty string" || tt.wantChars > 0 || tt.name == "single word" || tt.name == "multi-word" || tt.name == "multi-line" || tt.name == "unicode accented chars" || tt.name == "emoji single char" || tt.name == "pure ASCII printable" || tt.name == "trailing newline counts extra line" || tt.name == "Chinese characters" {
+			if tt.name == "empty string" || tt.wantChars > 0 || tt.name == "single word" || tt.name == "multi-word" || tt.name == "multi-line" || tt.name == "unicode accented chars" || tt.name == "emoji single char" || tt.name == "pure ASCII printable" || tt.name == "trailing newline terminates the line" || tt.name == "Chinese characters" {
 				if info.Characters != tt.wantChars {
 					t.Errorf("Characters = %d, want %d", info.Characters, tt.wantChars)
 				}

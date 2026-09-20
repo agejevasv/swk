@@ -13,6 +13,7 @@ import (
 func NewJSONCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "json [input]",
+		Args:  cobra.MaximumNArgs(1),
 		Short: "JSON string escape or unescape",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			input, err := ioutil.ReadInputString(args, cmd.InOrStdin())

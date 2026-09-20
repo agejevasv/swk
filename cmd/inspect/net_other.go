@@ -10,6 +10,7 @@ import (
 
 var netCmd = &cobra.Command{
 	Use:    "net",
+	Args:   cobra.NoArgs,
 	Short:  "List processes listening on network ports (Linux/macOS only)",
 	Hidden: true,
 	RunE: func(cmd *cobra.Command, args []string) error {

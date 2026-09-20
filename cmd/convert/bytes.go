@@ -11,6 +11,7 @@ import (
 
 var bytesCmd = &cobra.Command{
 	Use:   "bytes [input]",
+	Args:  cobra.MaximumNArgs(1),
 	Short: "Convert between byte sizes and human-readable formats",
 	Long:  "Convert between raw byte counts and human-readable sizes (KB, MB, GB, etc.).",
 	RunE: func(cmd *cobra.Command, args []string) error {

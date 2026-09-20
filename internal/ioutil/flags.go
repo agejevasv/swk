@@ -49,3 +49,23 @@ func ParseDelimiter(s string) (rune, error) {
 	}
 	return r, nil
 }
+
+// IntInRange returns an int flag value, rejecting anything outside [low, high].
+// Numeric flags feed arithmetic, allocations and protocol fields, so they are
+// bounded here rather than trusted downstream.
+func IntInRange(cmd *cobra.Command, name string, low, high int) (int, error) {
+	v := MustGetInt(cmd, name)
+	if v < low || v > high {
+		return 0, fmt.Errorf("--%s must be between %d and %d, got %d", name, low, high, v)
+	}
+	return v, nil
+}
+
+// IntAtLeast is IntInRange with no upper bound.
+func IntAtLeast(cmd *cobra.Command, name string, low int) (int, error) {
+	v := MustGetInt(cmd, name)
+	if v < low {
+		return 0, fmt.Errorf("--%s must be at least %d, got %d", name, low, v)
+	}
+	return v, nil
+}

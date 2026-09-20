@@ -32,13 +32,18 @@ func Handler(opts Options) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var body []byte
+		truncated := false
 		if r.Body != nil {
-			body, _ = io.ReadAll(io.LimitReader(r.Body, maxBodySize))
+			// Read one byte past the cap so truncation can be reported.
+			body, _ = io.ReadAll(io.LimitReader(r.Body, maxBodySize+1))
 			r.Body.Close()
+			if len(body) > maxBodySize {
+				body, truncated = body[:maxBodySize], true
+			}
 		}
 
 		mu.Lock()
-		logRequest(opts.Writer, r, body, opts.NoBody)
+		logRequest(opts.Writer, r, body, opts.NoBody, truncated)
 		mu.Unlock()
 
 		w.WriteHeader(opts.Status)
@@ -48,9 +53,14 @@ func Handler(opts Options) http.Handler {
 	})
 }
 
-func logRequest(w io.Writer, r *http.Request, body []byte, noBody bool) {
+func logRequest(w io.Writer, r *http.Request, body []byte, noBody, truncated bool) {
 	ts := time.Now().Format("2006-01-02 15:04:05")
-	fmt.Fprintf(w, "\n--- %s %s %s ---\n", r.Method, r.URL.RequestURI(), ts)
+	// RequestURI() cannot represent an authority-form target such as CONNECT.
+	target := r.RequestURI
+	if target == "" {
+		target = r.URL.RequestURI()
+	}
+	fmt.Fprintf(w, "\n--- %s %s %s ---\n", r.Method, sanitize(target), ts)
 
 	// Headers, sorted
 	var keys []string
@@ -86,7 +96,24 @@ func logRequest(w io.Writer, r *http.Request, body []byte, noBody bool) {
 		}
 	}
 
-	fmt.Fprintln(w, string(body))
+	fmt.Fprintln(w, sanitize(string(body)))
+	if truncated {
+		fmt.Fprintf(w, "[body truncated at %d MiB]\n", maxBodySize>>20)
+	}
+}
+
+// sanitize strips control characters so a request cannot inject ANSI escapes
+// or forge extra log records on the operator's terminal.
+func sanitize(s string) string {
+	return strings.Map(func(r rune) rune {
+		if r == '\n' || r == '\t' {
+			return r
+		}
+		if r < 0x20 || r == 0x7f {
+			return '\ufffd'
+		}
+		return r
+	}, s)
 }
 
 func isJSON(contentType string) bool {

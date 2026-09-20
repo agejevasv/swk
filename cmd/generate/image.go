@@ -11,13 +11,21 @@ import (
 
 var imageCmd = &cobra.Command{
 	Use:   "image",
+	Args:  cobra.NoArgs,
 	Short: "Generate abstract placeholder PNG images",
 	Example: `  swk generate image -o art.png
   swk generate image --width 800 --height 600 --style circles -o out.png
   swk generate image --style mixed > art.png`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		genWidth := ioutil.MustGetInt(cmd, "width")
-		genHeight := ioutil.MustGetInt(cmd, "height")
+		genWidth, err := ioutil.IntInRange(cmd, "width", graphicLib.MinImageDim, graphicLib.MaxImageDim)
+		if err != nil {
+			return err
+		}
+
+		genHeight, err := ioutil.IntInRange(cmd, "height", graphicLib.MinImageDim, graphicLib.MaxImageDim)
+		if err != nil {
+			return err
+		}
 		genStyle := ioutil.MustGetString(cmd, "style")
 		genOutput := ioutil.MustGetString(cmd, "output")
 

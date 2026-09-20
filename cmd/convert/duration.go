@@ -11,6 +11,7 @@ import (
 
 var durationCmd = &cobra.Command{
 	Use:   "duration [input]",
+	Args:  cobra.MaximumNArgs(1),
 	Short: "Convert between seconds and human-readable durations",
 	Long:  "Convert between seconds and human-readable duration formats (e.g., 86400 <-> 1d).",
 	RunE: func(cmd *cobra.Command, args []string) error {

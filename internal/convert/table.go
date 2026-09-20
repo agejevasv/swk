@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"unicode/utf8"
+	"unicode"
 
 	"github.com/agejevasv/swk/internal/jsonx"
 )
@@ -43,6 +43,10 @@ func ToTable(input []byte, style string, inputFormat string, delimiter rune) (st
 	var rows [][]string
 	var err error
 
+	if _, err := getStyle(style); err != nil {
+		return "", err
+	}
+
 	switch inputFormat {
 	case "csv":
 		headers, rows, err = parseCSVData(input, delimiter)
@@ -57,18 +61,23 @@ func ToTable(input []byte, style string, inputFormat string, delimiter rune) (st
 		return "", fmt.Errorf("no data to display")
 	}
 
-	s := getStyle(style)
+	s, err := getStyle(style)
+	if err != nil {
+		return "", err
+	}
 	return renderTable(headers, rows, s), nil
 }
 
-func getStyle(name string) TableStyle {
+func getStyle(name string) (TableStyle, error) {
 	switch name {
 	case "simple":
-		return SimpleStyle
+		return SimpleStyle, nil
 	case "plain":
-		return TableStyle{}
+		return TableStyle{}, nil
+	case "", "box":
+		return BoxStyle, nil
 	default:
-		return BoxStyle
+		return TableStyle{}, fmt.Errorf("unknown style %q (use box, simple, plain)", name)
 	}
 }
 
@@ -131,6 +140,8 @@ func parseJSONData(input []byte) ([]string, [][]string, error) {
 // Nested objects and arrays are JSON-serialized; scalars use simple formatting.
 func formatCellValue(v any) string {
 	switch v.(type) {
+	case nil:
+		return "null"
 	case map[string]any, []any:
 		b, err := json.Marshal(v)
 		if err != nil {
@@ -188,16 +199,68 @@ func parseCSVData(input []byte, delimiter rune) ([]string, [][]string, error) {
 	return records[0], records[1:], nil
 }
 
+// sanitizeCell keeps a value on one line so it cannot break the borders.
+func sanitizeCell(s string) string {
+	r := strings.NewReplacer("\r\n", "\\n", "\n", "\\n", "\r", "\\r", "\t", "\\t")
+	return r.Replace(s)
+}
+
+// displayWidth counts terminal columns rather than runes: East Asian wide and
+// fullwidth characters occupy two, and combining marks none.
+func displayWidth(s string) int {
+	width := 0
+	for _, r := range s {
+		switch {
+		case unicode.Is(unicode.Mn, r), unicode.Is(unicode.Me, r):
+		case isWideRune(r):
+			width += 2
+		default:
+			width++
+		}
+	}
+	return width
+}
+
+func isWideRune(r rune) bool {
+	switch {
+	case r >= 0x1100 && r <= 0x115F, // Hangul Jamo
+		r >= 0x2E80 && r <= 0x303E, // CJK radicals, Kangxi
+		r >= 0x3041 && r <= 0x33FF, // Hiragana .. CJK compatibility
+		r >= 0x3400 && r <= 0x4DBF, // CJK extension A
+		r >= 0x4E00 && r <= 0x9FFF, // CJK unified
+		r >= 0xA000 && r <= 0xA4CF, // Yi
+		r >= 0xAC00 && r <= 0xD7A3, // Hangul syllables
+		r >= 0xF900 && r <= 0xFAFF, // CJK compatibility ideographs
+		r >= 0xFE30 && r <= 0xFE6F, // CJK compatibility forms
+		r >= 0xFF00 && r <= 0xFF60, // fullwidth forms
+		r >= 0xFFE0 && r <= 0xFFE6,
+		r >= 0x1F300 && r <= 0x1F64F, // emoji
+		r >= 0x1F900 && r <= 0x1F9FF,
+		r >= 0x20000 && r <= 0x3FFFD: // CJK extensions B+
+		return true
+	}
+	return false
+}
+
 func renderTable(headers []string, rows [][]string, s TableStyle) string {
+	for i, h := range headers {
+		headers[i] = sanitizeCell(h)
+	}
+	for _, row := range rows {
+		for i, cell := range row {
+			row[i] = sanitizeCell(cell)
+		}
+	}
+
 	// Calculate column widths
 	widths := make([]int, len(headers))
 	for i, h := range headers {
-		widths[i] = utf8.RuneCountInString(h)
+		widths[i] = displayWidth(h)
 	}
 	for _, row := range rows {
 		for i, cell := range row {
 			if i < len(widths) {
-				w := utf8.RuneCountInString(cell)
+				w := displayWidth(cell)
 				if w > widths[i] {
 					widths[i] = w
 				}
@@ -262,7 +325,7 @@ func dataLine(cells []string, widths []int, sep string, plain bool) string {
 		buf.WriteByte(' ')
 	}
 	for i, cell := range cells {
-		w := utf8.RuneCountInString(cell)
+		w := displayWidth(cell)
 		buf.WriteString(cell)
 		buf.WriteString(strings.Repeat(" ", widths[i]-w))
 		if !plain {

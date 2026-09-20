@@ -227,14 +227,14 @@ func TestConvertBase(t *testing.T) {
 			input:    "-1",
 			fromBase: 10,
 			toBase:   16,
-			want:     "0x-1",
+			want:     "-0x1",
 		},
 		{
 			name:     "negative_dec_to_bin",
 			input:    "-10",
 			fromBase: 10,
 			toBase:   2,
-			want:     "0b-1010",
+			want:     "-0b1010",
 		},
 
 		// Error cases.

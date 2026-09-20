@@ -29,7 +29,9 @@ func Decode(data []byte, v any) error {
 		return err
 	}
 
-	if dec.More() {
+	// Decoder.More reports false for ']' and '}', so check for any remaining
+	// token rather than trusting it.
+	if _, err := dec.Token(); !errors.Is(err, io.EOF) {
 		return fmt.Errorf("invalid character after top-level value")
 	}
 

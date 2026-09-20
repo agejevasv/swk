@@ -17,7 +17,7 @@ func TestFormatJSON(t *testing.T) {
 			name:  "pretty_print_default_indent_2",
 			input: `{"name":"John","age":30}`,
 			opts:  JSONOptions{Indent: 2},
-			want:  "{\n  \"age\": 30,\n  \"name\": \"John\"\n}",
+			want:  "{\n  \"name\": \"John\",\n  \"age\": 30\n}",
 		},
 		{
 			name:  "pretty_print_indent_4",
@@ -31,7 +31,7 @@ func TestFormatJSON(t *testing.T) {
 			name:  "minify_removes_all_whitespace",
 			input: "{\n  \"name\": \"John\",\n  \"age\": 30\n}",
 			opts:  JSONOptions{Minify: true},
-			want:  `{"age":30,"name":"John"}`,
+			want:  `{"name":"John","age":30}`,
 		},
 		{
 			name:  "minify_array",
@@ -40,11 +40,18 @@ func TestFormatJSON(t *testing.T) {
 			want:  `[1,2,3]`,
 		},
 
-		// Sort keys (default behavior since json.Marshal sorts by default).
+		// A formatter re-indents; it does not rewrite the document.
 		{
-			name:  "sort_keys_alphabetical",
+			name:  "key_order_is_preserved",
 			input: `{"z":1,"a":2,"m":3}`,
-			want:  "{\n  \"a\": 2,\n  \"m\": 3,\n  \"z\": 1\n}",
+			opts:  JSONOptions{Indent: 2},
+			want:  "{\n  \"z\": 1,\n  \"a\": 2,\n  \"m\": 3\n}",
+		},
+		{
+			name:  "duplicate_keys_are_preserved",
+			input: `{"a":1,"a":2}`,
+			opts:  JSONOptions{Minify: true},
+			want:  `{"a":1,"a":2}`,
 		},
 
 		// All JSON types.
@@ -113,17 +120,12 @@ func TestFormatJSON(t *testing.T) {
 		},
 
 		// Indent <= 0 falls back to the default of two spaces.
+		// Indent 0 is compact, matching convert yaml2json --indent 0.
 		{
-			name:  "zero_indent_uses_default",
-			input: `{"a":1}`,
+			name:  "zero_indent_is_compact",
+			input: `{"a": 1}`,
 			opts:  JSONOptions{Indent: 0},
-			want:  "{\n  \"a\": 1\n}",
-		},
-		{
-			name:  "negative_indent_uses_default",
-			input: `{"a":1}`,
-			opts:  JSONOptions{Indent: -4},
-			want:  "{\n  \"a\": 1\n}",
+			want:  `{"a":1}`,
 		},
 		{
 			name:  "bool_true",

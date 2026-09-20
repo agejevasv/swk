@@ -11,6 +11,7 @@ import (
 
 var jsonCmd = &cobra.Command{
 	Use:   "json [input]",
+	Args:  cobra.MaximumNArgs(1),
 	Short: "Prettify or minify JSON",
 	Example: `  # Prettify JSON
   echo '{"a":1}' | swk format json
@@ -26,9 +27,9 @@ var jsonCmd = &cobra.Command{
 			return err
 		}
 
-		indent := ioutil.MustGetInt(cmd, "indent")
-		if indent < 0 {
-			return fmt.Errorf("--indent must be >= 0, got %d", indent)
+		indent, err := ioutil.IntInRange(cmd, "indent", 0, 64)
+		if err != nil {
+			return err
 		}
 
 		opts := fmtLib.JSONOptions{

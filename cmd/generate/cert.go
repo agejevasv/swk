@@ -3,6 +3,7 @@ package generate
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 
@@ -12,6 +13,7 @@ import (
 
 var certCmd = &cobra.Command{
 	Use:   "cert",
+	Args:  cobra.NoArgs,
 	Short: "Generate self-signed TLS certificates",
 	Long:  "Generate a self-signed X.509 certificate and private key for local development.",
 	Example: `  swk generate cert
@@ -22,11 +24,16 @@ var certCmd = &cobra.Command{
 		dns := cleanSlice(cmd, "dns")
 		ips := cleanSlice(cmd, "ip")
 
+		days, err := ioutil.IntInRange(cmd, "days", 1, 36500)
+		if err != nil {
+			return err
+		}
+
 		opts := genLib.CertOptions{
 			CN:      ioutil.MustGetString(cmd, "cn"),
 			DNS:     dns,
 			IPs:     ips,
-			Days:    ioutil.MustGetInt(cmd, "days"),
+			Days:    days,
 			KeyType: ioutil.MustGetString(cmd, "key-type"),
 		}
 
@@ -39,8 +46,19 @@ var certCmd = &cobra.Command{
 		certPath := out + ".pem"
 		keyPath := out + "-key.pem"
 
+		if dir := filepath.Dir(certPath); dir != "." {
+			if err := os.MkdirAll(dir, 0o755); err != nil {
+				return fmt.Errorf("failed to create %s: %w", dir, err)
+			}
+		}
+
 		if err := os.WriteFile(certPath, result.CertPEM, 0o644); err != nil {
 			return fmt.Errorf("failed to write %s: %w", certPath, err)
+		}
+		// WriteFile only applies the mode when it creates the file, so an
+		// existing key would keep its old, possibly readable, permissions.
+		if err := os.Remove(keyPath); err != nil && !os.IsNotExist(err) {
+			return fmt.Errorf("failed to replace %s: %w", keyPath, err)
 		}
 		if err := os.WriteFile(keyPath, result.KeyPEM, 0o600); err != nil {
 			return fmt.Errorf("failed to write %s: %w", keyPath, err)

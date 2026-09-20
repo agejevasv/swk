@@ -33,22 +33,26 @@ func ParseURL(input string) (*URLInfo, error) {
 	}
 
 	info := &URLInfo{
-		Scheme:   u.Scheme,
-		Fragment: u.Fragment,
-		Path:     u.Path,
+		Scheme: u.Scheme,
+		// EscapedPath keeps %2F distinct from a real separator, which is the
+		// distinction someone inspecting a URL is usually looking for.
+		Path:     u.EscapedPath(),
+		Fragment: u.EscapedFragment(),
 	}
 
-	// Host and port
-	host := u.Hostname()
-	port := u.Port()
-	info.Host = host
-	info.Port = port
+	// Hosts are case-insensitive; report them the way the scheme is reported.
+	info.Host = strings.ToLower(u.Hostname())
+	info.Port = u.Port()
 
-	// Query parameters
 	if u.RawQuery != "" {
 		info.Query = make(map[string][]string)
 		for key, values := range u.Query() {
 			info.Query[key] = values
+		}
+		// Query() drops pairs it cannot parse; keep the raw form rather than
+		// reporting no query at all.
+		if len(info.Query) == 0 {
+			info.Query = map[string][]string{"": {u.RawQuery}}
 		}
 	}
 

@@ -11,16 +11,24 @@ import (
 
 var textCmd = &cobra.Command{
 	Use:     "text <file1> <file2>",
+	Args:    cobra.ExactArgs(2),
 	Aliases: []string{"txt"},
 	Short:   "Unified text diff",
 	Long:    "Print a unified diff of two files. Exits 1 when they differ, like diff(1).",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := validateColor(cmd); err != nil {
+			return err
+		}
+
 		a, b, err := diffLib.ReadTwoInputs(args, cmd.InOrStdin())
 		if err != nil {
 			return err
 		}
 
-		ctx := ioutil.MustGetInt(cmd, "context")
+		ctx, err := ioutil.IntAtLeast(cmd, "context", 0)
+		if err != nil {
+			return err
+		}
 		result := diffLib.DiffText(a, b, ctx)
 		if result == "" {
 			return nil

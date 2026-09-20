@@ -13,6 +13,7 @@ import (
 func NewURLCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "url [input]",
+		Args:  cobra.MaximumNArgs(1),
 		Short: "URL percent-encode or decode",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			input, err := ioutil.ReadInputString(args, cmd.InOrStdin())

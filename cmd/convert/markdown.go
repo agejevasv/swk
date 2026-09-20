@@ -11,6 +11,7 @@ import (
 
 var markdownCmd = &cobra.Command{
 	Use:     "markdown [text]",
+	Args:    cobra.MaximumNArgs(1),
 	Aliases: []string{"md"},
 	Short:   "Convert markdown to HTML or plain text",
 	RunE: func(cmd *cobra.Command, args []string) error {

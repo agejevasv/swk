@@ -11,6 +11,7 @@ import (
 
 var json2yamlCmd = &cobra.Command{
 	Use:   "json2yaml [input]",
+	Args:  cobra.MaximumNArgs(1),
 	Short: "Convert JSON to YAML",
 	Example: `  echo '{"a":1}' | swk convert json2yaml
   swk convert json2yaml data.json`,

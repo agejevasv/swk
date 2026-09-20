@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -51,16 +52,58 @@ func ReadFileInputString(args []string, stdin io.Reader) (string, error) {
 }
 
 // resolveFileArg checks if arg is "-" (stdin), an existing regular file (read it),
-// or literal content (return as-is).
+// or literal content (return as-is). An argument that looks like a path but is
+// not readable is reported rather than hashed or parsed as literal text.
 func resolveFileArg(arg string, stdin io.Reader) ([]byte, error) {
 	if arg == "-" {
 		return ReadStdin(stdin)
 	}
+
 	info, err := os.Stat(arg)
-	if err == nil && info.Mode().IsRegular() {
+	switch {
+	case err == nil && info.Mode().IsRegular():
+		// No size cap here: the caller named this file deliberately, and
+		// hashing or converting a large one is a normal thing to ask for.
+		// The cap on stdin exists because a pipe's size cannot be known.
 		return os.ReadFile(arg)
+	case err == nil && info.IsDir() && looksLikePath(arg):
+		return nil, fmt.Errorf("%s is a directory", arg)
+	case err != nil && looksLikePath(arg):
+		return nil, err
 	}
+
 	return []byte(arg), nil
+}
+
+// looksLikePath reports whether an argument was meant as a file rather than as
+// literal text, so a typo'd filename is reported instead of being parsed as
+// data. Documents carry separators too, so anything that opens like structured
+// content, or spans lines, is treated as literal.
+func looksLikePath(arg string) bool {
+	if arg == "" || strings.ContainsAny(arg, "\n\r") {
+		return false
+	}
+	switch arg[0] {
+	case '{', '[', '<', '"', '-':
+		return false
+	}
+	if strings.ContainsRune(arg, '/') || strings.ContainsRune(arg, os.PathSeparator) {
+		return true
+	}
+
+	// A bare name ending in a data-file extension is a path as well, so a
+	// mistyped "notes.md" is reported rather than hashed as literal text.
+	return !strings.ContainsAny(arg, " \t") && dataFileExtensions[strings.ToLower(filepath.Ext(arg))]
+}
+
+// dataFileExtensions lists suffixes that mean "this argument names a file".
+// The list is deliberately narrow: anything not on it stays literal text.
+var dataFileExtensions = map[string]bool{
+	".json": true, ".yaml": true, ".yml": true, ".xml": true, ".csv": true, ".tsv": true,
+	".md": true, ".markdown": true, ".txt": true, ".log": true, ".html": true, ".htm": true,
+	".pem": true, ".crt": true, ".cer": true, ".key": true, ".jwt": true, ".toml": true,
+	".ini": true, ".conf": true, ".cfg": true, ".bin": true, ".png": true, ".jpg": true,
+	".jpeg": true, ".gif": true, ".iso": true, ".tar": true, ".gz": true, ".zip": true,
 }
 
 // MaxInputSize is the maximum bytes ReadStdin will read (64 MiB).

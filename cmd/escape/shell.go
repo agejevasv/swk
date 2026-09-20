@@ -13,6 +13,7 @@ import (
 func NewShellCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "shell [input]",
+		Args:    cobra.MaximumNArgs(1),
 		Aliases: []string{"sh"},
 		Short:   "Shell escape or unescape",
 		RunE: func(cmd *cobra.Command, args []string) error {

@@ -19,6 +19,7 @@ var baseNameMap = map[string]int{
 
 var baseCmd = &cobra.Command{
 	Use:     "base [input]",
+	Args:    cobra.MaximumNArgs(1),
 	Short:   "Convert numbers between bases",
 	Long:    "Convert numbers between binary, octal, decimal, and hexadecimal.",
 	Example: "  swk convert base 255 --from dec --to hex",

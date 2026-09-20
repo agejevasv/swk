@@ -11,6 +11,7 @@ import (
 
 var chmodCmd = &cobra.Command{
 	Use:   "chmod [input]",
+	Args:  cobra.MaximumNArgs(1),
 	Short: "Convert between numeric and symbolic file permissions",
 	Long:  "Convert between numeric (755) and symbolic (rwxr-xr-x) file permissions.",
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -20,6 +21,12 @@ var chmodCmd = &cobra.Command{
 		}
 
 		chmodTo := ioutil.MustGetString(cmd, "to")
+		switch chmodTo {
+		case "", "explain", "numeric", "symbolic":
+		default:
+			return fmt.Errorf("unknown --to %q: use numeric or symbolic", chmodTo)
+		}
+
 		switch chmodTo {
 		case "numeric":
 			result, err := convLib.ChmodToNumeric(input)

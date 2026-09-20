@@ -12,6 +12,7 @@ import (
 
 var cronCmd = &cobra.Command{
 	Use:   "cron [expression]",
+	Args:  cobra.MaximumNArgs(1),
 	Short: "Explain cron expressions",
 	Example: `  swk inspect cron '*/5 * * * *'
   swk inspect cron --next 3 '0 9 * * MON'`,
@@ -21,7 +22,10 @@ var cronCmd = &cobra.Command{
 			return err
 		}
 
-		cronNext := ioutil.MustGetInt(cmd, "next")
+		cronNext, err := ioutil.IntInRange(cmd, "next", 1, 10000)
+		if err != nil {
+			return err
+		}
 		cronExplain := ioutil.MustGetBool(cmd, "explain")
 
 		showExplain := cronExplain || !cmd.Flags().Changed("next")
@@ -43,7 +47,11 @@ var cronCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
-			fmt.Fprintf(cmd.OutOrStdout(), "Next %d runs:\n", cronNext)
+			label := "runs"
+			if cronNext == 1 {
+				label = "run"
+			}
+			fmt.Fprintf(cmd.OutOrStdout(), "Next %d %s:\n", cronNext, label)
 			for _, t := range times {
 				fmt.Fprintln(cmd.OutOrStdout(), " ", t.Format(time.RFC3339))
 			}

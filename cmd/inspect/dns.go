@@ -12,6 +12,7 @@ import (
 
 var dnsCmd = &cobra.Command{
 	Use:   "dns [hostname|ip]",
+	Args:  cobra.MaximumNArgs(1),
 	Short: "DNS lookups",
 	Long:  "Resolve DNS records for a hostname, or perform reverse lookup for an IP address.",
 	Example: `  swk inspect dns example.com

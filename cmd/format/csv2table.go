@@ -11,8 +11,9 @@ import (
 
 var csv2tableCmd = &cobra.Command{
 	Use:   "csv2table [input]",
+	Args:  cobra.MaximumNArgs(1),
 	Short: "Format CSV as a table",
-	Example: `  echo 'name,age\nalice,30' | swk format csv2table
+	Example: `  printf 'name,age\nalice,30\n' | swk format csv2table
   swk format csv2table --delimiter ';' data.csv`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		input, err := ioutil.ReadFileInputString(args, cmd.InOrStdin())

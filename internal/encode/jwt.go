@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+
+	"github.com/agejevasv/swk/internal/jsonx"
 )
 
 // JWTInfo holds decoded JWT information.
@@ -30,8 +32,10 @@ func (i *JWTInfo) IsVerified() bool {
 }
 
 func JWTEncode(payloadJSON string, secret string, keyPEM []byte, algo string) (string, error) {
+	// Decoding through encoding/json would turn every claim into a float64 and
+	// bake the rounding into a signed token.
 	var claims jwt.MapClaims
-	if err := json.Unmarshal([]byte(payloadJSON), &claims); err != nil {
+	if err := jsonx.Decode([]byte(payloadJSON), &claims); err != nil {
 		return "", fmt.Errorf("invalid JSON payload: %w", err)
 	}
 
@@ -55,7 +59,7 @@ func JWTEncode(payloadJSON string, secret string, keyPEM []byte, algo string) (s
 }
 
 func JWTDecode(tokenStr string) (*JWTInfo, error) {
-	parser := jwt.NewParser(jwt.WithoutClaimsValidation())
+	parser := jwt.NewParser(jwt.WithoutClaimsValidation(), jwt.WithJSONNumber())
 	token, parts, err := parser.ParseUnverified(tokenStr, jwt.MapClaims{})
 	if err != nil {
 		return nil, fmt.Errorf("invalid JWT: %w", err)
@@ -85,7 +89,7 @@ func JWTDecode(tokenStr string) (*JWTInfo, error) {
 func JWTVerify(tokenStr string, secret string, keyPEM []byte) (*JWTInfo, error) {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (any, error) {
 		return resolveVerifyKey(token.Method, secret, keyPEM)
-	})
+	}, jwt.WithJSONNumber())
 
 	sig := ""
 	if parts := strings.SplitN(tokenStr, ".", 3); len(parts) == 3 {
@@ -213,10 +217,31 @@ func parsePublicKey(keyPEM []byte, expect string) (any, error) {
 }
 
 func extractExpiry(claims jwt.MapClaims, info *JWTInfo) {
-	if exp, ok := claims["exp"]; ok {
-		if expFloat, ok := exp.(float64); ok {
-			expTime := time.Unix(int64(expFloat), 0)
-			info.ExpiredAt = &expTime
-		}
+	exp, ok := claims["exp"]
+	if !ok {
+		return
 	}
+	if secs, ok := ClaimSeconds(exp); ok {
+		expTime := time.Unix(secs, 0)
+		info.ExpiredAt = &expTime
+	}
+}
+
+// ClaimSeconds reads a numeric time claim, which is a json.Number when the
+// parser preserves literals and a float64 when it does not.
+func ClaimSeconds(v any) (int64, bool) {
+	switch n := v.(type) {
+	case json.Number:
+		if i, err := n.Int64(); err == nil {
+			return i, true
+		}
+		if f, err := n.Float64(); err == nil {
+			return int64(f), true
+		}
+	case float64:
+		return int64(n), true
+	case int64:
+		return n, true
+	}
+	return 0, false
 }

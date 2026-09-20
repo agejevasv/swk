@@ -11,13 +11,24 @@ import (
 
 var uuidCmd = &cobra.Command{
 	Use:   "uuid",
+	Args:  cobra.NoArgs,
 	Short: "Generate UUIDs",
 	Long:  "Generate UUIDs of various versions (1, 4, 5, 7).",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		uuidVersion := ioutil.MustGetInt(cmd, "version")
-		uuidCount := ioutil.MustGetInt(cmd, "count")
+
+		uuidCount, err := ioutil.IntInRange(cmd, "count", 1, 10000)
+		if err != nil {
+			return err
+		}
 		uuidNamespace := ioutil.MustGetString(cmd, "namespace")
 		uuidName := ioutil.MustGetString(cmd, "name")
+
+		// Without this the request for a deterministic UUID is dropped and a
+		// random one is printed instead.
+		if uuidVersion != 5 && (uuidNamespace != "" || uuidName != "") {
+			return fmt.Errorf("--namespace and --name only apply to --version 5")
+		}
 
 		for i := 0; i < uuidCount; i++ {
 			id, err := genLib.GenerateUUID(uuidVersion, uuidNamespace, uuidName)

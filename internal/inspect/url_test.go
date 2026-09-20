@@ -120,9 +120,10 @@ func TestParseURL(t *testing.T) {
 			name:  "url_with_encoded_characters",
 			input: "https://example.com/path%20with%20spaces?name=hello%20world",
 			checkFn: func(t *testing.T, info *URLInfo) {
-				// net/url.Parse decodes percent-encoded path segments
-				if info.Path != "/path with spaces" {
-					t.Errorf("Path = %q, want '/path with spaces'", info.Path)
+				// The path is reported as written, so %2F stays distinct from a
+				// real separator; query values are decoded.
+				if info.Path != "/path%20with%20spaces" {
+					t.Errorf("Path = %q, want '/path%%20with%%20spaces'", info.Path)
 				}
 				if len(info.Query["name"]) != 1 || info.Query["name"][0] != "hello world" {
 					t.Errorf("Query[name] = %v, want [hello world]", info.Query["name"])

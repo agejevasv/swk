@@ -17,10 +17,28 @@ func Diff(a, b string, contextLines int) string {
 	diffs := dmp.DiffMain(aLines, bLines, false)
 	diffs = dmp.DiffCharsToLines(diffs, lineArray)
 
-	return formatUnifiedDiff(diffs, contextLines)
+	return formatUnifiedDiff(diffs, contextLines,
+		a != "" && !strings.HasSuffix(a, "\n"),
+		b != "" && !strings.HasSuffix(b, "\n"))
 }
 
-func formatUnifiedDiff(diffs []diffmatchpatch.Diff, contextLines int) string {
+// hunkRange renders one side of a hunk header. A zero-length range starts at
+// the line before it, and a single-line range omits the count, both of which
+// diff(1) requires.
+func hunkRange(start, count int) string {
+	switch count {
+	case 0:
+		return fmt.Sprintf("%d,0", start-1)
+	case 1:
+		return fmt.Sprintf("%d", start)
+	default:
+		return fmt.Sprintf("%d,%d", start, count)
+	}
+}
+
+const noNewlineMarker = "\\ No newline at end of file"
+
+func formatUnifiedDiff(diffs []diffmatchpatch.Diff, contextLines int, aNoNewline, bNoNewline bool) string {
 	type diffLine struct {
 		op   diffmatchpatch.Operation
 		text string
@@ -40,6 +58,18 @@ func formatUnifiedDiff(diffs []diffmatchpatch.Diff, contextLines int) string {
 
 	if len(lines) == 0 {
 		return ""
+	}
+
+	// The last line of each side needs the "no newline" marker when that input
+	// did not end with one.
+	lastA, lastB := -1, -1
+	for i, l := range lines {
+		if l.op != diffmatchpatch.DiffInsert {
+			lastA = i
+		}
+		if l.op != diffmatchpatch.DiffDelete {
+			lastB = i
+		}
 	}
 
 	var out strings.Builder
@@ -92,7 +122,7 @@ func formatUnifiedDiff(diffs []diffmatchpatch.Diff, contextLines int) string {
 			}
 		}
 
-		out.WriteString(fmt.Sprintf("@@ -%d,%d +%d,%d @@\n", aStart, aCount, bStart, bCount))
+		out.WriteString(fmt.Sprintf("@@ -%s +%s @@\n", hunkRange(aStart, aCount), hunkRange(bStart, bCount)))
 
 		for j := hunkStart; j < hunkEnd; j++ {
 			switch lines[j].op {
@@ -106,6 +136,11 @@ func formatUnifiedDiff(diffs []diffmatchpatch.Diff, contextLines int) string {
 			case diffmatchpatch.DiffInsert:
 				out.WriteString("+" + lines[j].text + "\n")
 				bLine++
+			}
+
+			if (j == lastA && aNoNewline && lines[j].op != diffmatchpatch.DiffInsert) ||
+				(j == lastB && bNoNewline && lines[j].op != diffmatchpatch.DiffDelete) {
+				out.WriteString(noNewlineMarker + "\n")
 			}
 		}
 

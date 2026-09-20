@@ -12,6 +12,7 @@ import (
 
 var jwtCmd = &cobra.Command{
 	Use:   "jwt [input]",
+	Args:  cobra.MaximumNArgs(1),
 	Short: "Encode or decode JWT tokens",
 	Long: `Encode: pass a JSON payload to create a signed JWT.
 Decode: pass a JWT token with -d to inspect header and payload (works with any algorithm).

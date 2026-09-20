@@ -13,6 +13,7 @@ import (
 func NewHTMLCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "html [input]",
+		Args:  cobra.MaximumNArgs(1),
 		Short: "HTML entity escape or unescape",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			input, err := ioutil.ReadInputString(args, cmd.InOrStdin())

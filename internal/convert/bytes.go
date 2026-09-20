@@ -64,12 +64,18 @@ func BytesToHuman(bytes int64, decimal bool) string {
 		units = decimalUnits
 	}
 
-	for _, u := range units {
-		if math.Abs(b) >= u.size {
-			val := b / u.size
-			formatted := formatFloat(val)
-			return formatted + " " + u.suffix
+	for i, u := range units {
+		if math.Abs(b) < u.size {
+			continue
 		}
+		val := b / u.size
+		formatted := formatFloat(val)
+		// Rounding can carry the value up into the next unit: 1048575 bytes is
+		// "1024.00 KiB", which must be reported as "1 MiB".
+		if i > 0 && math.Abs(roundedValue(formatted)) >= units[i-1].size/u.size {
+			return formatFloat(b/units[i-1].size) + " " + units[i-1].suffix
+		}
+		return formatted + " " + u.suffix
 	}
 	return fmt.Sprintf("%d B", bytes)
 }
@@ -105,7 +111,21 @@ func HumanToBytes(input string) (int64, error) {
 		return 0, fmt.Errorf("unknown unit %q", unitStr)
 	}
 
-	return int64(math.Round(num * multiplier)), nil
+	total := math.Round(num * multiplier)
+	if total > math.MaxInt64 || total < math.MinInt64 {
+		return 0, fmt.Errorf("size %q is out of range", input)
+	}
+	return int64(total), nil
+}
+
+// roundedValue reads back the number formatFloat produced, so the unit choice
+// can be re-checked against what will actually be printed.
+func roundedValue(formatted string) float64 {
+	v, err := strconv.ParseFloat(formatted, 64)
+	if err != nil {
+		return 0
+	}
+	return v
 }
 
 // BytesConvert auto-detects direction. If input is a plain number, converts to human.

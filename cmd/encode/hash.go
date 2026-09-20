@@ -11,6 +11,7 @@ import (
 
 var hashCmd = &cobra.Command{
 	Use:     "hash [input]",
+	Args:    cobra.MaximumNArgs(1),
 	Aliases: []string{"sum"},
 	Short:   "Generate hash/checksum",
 	Long:    "Compute hash of input using md5, sha1, sha256, sha384, or sha512.",

@@ -11,6 +11,7 @@ import (
 
 var cronCmd = &cobra.Command{
 	Use:   "cron",
+	Args:  cobra.NoArgs,
 	Short: "Generate cron expressions from flags",
 	Long:  "Build a cron expression from human-readable scheduling flags.",
 	Example: `  swk generate cron --every 5m

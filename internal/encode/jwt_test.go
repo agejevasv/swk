@@ -7,7 +7,9 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/json"
 	"encoding/pem"
+	"fmt"
 	"math/big"
 	"strings"
 	"testing"
@@ -639,5 +641,99 @@ func TestJWTVerify_ReportsReason(t *testing.T) {
 	}
 	if info.Error == "" {
 		t.Error("expected a reason for the failure")
+	}
+}
+
+// Claims are signed into a credential, so rounding them is unrecoverable.
+func TestJWT_PreservesLargeNumericClaims(t *testing.T) {
+	const payload = `{"user_id":12345678901234567890,"n":1000000,"small":42,"f":1.5}`
+
+	token, err := JWTEncode(payload, "secret", nil, "HS256")
+	if err != nil {
+		t.Fatalf("JWTEncode: %v", err)
+	}
+
+	info, err := JWTDecode(token)
+	if err != nil {
+		t.Fatalf("JWTDecode: %v", err)
+	}
+
+	want := map[string]string{
+		"user_id": "12345678901234567890",
+		"n":       "1000000",
+		"small":   "42",
+		"f":       "1.5",
+	}
+	for key, expected := range want {
+		got, ok := info.Payload[key]
+		if !ok {
+			t.Errorf("claim %q missing", key)
+			continue
+		}
+		if fmt.Sprintf("%v", got) != expected {
+			t.Errorf("claim %q = %v, want %s", key, got, expected)
+		}
+	}
+}
+
+func TestJWT_VerifyPreservesLargeNumericClaims(t *testing.T) {
+	token, err := JWTEncode(`{"id":9007199254740993}`, "secret", nil, "HS256")
+	if err != nil {
+		t.Fatalf("JWTEncode: %v", err)
+	}
+
+	info, err := JWTVerify(token, "secret", nil)
+	if err != nil {
+		t.Fatalf("JWTVerify: %v", err)
+	}
+	if !info.IsVerified() {
+		t.Fatal("expected the token to verify")
+	}
+	if got := fmt.Sprintf("%v", info.Payload["id"]); got != "9007199254740993" {
+		t.Errorf("claim id = %s, want 9007199254740993", got)
+	}
+}
+
+// Expiry must still be read once claims are preserved as literals.
+func TestClaimSeconds(t *testing.T) {
+	tests := []struct {
+		name  string
+		value any
+		want  int64
+		ok    bool
+	}{
+		{"json.Number integer", json.Number("1700000000"), 1700000000, true},
+		{"json.Number float", json.Number("1700000000.5"), 1700000000, true},
+		{"float64", float64(1700000000), 1700000000, true},
+		{"int64", int64(1700000000), 1700000000, true},
+		{"string is not a time", "1700000000", 0, false},
+		{"nil", nil, 0, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, ok := ClaimSeconds(tt.value)
+			if ok != tt.ok || (ok && got != tt.want) {
+				t.Errorf("ClaimSeconds(%v) = (%d, %v), want (%d, %v)", tt.value, got, ok, tt.want, tt.ok)
+			}
+		})
+	}
+}
+
+func TestJWT_ExpiryStillDetected(t *testing.T) {
+	expired, err := JWTEncode(`{"exp":1000000000}`, "secret", nil, "HS256")
+	if err != nil {
+		t.Fatalf("JWTEncode: %v", err)
+	}
+
+	info, err := JWTDecode(expired)
+	if err != nil {
+		t.Fatalf("JWTDecode: %v", err)
+	}
+	if info.ExpiredAt == nil {
+		t.Fatal("expected the exp claim to be read")
+	}
+	if !info.ExpiredAt.Equal(time.Unix(1000000000, 0)) {
+		t.Errorf("ExpiredAt = %v, want %v", info.ExpiredAt, time.Unix(1000000000, 0))
 	}
 }

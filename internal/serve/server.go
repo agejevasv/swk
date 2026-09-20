@@ -38,78 +38,86 @@ func Handler(opts Options) http.Handler {
 }
 
 func fileHandler(opts Options) http.HandlerFunc {
-	root := filepath.Clean(opts.Root)
-	// Resolve symlinks on root so the prefix check works when root is itself a symlink.
-	if resolved, err := filepath.EvalSymlinks(root); err == nil {
-		root = resolved
-	}
+	// os.Root confines every lookup to the directory: symlinks that leave it
+	// cannot be followed, and the check cannot be raced by swapping a path
+	// component between the check and the open.
+	root, rootErr := os.OpenRoot(filepath.Clean(opts.Root))
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet && r.Method != http.MethodHead {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
+		if rootErr != nil {
+			http.Error(w, "Server misconfigured", http.StatusInternalServerError)
+			return
+		}
 
 		cleaned := path.Clean("/" + r.URL.Path)
-		fp := filepath.Join(root, filepath.FromSlash(cleaned))
-
-		// Resolve symlinks and verify the path is under root
-		resolved, err := filepath.EvalSymlinks(fp)
-		if err != nil {
-			http.NotFound(w, r)
-			return
-		}
-		if resolved != root && !strings.HasPrefix(resolved, root+string(filepath.Separator)) {
-			http.NotFound(w, r)
-			return
+		name := strings.TrimPrefix(cleaned, "/")
+		if name == "" {
+			name = "."
 		}
 
-		info, err := os.Stat(resolved)
-		if err != nil {
+		f, info, ok := openConfined(root, name)
+		if !ok {
 			http.NotFound(w, r)
 			return
 		}
+		defer f.Close()
 
 		if !info.IsDir() {
-			f, err := os.Open(resolved)
-			if err != nil {
-				http.NotFound(w, r)
-				return
-			}
-			defer f.Close()
 			http.ServeContent(w, r, info.Name(), info.ModTime(), f)
 			return
 		}
 
-		// Directory: redirect if no trailing slash
+		// Directory: redirect if no trailing slash. Build the target from the
+		// escaped path so reserved characters survive.
 		if !strings.HasSuffix(r.URL.Path, "/") {
-			http.Redirect(w, r, r.URL.Path+"/", http.StatusMovedPermanently)
+			target := (&url.URL{Path: cleaned + "/", RawQuery: r.URL.RawQuery}).String()
+			http.Redirect(w, r, target, http.StatusMovedPermanently)
 			return
 		}
 
-		// Try index files
 		for _, index := range []string{"index.html", "index.htm"} {
-			indexPath := filepath.Join(resolved, index)
-			if fi, err := os.Stat(indexPath); err == nil && !fi.IsDir() {
-				f, err := os.Open(indexPath)
-				if err != nil {
-					http.NotFound(w, r)
-					return
-				}
-				defer f.Close()
-				http.ServeContent(w, r, fi.Name(), fi.ModTime(), f)
-				return
+			idx, idxInfo, ok := openConfined(root, path.Join(name, index))
+			if !ok {
+				continue
 			}
+			defer idx.Close()
+			if idxInfo.IsDir() {
+				continue
+			}
+			http.ServeContent(w, r, idxInfo.Name(), idxInfo.ModTime(), idx)
+			return
 		}
 
-		// Directory listing
 		if opts.NoIndex {
 			http.NotFound(w, r)
 			return
 		}
 
-		renderDirListing(w, cleaned, resolved)
+		renderDirListing(w, cleaned, root, f)
 	}
+}
+
+// openConfined opens a path inside the root and reports whether it is servable.
+// Anything that is not a regular file or a directory (FIFOs, devices, sockets)
+// is refused: opening one can block the handler forever.
+func openConfined(root *os.Root, name string) (*os.File, os.FileInfo, bool) {
+	// Check the mode before opening: opening a FIFO blocks until a writer
+	// appears, which would pin the handler goroutine indefinitely.
+	info, err := root.Stat(name)
+	if err != nil || !(info.Mode().IsRegular() || info.IsDir()) {
+		return nil, nil, false
+	}
+
+	f, err := root.Open(name)
+	if err != nil {
+		return nil, nil, false
+	}
+
+	return f, info, true
 }
 
 type statusWriter struct {
@@ -135,7 +143,7 @@ func loggingMiddleware(next http.Handler, logW io.Writer) http.Handler {
 		sw := &statusWriter{ResponseWriter: w, status: http.StatusOK}
 		next.ServeHTTP(sw, r)
 		fmt.Fprintf(logW, "%s %s %d %s %s\n",
-			r.Method, r.URL.Path, sw.status, formatSize(sw.size), formatDuration(time.Since(start)))
+			r.Method, sanitizeForLog(r.URL.Path), sw.status, formatSize(sw.size), formatDuration(time.Since(start)))
 	})
 }
 
@@ -165,6 +173,7 @@ type dirEntryData struct {
 	Href    string
 	Size    string
 	ModTime string
+	IsDir   bool
 }
 
 var dirListingTmpl = template.Must(template.New("dirlist").Parse(`<!DOCTYPE html>
@@ -201,21 +210,14 @@ a:hover { text-decoration: underline; }
 </html>
 `))
 
-func renderDirListing(w http.ResponseWriter, reqPath string, dirPath string) {
-	entries, err := os.ReadDir(dirPath)
+func renderDirListing(w http.ResponseWriter, reqPath string, root *os.Root, dir *os.File) {
+	entries, err := dir.ReadDir(-1)
 	if err != nil {
 		http.Error(w, "Failed to read directory", http.StatusInternalServerError)
 		return
 	}
 
-	sort.Slice(entries, func(i, j int) bool {
-		iDir := entries[i].IsDir()
-		jDir := entries[j].IsDir()
-		if iDir != jDir {
-			return iDir
-		}
-		return entries[i].Name() < entries[j].Name()
-	})
+	relDir := strings.TrimPrefix(reqPath, "/")
 
 	data := dirListingData{
 		Path:      reqPath,
@@ -223,19 +225,20 @@ func renderDirListing(w http.ResponseWriter, reqPath string, dirPath string) {
 	}
 
 	for _, entry := range entries {
-		name := entry.Name()
-		href := url.PathEscape(name)
-		size := "-"
-		modTime := "-"
-
-		if info, err := entry.Info(); err == nil {
-			modTime = info.ModTime().Format("2006-01-02 15:04")
-			if !entry.IsDir() {
-				size = formatSize(info.Size())
-			}
+		// Stat through the root: it follows symlinks that stay inside and
+		// fails for those that leave, so the listing shows what can be served
+		// and reveals nothing about targets outside the root.
+		info, err := root.Stat(path.Join(relDir, entry.Name()))
+		if err != nil {
+			continue
 		}
 
-		if entry.IsDir() {
+		name := entry.Name()
+		href := "./" + url.PathEscape(name)
+		size := "-"
+		if !info.IsDir() {
+			size = formatSize(info.Size())
+		} else {
 			name += "/"
 			href += "/"
 		}
@@ -244,13 +247,33 @@ func renderDirListing(w http.ResponseWriter, reqPath string, dirPath string) {
 			Name:    name,
 			Href:    href,
 			Size:    size,
-			ModTime: modTime,
+			ModTime: info.ModTime().Format("2006-01-02 15:04"),
+			IsDir:   info.IsDir(),
 		})
 	}
+
+	// Directories first, then by name.
+	sort.Slice(data.Entries, func(i, j int) bool {
+		if data.Entries[i].IsDir != data.Entries[j].IsDir {
+			return data.Entries[i].IsDir
+		}
+		return data.Entries[i].Name < data.Entries[j].Name
+	})
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	// Nothing can be done about a write failure here: the header is already out.
 	_ = dirListingTmpl.Execute(w, data)
+}
+
+// sanitizeForLog strips control characters so a request path cannot inject
+// ANSI escapes or forge extra lines in the operator's terminal.
+func sanitizeForLog(s string) string {
+	return strings.Map(func(r rune) rune {
+		if r < 0x20 || r == 0x7f {
+			return '\ufffd'
+		}
+		return r
+	}, s)
 }
 
 func formatSize(n int64) string {

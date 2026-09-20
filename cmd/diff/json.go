@@ -11,17 +11,25 @@ import (
 
 var jsonCmd = &cobra.Command{
 	Use:   "json <file1> <file2>",
+	Args:  cobra.ExactArgs(2),
 	Short: "Semantic JSON diff (normalizes key order)",
 	Long:  "Compare two JSON documents ignoring key order. Exits 1 when they differ, like diff(1).",
 	Example: `  swk diff json old.json new.json
   curl -s api/v1 | swk diff json - saved.json`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := validateColor(cmd); err != nil {
+			return err
+		}
+
 		a, b, err := diffLib.ReadTwoInputs(args, cmd.InOrStdin())
 		if err != nil {
 			return err
 		}
 
-		ctx := ioutil.MustGetInt(cmd, "context")
+		ctx, err := ioutil.IntAtLeast(cmd, "context", 0)
+		if err != nil {
+			return err
+		}
 		result, err := diffLib.DiffJSON(a, b, ctx)
 		if err != nil {
 			return err

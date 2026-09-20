@@ -2,6 +2,7 @@ package convert
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"unicode"
@@ -127,6 +128,12 @@ func humanToSeconds(input string) (int64, error) {
 		return 0, fmt.Errorf("empty duration string")
 	}
 
+	// secondsToHuman emits a leading "-", so accept it back.
+	negative := false
+	if rest, ok := strings.CutPrefix(input, "-"); ok {
+		negative, input = true, rest
+	}
+
 	var total int64
 	i := 0
 
@@ -152,7 +159,7 @@ func humanToSeconds(input string) (int64, error) {
 		unit := strings.ToLower(input[unitStart:i])
 		if unit == "" {
 			// Trailing number with no unit, treat as seconds
-			total += int64(val)
+			total += int64(math.Round(val))
 			continue
 		}
 
@@ -160,9 +167,12 @@ func humanToSeconds(input string) (int64, error) {
 		if !ok {
 			return 0, fmt.Errorf("unknown duration unit %q in %q", unit, input)
 		}
-		total += int64(val * multiplier)
+		total += int64(math.Round(val * multiplier))
 	}
 
+	if negative {
+		total = -total
+	}
 	return total, nil
 }
 

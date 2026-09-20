@@ -12,7 +12,7 @@ import (
 var jsonCmd = &cobra.Command{
 	Use:   "json EXPRESSION [input]",
 	Short: "Query JSON with JSONPath expressions",
-	Args:  cobra.MinimumNArgs(1),
+	Args:  cobra.RangeArgs(1, 2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonpathQuery := args[0]
 		input, err := ioutil.ReadFileInputString(args[1:], cmd.InOrStdin())

@@ -11,6 +11,7 @@ import (
 
 var json2csvCmd = &cobra.Command{
 	Use:   "json2csv [input]",
+	Args:  cobra.MaximumNArgs(1),
 	Short: "Convert JSON to CSV",
 	Example: `  echo '[{"name":"alice","age":30}]' | swk convert json2csv
   swk convert json2csv --delimiter ';' data.json`,

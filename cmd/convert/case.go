@@ -11,6 +11,7 @@ import (
 
 var caseCmd = &cobra.Command{
 	Use:   "case [text]",
+	Args:  cobra.MaximumNArgs(1),
 	Short: "Convert text between case conventions",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		input, err := ioutil.ReadFileInputString(args, cmd.InOrStdin())
