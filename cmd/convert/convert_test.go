@@ -375,3 +375,48 @@ func TestParseResize(t *testing.T) {
 		})
 	}
 }
+
+func TestYAML2JSON_NegativeIndentIsAnError(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	if _, err := executeCommand("yaml2json", "--indent", "-1", "a: 1"); err == nil {
+		t.Fatal("expected an error for a negative indent")
+	}
+}
+
+// "0b1" is a hexadecimal literal; only a matching prefix may be stripped.
+func TestBase_PrefixIsBaseAware(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("base", "0b1", "--from", "hex", "--to", "dec")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if strings.TrimRight(out, "\n") != "177" {
+		t.Errorf("expected 177, got %q", out)
+	}
+}
+
+func TestCSV2JSON_MultiByteDelimiter(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("csv2json", "--delimiter", "§", "a§b\n1§2")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, `"a": "1"`) || !strings.Contains(out, `"b": "2"`) {
+		t.Errorf("delimiter should have split the row, got %q", out)
+	}
+}
+
+func TestMarkdown_SyntaxHighlightRequiresHTML(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	if _, err := executeCommand("markdown", "--syntax-highlight", "# x"); err == nil {
+		t.Fatal("expected an error for --syntax-highlight without --html")
+	}
+}
+
+func TestMarkdown_RejectsUnsafeTheme(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	if _, err := executeCommand("markdown", "--html", "--syntax-highlight",
+		"--theme", `x"><script>alert(1)</script>`, "# x"); err == nil {
+		t.Fatal("expected an error for an unsafe theme value")
+	}
+}

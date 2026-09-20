@@ -115,7 +115,7 @@ func fileHandler(opts Options) http.HandlerFunc {
 type statusWriter struct {
 	http.ResponseWriter
 	status int
-	size   int
+	size   int64
 }
 
 func (sw *statusWriter) WriteHeader(code int) {
@@ -125,7 +125,7 @@ func (sw *statusWriter) WriteHeader(code int) {
 
 func (sw *statusWriter) Write(b []byte) (int, error) {
 	n, err := sw.ResponseWriter.Write(b)
-	sw.size += n
+	sw.size += int64(n)
 	return n, err
 }
 
@@ -231,7 +231,7 @@ func renderDirListing(w http.ResponseWriter, reqPath string, dirPath string) {
 		if info, err := entry.Info(); err == nil {
 			modTime = info.ModTime().Format("2006-01-02 15:04")
 			if !entry.IsDir() {
-				size = formatSize(int(info.Size()))
+				size = formatSize(info.Size())
 			}
 		}
 
@@ -249,10 +249,11 @@ func renderDirListing(w http.ResponseWriter, reqPath string, dirPath string) {
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	dirListingTmpl.Execute(w, data)
+	// Nothing can be done about a write failure here: the header is already out.
+	_ = dirListingTmpl.Execute(w, data)
 }
 
-func formatSize(n int) string {
+func formatSize(n int64) string {
 	switch {
 	case n == 0:
 		return "0B"

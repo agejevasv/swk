@@ -7,13 +7,17 @@ import (
 	"strings"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/agejevasv/swk/internal/jsonx"
 )
 
 func JSONToYAML(input []byte) ([]byte, error) {
 	var data any
-	if err := json.Unmarshal(input, &data); err != nil {
+	if err := jsonx.Decode(input, &data); err != nil {
 		return nil, err
 	}
+
+	data = numbersToNodes(data)
 
 	var buf bytes.Buffer
 	enc := yaml.NewEncoder(&buf)
@@ -24,7 +28,43 @@ func JSONToYAML(input []byte) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+// numbersToNodes replaces json.Number values with YAML scalar nodes so the
+// original literal is emitted unquoted, instead of being encoded as a string
+// (json.Number) or rounded through float64.
+func numbersToNodes(v any) any {
+	switch v := v.(type) {
+	case json.Number:
+		return numberNode(v)
+	case map[string]any:
+		for key, val := range v {
+			v[key] = numbersToNodes(val)
+		}
+		return v
+	case []any:
+		for i, val := range v {
+			v[i] = numbersToNodes(val)
+		}
+		return v
+	default:
+		return v
+	}
+}
+
+func numberNode(n json.Number) *yaml.Node {
+	tag := "!!int"
+	if strings.ContainsAny(string(n), ".eE") {
+		tag = "!!float"
+	}
+	return &yaml.Node{Kind: yaml.ScalarNode, Tag: tag, Value: string(n)}
+}
+
+// YAMLToJSON converts YAML to JSON. indent is the number of spaces per level;
+// 0 produces compact output. Negative values are rejected.
 func YAMLToJSON(input []byte, indent int) ([]byte, error) {
+	if indent < 0 {
+		return nil, fmt.Errorf("indent must be >= 0, got %d", indent)
+	}
+
 	var data any
 	if err := yaml.Unmarshal(input, &data); err != nil {
 		return nil, err

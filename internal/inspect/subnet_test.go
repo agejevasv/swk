@@ -141,3 +141,16 @@ func TestSubnetInfoJSON(t *testing.T) {
 		t.Errorf("expected network in JSON, got %v", parsed["network"])
 	}
 }
+
+// An IPv4-mapped IPv6 CIDR converts with To4() but keeps a 128-bit mask.
+func TestParseSubnet_RejectsIPv4MappedIPv6(t *testing.T) {
+	for _, cidr := range []string{
+		"::ffff:192.168.1.0/120",
+		"::ffff:10.0.0.0/104",
+		"2001:db8::/32",
+	} {
+		if _, err := ParseSubnet(cidr); err == nil {
+			t.Errorf("ParseSubnet(%q) should have returned an error", cidr)
+		}
+	}
+}

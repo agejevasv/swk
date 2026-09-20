@@ -27,9 +27,9 @@ func ParseSubnet(cidr string) (*SubnetInfo, error) {
 		return nil, fmt.Errorf("invalid CIDR %q: %w", cidr, err)
 	}
 
-	// Only support IPv4 for now
-	ip4 := ip.To4()
-	if ip4 == nil {
+	// Only support IPv4 for now. An IPv4-mapped IPv6 address (::ffff:1.2.3.0/120)
+	// converts with To4() but keeps a 128-bit mask, so check the mask too.
+	if ip.To4() == nil || len(ipNet.Mask) != net.IPv4len || ipNet.IP.To4() == nil {
 		return nil, fmt.Errorf("IPv6 subnets not supported")
 	}
 

@@ -20,10 +20,9 @@ var csv2tableCmd = &cobra.Command{
 			return err
 		}
 
-		csvDelimiter := ioutil.MustGetString(cmd, "delimiter")
-		delimiter := ','
-		if len(csvDelimiter) > 0 {
-			delimiter = rune(csvDelimiter[0])
+		delimiter, err := ioutil.ParseDelimiter(ioutil.MustGetString(cmd, "delimiter"))
+		if err != nil {
+			return err
 		}
 
 		result, err := convLib.ToTable([]byte(input), ioutil.MustGetString(cmd, "style"), "csv", delimiter)

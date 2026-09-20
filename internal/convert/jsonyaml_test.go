@@ -261,3 +261,39 @@ func TestYAMLToJSON_HTMLNotEscaped(t *testing.T) {
 		t.Errorf("YAMLToJSON should not escape HTML, got: %s", got)
 	}
 }
+
+// Numbers must stay unquoted YAML scalars with their original precision.
+func TestJSONToYAML_PreservesNumbers(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{"plain integer", `{"a":42}`, "a: 42\n"},
+		{"round number", `{"a":1000000}`, "a: 1000000\n"},
+		{"beyond float64 precision", `{"a":9007199254740993}`, "a: 9007199254740993\n"},
+		{"beyond int64", `{"a":12345678901234567890}`, "a: 12345678901234567890\n"},
+		{"float", `{"a":3.14}`, "a: 3.14\n"},
+		{"exponent", `{"a":1e10}`, "a: 1e10\n"},
+		{"negative", `{"a":-7}`, "a: -7\n"},
+		{"in an array", `{"a":[1,2]}`, "a:\n  - 1\n  - 2\n"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := JSONToYAML([]byte(tt.input))
+			if err != nil {
+				t.Fatalf("JSONToYAML: %v", err)
+			}
+			if string(got) != tt.want {
+				t.Errorf("JSONToYAML() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestYAMLToJSON_RejectsNegativeIndent(t *testing.T) {
+	if _, err := YAMLToJSON([]byte("a: 1\n"), -1); err == nil {
+		t.Error("expected an error for a negative indent")
+	}
+}

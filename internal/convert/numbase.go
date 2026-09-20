@@ -7,24 +7,23 @@ import (
 )
 
 func ConvertBase(input string, fromBase, toBase int) (string, error) {
-	cleaned := strings.TrimSpace(input)
-
-	// Strip common prefixes
-	lower := strings.ToLower(cleaned)
-	switch {
-	case strings.HasPrefix(lower, "0x"):
-		cleaned = cleaned[2:]
-	case strings.HasPrefix(lower, "0b"):
-		cleaned = cleaned[2:]
-	case strings.HasPrefix(lower, "0o"):
-		cleaned = cleaned[2:]
-	}
-
 	if fromBase < 2 || fromBase > 16 {
 		return "", fmt.Errorf("unsupported from-base: %d", fromBase)
 	}
 	if toBase < 2 || toBase > 16 {
 		return "", fmt.Errorf("unsupported to-base: %d", toBase)
+	}
+
+	cleaned := strings.TrimSpace(input)
+
+	// Strip only the prefix that matches the source base. "0b1" is a valid
+	// hexadecimal literal (177), so stripping "0b" from it would be wrong.
+	lower := strings.ToLower(cleaned)
+	switch {
+	case fromBase == 16 && strings.HasPrefix(lower, "0x"),
+		fromBase == 2 && strings.HasPrefix(lower, "0b"),
+		fromBase == 8 && strings.HasPrefix(lower, "0o"):
+		cleaned = cleaned[2:]
 	}
 
 	n, err := strconv.ParseInt(cleaned, fromBase, 64)

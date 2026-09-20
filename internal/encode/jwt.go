@@ -16,8 +16,17 @@ type JWTInfo struct {
 	Header    map[string]any `json:"header"`
 	Payload   map[string]any `json:"payload"`
 	Signature string         `json:"signature"`
-	Valid     bool           `json:"valid"`
-	ExpiredAt *time.Time     `json:"expired_at,omitempty"`
+	// Valid is nil when the token was decoded without signature verification,
+	// so "not verified" is never reported as "invalid".
+	Valid *bool `json:"valid,omitempty"`
+	// Error holds why verification failed, when it failed.
+	Error     string     `json:"error,omitempty"`
+	ExpiredAt *time.Time `json:"expired_at,omitempty"`
+}
+
+// IsVerified reports whether signature verification ran and succeeded.
+func (i *JWTInfo) IsVerified() bool {
+	return i != nil && i.Valid != nil && *i.Valid
 }
 
 func JWTEncode(payloadJSON string, secret string, keyPEM []byte, algo string) (string, error) {
@@ -83,10 +92,7 @@ func JWTVerify(tokenStr string, secret string, keyPEM []byte) (*JWTInfo, error) 
 		sig = parts[2]
 	}
 
-	info := &JWTInfo{
-		Valid:     false,
-		Signature: sig,
-	}
+	info := &JWTInfo{Signature: sig}
 
 	if token == nil {
 		return nil, fmt.Errorf("invalid JWT: %w", err)
@@ -97,7 +103,15 @@ func JWTVerify(tokenStr string, secret string, keyPEM []byte) (*JWTInfo, error) 
 		info.Payload = map[string]any(claims)
 		extractExpiry(claims, info)
 	}
-	info.Valid = token.Valid
+
+	valid := token.Valid
+	info.Valid = &valid
+	if !valid {
+		info.Error = "signature verification failed"
+		if err != nil {
+			info.Error = err.Error()
+		}
+	}
 
 	return info, nil
 }

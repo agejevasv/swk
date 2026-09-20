@@ -2,11 +2,14 @@ package encode
 
 import (
 	"bytes"
+	"errors"
 	"strings"
 	"testing"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/spf13/pflag"
+
+	"github.com/agejevasv/swk/internal/ioutil"
 )
 
 func resetAllFlags() {
@@ -252,5 +255,64 @@ func TestQR_Terminal(t *testing.T) {
 	}
 	if strings.TrimSpace(out) == "" {
 		t.Error("expected non-empty QR output")
+	}
+}
+
+// A failed signature check must exit 1, not 0.
+func TestJWT_VerifyFailureExitsOne(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	token := makeTestJWT("right-secret", jwt.MapClaims{"sub": "u1"})
+
+	out, err := executeCommand("jwt", "-d", "--secret", "wrong-secret", token)
+	if err == nil {
+		t.Fatal("expected an error for a bad signature")
+	}
+
+	var ec ioutil.ExitCoder
+	if !errors.As(err, &ec) {
+		t.Fatalf("expected an ExitCoder, got %v", err)
+	}
+	if ec.ExitCode() != 1 {
+		t.Errorf("exit code = %d, want 1", ec.ExitCode())
+	}
+	if !strings.Contains(out, `"valid": false`) {
+		t.Errorf("expected valid:false in output, got %q", out)
+	}
+}
+
+func TestJWT_VerifySuccessExitsZero(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	token := makeTestJWT("right-secret", jwt.MapClaims{"sub": "u1"})
+
+	out, err := executeCommand("jwt", "-d", "--secret", "right-secret", token)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, `"valid": true`) {
+		t.Errorf("expected valid:true in output, got %q", out)
+	}
+}
+
+// A plain decode verifies nothing, so it must not report a validity verdict.
+func TestJWT_DecodeOmitsValidField(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	token := makeTestJWT("secret", jwt.MapClaims{"sub": "u1"})
+
+	out, err := executeCommand("jwt", "-d", token)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if strings.Contains(out, `"valid"`) {
+		t.Errorf("decode output should not claim a validity verdict, got %q", out)
+	}
+}
+
+// Accepting both would let the token's own alg header choose the key.
+func TestJWT_SecretAndKeyAreMutuallyExclusive(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	token := makeTestJWT("secret", jwt.MapClaims{"sub": "u1"})
+
+	if _, err := executeCommand("jwt", "-d", "--secret", "s", "--key", "k.pem", token); err == nil {
+		t.Fatal("expected an error when both --secret and --key are given")
 	}
 }

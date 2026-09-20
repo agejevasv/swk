@@ -251,3 +251,30 @@ func TestColorize_Lines(t *testing.T) {
 		t.Error("expected bold for file header")
 	}
 }
+
+// A difference that only shows up beyond float64 precision must still be found.
+func TestDiffJSON_DetectsLargeIntegerDifference(t *testing.T) {
+	a := []byte(`{"v":9007199254740993}`)
+	b := []byte(`{"v":9007199254740992}`)
+
+	got, err := DiffJSON(a, b, 3)
+	if err != nil {
+		t.Fatalf("DiffJSON: %v", err)
+	}
+	if got == "" {
+		t.Fatal("DiffJSON reported no difference between different documents")
+	}
+	if !strings.Contains(got, "9007199254740993") || !strings.Contains(got, "9007199254740992") {
+		t.Errorf("both values should appear in the diff:\n%s", got)
+	}
+}
+
+func TestDiffJSON_KeyOrderStillIgnored(t *testing.T) {
+	got, err := DiffJSON([]byte(`{"b":2,"a":1}`), []byte(`{"a":1,"b":2}`), 3)
+	if err != nil {
+		t.Fatalf("DiffJSON: %v", err)
+	}
+	if got != "" {
+		t.Errorf("expected no diff for reordered keys, got:\n%s", got)
+	}
+}

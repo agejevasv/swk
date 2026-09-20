@@ -2,13 +2,28 @@ package diff
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/spf13/pflag"
+
+	"github.com/agejevasv/swk/internal/ioutil"
 )
+
+// wantExitCode fails unless err carries the given exit code.
+func wantExitCode(t *testing.T, err error, code int) {
+	t.Helper()
+	var ec ioutil.ExitCoder
+	if !errors.As(err, &ec) {
+		t.Fatalf("expected an ExitCoder error, got %v", err)
+	}
+	if ec.ExitCode() != code {
+		t.Fatalf("exit code = %d, want %d", ec.ExitCode(), code)
+	}
+}
 
 func resetAllFlags() {
 	for _, sub := range Cmd.Commands() {
@@ -57,9 +72,8 @@ func TestText_Different(t *testing.T) {
 	a := writeTempFile(t, dir, "a.txt", "hello\n")
 	b := writeTempFile(t, dir, "b.txt", "world\n")
 	out, err := executeCommand("text", a, b)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	// Differing files exit 1, like diff(1).
+	wantExitCode(t, err, 1)
 	if !strings.Contains(out, "-hello") {
 		t.Errorf("expected '-hello' in diff output, got %q", out)
 	}
@@ -96,9 +110,8 @@ func TestJSON_Different(t *testing.T) {
 	a := writeTempFile(t, dir, "a.json", `{"a":1}`)
 	b := writeTempFile(t, dir, "b.json", `{"a":2}`)
 	out, err := executeCommand("json", a, b)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	// Differing documents exit 1, like diff(1).
+	wantExitCode(t, err, 1)
 	if !strings.Contains(out, "-") && !strings.Contains(out, "+") {
 		t.Errorf("expected diff markers in output, got %q", out)
 	}

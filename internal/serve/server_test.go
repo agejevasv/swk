@@ -378,7 +378,7 @@ func TestPathTraversal_Encoded(t *testing.T) {
 
 func TestFormatSize(t *testing.T) {
 	tests := []struct {
-		n    int
+		n    int64
 		want string
 	}{
 		{0, "0B"},
@@ -389,6 +389,9 @@ func TestFormatSize(t *testing.T) {
 		{1000000, "1.0MB"},
 		{1500000, "1.5MB"},
 		{1000000000, "1.0GB"},
+		// Sizes past 2 GiB must not overflow on 32-bit builds.
+		{3000000000, "3.0GB"},
+		{9000000000000, "9000.0GB"},
 	}
 	for _, tt := range tests {
 		got := formatSize(tt.n)

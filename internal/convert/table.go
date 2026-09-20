@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/agejevasv/swk/internal/jsonx"
 )
 
 type TableStyle struct {
@@ -83,7 +85,7 @@ func parseJSONData(input []byte) ([]string, [][]string, error) {
 	input = unwrapSingleArray(input)
 
 	var rawArray []json.RawMessage
-	if err := json.Unmarshal(input, &rawArray); err != nil {
+	if err := jsonx.Decode(input, &rawArray); err != nil {
 		return nil, nil, fmt.Errorf("expected JSON array: %w", err)
 	}
 	if len(rawArray) == 0 {
@@ -107,7 +109,7 @@ func parseJSONData(input []byte) ([]string, [][]string, error) {
 	}
 
 	var data []map[string]any
-	if err := json.Unmarshal(input, &data); err != nil {
+	if err := jsonx.Decode(input, &data); err != nil {
 		return nil, nil, fmt.Errorf("expected array of objects: %w", err)
 	}
 
@@ -279,7 +281,7 @@ func dataLine(cells []string, widths []int, sep string, plain bool) string {
 // unwrapSingleArray handles [[...]] → [...] so JSONPath output pipes into table rendering.
 func unwrapSingleArray(input []byte) []byte {
 	var outer []json.RawMessage
-	if err := json.Unmarshal(input, &outer); err != nil || len(outer) != 1 {
+	if err := jsonx.Decode(input, &outer); err != nil || len(outer) != 1 {
 		return input
 	}
 	inner := bytes.TrimSpace(outer[0])

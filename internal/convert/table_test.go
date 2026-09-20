@@ -314,3 +314,22 @@ func TestToTable_DefaultStyleIsBox(t *testing.T) {
 		t.Errorf("default style should be box, but missing box-drawing chars\ngot:\n%s", got)
 	}
 }
+
+// Table cells must show the number that was in the JSON.
+func TestToTable_PreservesNumbers(t *testing.T) {
+	input := `[{"id":1234567,"n":1000000,"big":9007199254740993}]`
+
+	got, err := ToTable([]byte(input), "plain", "json", ',')
+	if err != nil {
+		t.Fatalf("ToTable: %v", err)
+	}
+
+	for _, want := range []string{"1234567", "1000000", "9007199254740993"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("table missing %q:\n%s", want, got)
+		}
+	}
+	if strings.Contains(got, "e+") {
+		t.Errorf("table rendered a number in exponent form:\n%s", got)
+	}
+}

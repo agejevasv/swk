@@ -26,8 +26,13 @@ var jsonCmd = &cobra.Command{
 			return err
 		}
 
+		indent := ioutil.MustGetInt(cmd, "indent")
+		if indent < 0 {
+			return fmt.Errorf("--indent must be >= 0, got %d", indent)
+		}
+
 		opts := fmtLib.JSONOptions{
-			Indent: ioutil.MustGetInt(cmd, "indent"),
+			Indent: indent,
 			Minify: ioutil.MustGetBool(cmd, "minify"),
 		}
 		result, err := fmtLib.FormatJSON([]byte(input), opts)

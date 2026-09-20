@@ -36,8 +36,8 @@ var certCmd = &cobra.Command{
 			w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
 			fmt.Fprintf(w, "Subject:\t%s\n", info.Subject)
 			fmt.Fprintf(w, "Issuer:\t%s\n", info.Issuer)
-			fmt.Fprintf(w, "Not Before:\t%s\n", info.NotBefore.Format("2006-01-02 15:04:05 UTC"))
-			fmt.Fprintf(w, "Not After:\t%s\n", info.NotAfter.Format("2006-01-02 15:04:05 UTC"))
+			fmt.Fprintf(w, "Not Before:\t%s\n", info.NotBefore.UTC().Format("2006-01-02 15:04:05 UTC"))
+			fmt.Fprintf(w, "Not After:\t%s\n", info.NotAfter.UTC().Format("2006-01-02 15:04:05 UTC"))
 			fmt.Fprintf(w, "Serial:\t%s\n", info.SerialNumber)
 			fmt.Fprintf(w, "Algorithm:\t%s\n", info.SignatureAlgorithm)
 			if len(info.DNSNames) > 0 {

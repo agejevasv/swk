@@ -1,6 +1,7 @@
 package diff
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -8,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/agejevasv/swk/internal/ioutil"
+	"github.com/agejevasv/swk/internal/jsonx"
 	textLib "github.com/agejevasv/swk/internal/text"
 )
 
@@ -95,12 +97,17 @@ func Colorize(diff string) string {
 
 func normalizeJSON(data []byte) (string, error) {
 	var v any
-	if err := json.Unmarshal(data, &v); err != nil {
+	if err := jsonx.Decode(data, &v); err != nil {
 		return "", fmt.Errorf("invalid JSON: %w", err)
 	}
-	out, err := json.MarshalIndent(v, "", "  ")
-	if err != nil {
+
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(false)
+	enc.SetIndent("", "  ")
+	if err := enc.Encode(v); err != nil {
 		return "", err
 	}
-	return string(out) + "\n", nil
+	// Encode already terminates the value with a newline.
+	return buf.String(), nil
 }

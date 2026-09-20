@@ -52,3 +52,35 @@ func TestGenerateImageInvalidStyle(t *testing.T) {
 		t.Fatal("expected error")
 	}
 }
+
+func TestGenerateImage_RejectsOutOfRangeDimensions(t *testing.T) {
+	tests := []struct {
+		name          string
+		width, height int
+	}{
+		{"zero", 0, 0},
+		{"negative", -10, -10},
+		{"below drawing minimum", 3, 3},
+		{"one side too small", 100, 2},
+		{"absurdly large", 1 << 20, 1 << 20},
+		{"one side too large", 100, MaxImageDim + 1},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if _, err := GenerateImage(tt.width, tt.height, "mixed"); err == nil {
+				t.Errorf("GenerateImage(%d, %d) should have returned an error", tt.width, tt.height)
+			}
+		})
+	}
+}
+
+func TestGenerateImage_AcceptsSmallestAllowedSize(t *testing.T) {
+	got, err := GenerateImage(MinImageDim, MinImageDim, "mixed")
+	if err != nil {
+		t.Fatalf("GenerateImage: %v", err)
+	}
+	if len(got) == 0 {
+		t.Error("expected PNG data")
+	}
+}

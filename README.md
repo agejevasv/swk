@@ -52,6 +52,19 @@ swk format json data.json
 swk format json - < data.json
 ```
 
+### Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | Negative result: no match (`query`), inputs differ (`diff`), check failed (`--check-expiry`, `--verify`, JWT signature verification) |
+| `2` | Error: bad input, invalid flags |
+
+```bash
+swk diff json old.json new.json || echo "they differ"
+swk encode jwt -d --secret "$SECRET" "$TOKEN" || echo "bad signature"
+```
+
 ## Commands
 
 | Category | Description |
@@ -116,6 +129,7 @@ swk convert date 1700000000 --from unix --to human --tz UTC
 swk convert date now --to unix
 swk convert date 1700000000 --from unix --to '%Y-%m-%d' --tz UTC   # 2023-11-14
 swk convert date '2023-11-14' --from '%Y-%m-%d' --to unix
+# Inputs without a zone are read as UTC; --tz sets the output zone
 
 # Duration conversion
 swk convert duration 86400             # 1d
@@ -183,7 +197,7 @@ echo '{"meta":"v1","users":[{"name":"alice"},{"name":"bob"}]}' \
 | Command | Description |
 |---------|-------------|
 | `encode base64` / `b64` | Base64 encode/decode |
-| `encode hash` / `sum` | Generate hashes (MD5, SHA1, SHA256, SHA512) |
+| `encode hash` / `sum` | Generate hashes (MD5, SHA1, SHA256, SHA384, SHA512) |
 | `encode html` | HTML entity encode/decode (alias of `escape html`) |
 | `encode jwt` | Create, decode, or verify JWT tokens |
 | `encode qr` | Generate QR codes |
@@ -210,7 +224,7 @@ swk encode jwt --algo ES256 --key ec-private.pem '{"sub":"user1"}'
 # JWT — decode (no verification, works with any algorithm)
 swk encode jwt -d 'eyJhbGciOiJIUzI1NiIs...'
 
-# JWT — verify with HMAC secret
+# JWT — verify with HMAC secret (exits 1 if the signature is bad)
 swk encode jwt -d --secret mykey 'eyJhbGciOiJIUzI1NiIs...'
 
 # JWT — verify with public key (RSA/EC/Ed25519)
@@ -381,6 +395,7 @@ swk query json '$.users[*].name' data.json
 echo '2024-01-15 hello 2024-02-20' | swk query regex -o -g '\d{4}-\d{2}-\d{2}'
 echo 'John:30' | swk query regex --groups '(\w+):(\d+)'
 echo 'foo bar baz' | swk query regex -r 'qux' 'bar'
+echo 'foo bar baz' | swk query regex -r '' 'bar '     # delete matches
 ```
 
 ### Diff (`swk diff`, `swk d`)

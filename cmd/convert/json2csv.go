@@ -20,10 +20,9 @@ var json2csvCmd = &cobra.Command{
 			return err
 		}
 
-		csvDelimiter := ioutil.MustGetString(cmd, "delimiter")
-		delimiter := ','
-		if len(csvDelimiter) > 0 {
-			delimiter = rune(csvDelimiter[0])
+		delimiter, err := ioutil.ParseDelimiter(ioutil.MustGetString(cmd, "delimiter"))
+		if err != nil {
+			return err
 		}
 
 		output, err := convLib.JSONToCSV([]byte(input), delimiter)

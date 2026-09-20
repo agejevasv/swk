@@ -21,7 +21,10 @@ Use -o to print only the matched parts, --groups for structured JSON output,
 or --replace for substitution.`,
 	Example: `  echo '2024-01-15 hello 2024-02-20' | swk query regex -o '\d{4}-\d{2}-\d{2}'
   echo 'John:30' | swk query regex --groups '(\w+):(\d+)'
-  echo 'foo bar' | swk query regex -r 'baz' 'bar'`,
+  echo 'foo bar' | swk query regex -r 'baz' 'bar'
+
+  # Delete every match
+  echo 'foo bar' | swk query regex -r '' 'foo '`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		regexPattern := args[0]
@@ -35,8 +38,9 @@ or --replace for substitution.`,
 		regexReplace := ioutil.MustGetString(cmd, "replace")
 		regexOnly := ioutil.MustGetBool(cmd, "only-matching")
 
-		// --replace: substitute on full input.
-		if regexReplace != "" {
+		// --replace: substitute on full input. Test the flag rather than its
+		// value so that an empty replacement deletes the matches.
+		if cmd.Flags().Changed("replace") {
 			result, err := queryLib.RegexReplace(input, regexPattern, regexReplace)
 			if err != nil {
 				return err

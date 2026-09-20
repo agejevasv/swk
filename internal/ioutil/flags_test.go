@@ -62,3 +62,35 @@ func TestMustGetInt_Panic(t *testing.T) {
 	cmd := &cobra.Command{}
 	MustGetInt(cmd, "nonexistent")
 }
+
+func TestParseDelimiter(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		want    rune
+		wantErr bool
+	}{
+		{"empty defaults to comma", "", ',', false},
+		{"comma", ",", ',', false},
+		{"semicolon", ";", ';', false},
+		{"tab", "\t", '\t', false},
+		{"pipe", "|", '|', false},
+		{"multi-byte rune", "§", '§', false},
+		{"multi-byte rune 2", "→", '→', false},
+		{"two characters", ",,", 0, true},
+		{"word", "sep", 0, true},
+		{"invalid utf-8", "\xff", 0, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ParseDelimiter(tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("ParseDelimiter(%q) error = %v, wantErr %v", tt.input, err, tt.wantErr)
+			}
+			if !tt.wantErr && got != tt.want {
+				t.Errorf("ParseDelimiter(%q) = %q, want %q", tt.input, got, tt.want)
+			}
+		})
+	}
+}

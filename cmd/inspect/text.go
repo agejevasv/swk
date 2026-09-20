@@ -46,6 +46,6 @@ var textCmd = &cobra.Command{
 }
 
 func init() {
-	textCmd.Flags().Bool("json", false, "Output as JSON")
+	textCmd.Flags().Bool("json", false, "output as JSON")
 	Cmd.AddCommand(textCmd)
 }

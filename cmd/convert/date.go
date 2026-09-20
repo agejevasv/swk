@@ -18,7 +18,10 @@ var dateCmd = &cobra.Command{
 Custom formats use strftime syntax (e.g. "%Y-%m-%d", "%H:%M:%S").
 
 With --from auto (default), numeric values >1e12 are treated as milliseconds.
-Use --from unix or --from unixms to be explicit.`,
+Use --from unix or --from unixms to be explicit.
+
+An input that carries no timezone is interpreted as UTC; --tz sets the zone of
+the output, not of the input.`,
 	Example: `  swk convert date 1700000000 --from unix --to iso
   swk convert date now --to unix
   swk convert date 1700000000 --from unix --to '%Y-%m-%d' --tz UTC`,

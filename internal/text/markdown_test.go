@@ -154,3 +154,82 @@ func TestRenderMarkdown(t *testing.T) {
 		})
 	}
 }
+
+// Images are stripped before links, so no stray "!" is left behind.
+func TestStripMarkdown_Images(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{"image alt text", "![alt text](img.png)", "alt text"},
+		{"image with empty alt", "![](img.png)", ""},
+		{"link is still stripped", "[link](http://x)", "link"},
+		{"image inside a sentence", "see ![a](b.png) here", "see a here"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := RenderMarkdown([]byte(tt.input), false, false, "")
+			if err != nil {
+				t.Fatalf("RenderMarkdown: %v", err)
+			}
+			if strings.TrimRight(string(got), "\n") != tt.want {
+				t.Errorf("got %q, want %q", string(got), tt.want)
+			}
+		})
+	}
+}
+
+// Underscore emphasis applies at word boundaries only, so identifiers survive.
+func TestStripMarkdown_Underscores(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{"snake case preserved", "snake_case_name", "snake_case_name"},
+		{"identifier preserved", "foo_bar_baz", "foo_bar_baz"},
+		{"leading underscore identifier", "_private_field_", "_private_field_"},
+		{"emphasis stripped", "_emphasis_", "emphasis"},
+		{"emphasis in sentence", "a _b_ c", "a b c"},
+		{"adjacent emphasis", "_a_ _b_", "a b"},
+		{"emphasis next to punctuation", "(_x_)", "(x)"},
+		{"mixed identifier and emphasis", "use _foo_ with bar_baz", "use foo with bar_baz"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := RenderMarkdown([]byte(tt.input), false, false, "")
+			if err != nil {
+				t.Fatalf("RenderMarkdown: %v", err)
+			}
+			if strings.TrimRight(string(got), "\n") != tt.want {
+				t.Errorf("got %q, want %q", string(got), tt.want)
+			}
+		})
+	}
+}
+
+func TestRenderMarkdown_ThemeValidation(t *testing.T) {
+	if _, err := RenderMarkdown([]byte("# x"), true, true, "tokyo-night-dark"); err != nil {
+		t.Errorf("valid theme rejected: %v", err)
+	}
+
+	bad := []string{`x"><script>alert(1)</script>`, "../../etc/passwd", "a b"}
+	for _, theme := range bad {
+		if _, err := RenderMarkdown([]byte("# x"), true, true, theme); err == nil {
+			t.Errorf("theme %q should have been rejected", theme)
+		}
+	}
+}
+
+func TestRenderMarkdown_HTMLEndsWithNewline(t *testing.T) {
+	got, err := RenderMarkdown([]byte("# x"), true, false, "")
+	if err != nil {
+		t.Fatalf("RenderMarkdown: %v", err)
+	}
+	if !strings.HasSuffix(string(got), "</html>\n") {
+		t.Errorf("HTML output should end with a newline, got %q", string(got)[len(got)-20:])
+	}
+}

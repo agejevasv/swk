@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -44,14 +45,20 @@ func runListen(cmd *cobra.Command, args []string) error {
 
 	handler := listenLib.Handler(opts)
 
-	ln, err := net.Listen("tcp", fmt.Sprintf("%s:%d", host, port))
+	// JoinHostPort brackets IPv6 literals; "%s:%d" would produce "::1:8080".
+	ln, err := net.Listen("tcp", net.JoinHostPort(host, strconv.Itoa(port)))
 	if err != nil {
 		return err
 	}
 
 	fmt.Fprintf(cmd.ErrOrStderr(), "Listening on http://%s\n", ln.Addr())
 
-	server := &http.Server{Handler: handler}
+	server := &http.Server{
+		Handler: handler,
+		// Without a header timeout a single idle connection can hold the
+		// server open indefinitely.
+		ReadHeaderTimeout: 10 * time.Second,
+	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()

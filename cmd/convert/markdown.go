@@ -23,6 +23,10 @@ var markdownCmd = &cobra.Command{
 		syntaxHL := ioutil.MustGetBool(cmd, "syntax-highlight")
 		theme := ioutil.MustGetString(cmd, "theme")
 
+		if syntaxHL && !mdHTML {
+			return fmt.Errorf("--syntax-highlight requires --html")
+		}
+
 		result, err := textLib.RenderMarkdown([]byte(input), mdHTML, syntaxHL, theme)
 		if err != nil {
 			return err
@@ -34,8 +38,8 @@ var markdownCmd = &cobra.Command{
 }
 
 func init() {
-	markdownCmd.Flags().Bool("html", false, "Output HTML (default is plain text)")
-	markdownCmd.Flags().Bool("syntax-highlight", false, "Include highlight.js for syntax highlighting (requires --html)")
+	markdownCmd.Flags().Bool("html", false, "output HTML (default is plain text)")
+	markdownCmd.Flags().Bool("syntax-highlight", false, "include highlight.js for syntax highlighting (requires --html)")
 	markdownCmd.Flags().String("theme", "github", "highlight.js theme (github, monokai, dracula, nord, tokyo-night-dark, etc.)")
 	Cmd.AddCommand(markdownCmd)
 }

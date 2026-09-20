@@ -4,39 +4,43 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"strings"
+
+	"github.com/agejevasv/swk/internal/jsonx"
 )
 
 type JSONOptions struct {
+	// Indent is the number of spaces per level. Values <= 0 use the default of 2.
 	Indent int
 	Minify bool
 }
 
+const defaultIndent = 2
+
 func FormatJSON(input []byte, opts JSONOptions) ([]byte, error) {
 	var data any
-	if err := json.Unmarshal(input, &data); err != nil {
+	if err := jsonx.Decode(input, &data); err != nil {
 		return nil, fmt.Errorf("invalid JSON: %w", err)
 	}
 
-	if opts.Minify {
-		var buf bytes.Buffer
-		if err := json.NewEncoder(&buf).Encode(data); err != nil {
-			return nil, err
-		}
-		return buf.Bytes(), nil
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	// Keep string contents verbatim; <, > and & are valid inside JSON strings.
+	enc.SetEscapeHTML(false)
+	if !opts.Minify {
+		enc.SetIndent("", indentString(opts.Indent))
 	}
 
-	indent := "  "
-	if opts.Indent > 0 {
-		indent = ""
-		for i := 0; i < opts.Indent; i++ {
-			indent += " "
-		}
-	}
-
-	result, err := json.MarshalIndent(data, "", indent)
-	if err != nil {
+	if err := enc.Encode(data); err != nil {
 		return nil, err
 	}
 
-	return append(result, '\n'), nil
+	return buf.Bytes(), nil
+}
+
+func indentString(n int) string {
+	if n <= 0 {
+		n = defaultIndent
+	}
+	return strings.Repeat(" ", n)
 }

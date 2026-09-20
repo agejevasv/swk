@@ -145,6 +145,36 @@ func TestConvertBase(t *testing.T) {
 			want:     "8",
 		},
 
+		// A prefix that does not belong to the source base is part of the number.
+		{
+			name:     "0b_is_a_hex_literal_not_a_binary_prefix",
+			input:    "0b1",
+			fromBase: 16,
+			toBase:   10,
+			want:     "177",
+		},
+		{
+			name:     "0e_hex_digits_unaffected",
+			input:    "0xb1",
+			fromBase: 16,
+			toBase:   10,
+			want:     "177",
+		},
+		{
+			name:     "0o_is_not_stripped_from_hex",
+			input:    "0x0",
+			fromBase: 16,
+			toBase:   10,
+			want:     "0",
+		},
+		{
+			name:     "binary_prefix_not_stripped_for_decimal",
+			input:    "0b1",
+			fromBase: 10,
+			toBase:   10,
+			wantErr:  true,
+		},
+
 		// Zero in all bases.
 		{
 			name:     "zero_dec_to_hex",

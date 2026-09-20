@@ -167,3 +167,41 @@ func TestXML_Invalid(t *testing.T) {
 		t.Fatal("expected error for invalid XML, got nil")
 	}
 }
+
+func TestJSON_NegativeIndentIsAnError(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	if _, err := executeCommand("json", "--indent", "-1", `{"a":1}`); err == nil {
+		t.Fatal("expected an error for a negative indent")
+	}
+}
+
+func TestXML_NegativeIndentIsAnError(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	if _, err := executeCommand("xml", "--indent", "-1", "<a><b>1</b></a>"); err == nil {
+		t.Fatal("expected an error for a negative indent")
+	}
+}
+
+// A multi-byte delimiter must not be truncated to its first byte.
+func TestCSV2Table_MultiByteDelimiter(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("csv2table", "--delimiter", "§", "--style", "plain", "a§b\n1§2")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if strings.Contains(out, "§") {
+		t.Errorf("delimiter should have split the row, got %q", out)
+	}
+	for _, want := range []string{"a", "b", "1", "2"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("expected %q in output, got %q", want, out)
+		}
+	}
+}
+
+func TestCSV2Table_RejectsMultiCharDelimiter(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	if _, err := executeCommand("csv2table", "--delimiter", "ab", "x,y"); err == nil {
+		t.Fatal("expected an error for a multi-character delimiter")
+	}
+}

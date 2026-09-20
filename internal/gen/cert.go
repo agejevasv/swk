@@ -96,8 +96,10 @@ func GenerateCert(opts CertOptions) (*CertResult, error) {
 		DNSNames:     opts.DNS,
 		IPAddresses:  ipAddrs,
 
+		// A self-signed server certificate is a leaf, not a CA. Asserting CA
+		// without KeyUsageCertSign is contradictory and strict verifiers reject it.
 		BasicConstraintsValid: true,
-		IsCA:                  true,
+		IsCA:                  false,
 	}
 
 	// Self-sign

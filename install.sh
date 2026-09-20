@@ -42,7 +42,9 @@ if [ ! -s "$TMPFILE" ]; then
   exit 1
 fi
 
-chmod +x "$TMPFILE"
+# mktemp creates the file 0600; "chmod +x" would leave it unreadable for
+# everyone but the owner, so set the mode explicitly.
+chmod 755 "$TMPFILE"
 
 if [ -w "$INSTALL_DIR" ]; then
   mv "$TMPFILE" "$INSTALL_DIR/swk"
@@ -51,4 +53,11 @@ else
 fi
 
 echo "Installed swk to $INSTALL_DIR/swk"
-swk --version
+
+# Call it by path: INSTALL_DIR is not necessarily on PATH.
+"$INSTALL_DIR/swk" --version
+
+case ":$PATH:" in
+  *":$INSTALL_DIR:"*) ;;
+  *) echo "Note: $INSTALL_DIR is not on your PATH." >&2 ;;
+esac

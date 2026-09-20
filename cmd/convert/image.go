@@ -64,6 +64,10 @@ func parseResize(s string) (int, int, error) {
 	if w <= 0 || h <= 0 {
 		return 0, 0, fmt.Errorf("width and height must be positive")
 	}
+	if w > graphicLib.MaxImageDim || h > graphicLib.MaxImageDim {
+		return 0, 0, fmt.Errorf("width and height must be at most %d, got %dx%d",
+			graphicLib.MaxImageDim, w, h)
+	}
 	return w, h, nil
 }
 

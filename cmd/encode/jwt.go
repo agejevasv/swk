@@ -16,6 +16,8 @@ var jwtCmd = &cobra.Command{
 	Long: `Encode: pass a JSON payload to create a signed JWT.
 Decode: pass a JWT token with -d to inspect header and payload (works with any algorithm).
 Verify: pass -d with --secret (HMAC) or --key (RSA/EC/Ed25519) to verify the signature.
+Verification exits 1 if the signature does not check out; a plain decode reports no
+"valid" field at all, since nothing was verified.
 
 Supported algorithms: HS256, HS384, HS512, RS256, RS384, RS512, ES256, ES384, ES512, EdDSA.`,
 	Example: `  # Create a JWT with HMAC
@@ -71,10 +73,12 @@ func jwtEncodeRun(cmd *cobra.Command, payload, secret string, keyPEM []byte, alg
 }
 
 func jwtDecodeRun(cmd *cobra.Command, tokenStr, secret string, keyPEM []byte) error {
+	verify := secret != "" || len(keyPEM) > 0
+
 	var info *encLib.JWTInfo
 	var err error
 
-	if secret != "" || len(keyPEM) > 0 {
+	if verify {
 		info, err = encLib.JWTVerify(tokenStr, secret, keyPEM)
 	} else {
 		info, err = encLib.JWTDecode(tokenStr)
@@ -88,6 +92,13 @@ func jwtDecodeRun(cmd *cobra.Command, tokenStr, secret string, keyPEM []byte) er
 		return err
 	}
 	fmt.Fprintln(cmd.OutOrStdout(), string(output))
+
+	// A failed signature check must not look like success to a caller.
+	if verify && !info.IsVerified() {
+		fmt.Fprintf(cmd.ErrOrStderr(), "Error: %s\n", info.Error)
+		return ioutil.CheckFailedError{}
+	}
+
 	return nil
 }
 
@@ -96,5 +107,8 @@ func init() {
 	jwtCmd.Flags().StringP("secret", "s", "", "HMAC secret for signing or verification")
 	jwtCmd.Flags().StringP("key", "k", "", "path to PEM key file (private for sign, public for verify)")
 	jwtCmd.Flags().StringP("algo", "a", "HS256", "signing algorithm (HS256, RS256, ES256, EdDSA, etc.)")
+	// Accepting both at once would let a token's own alg header pick the key,
+	// which is the classic JWT algorithm-confusion attack.
+	jwtCmd.MarkFlagsMutuallyExclusive("secret", "key")
 	Cmd.AddCommand(jwtCmd)
 }

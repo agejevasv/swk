@@ -160,3 +160,36 @@ func TestGenerateCert_KeyUsage(t *testing.T) {
 		t.Error("expected ServerAuth and ClientAuth extended key usage")
 	}
 }
+
+// A self-signed server certificate is a leaf, not a CA.
+func TestGenerateCert_IsNotACA(t *testing.T) {
+	res, err := GenerateCert(CertOptions{CN: "localhost"})
+	if err != nil {
+		t.Fatalf("GenerateCert: %v", err)
+	}
+
+	block, _ := pem.Decode(res.CertPEM)
+	if block == nil {
+		t.Fatal("failed to decode certificate PEM")
+	}
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		t.Fatalf("ParseCertificate: %v", err)
+	}
+
+	if cert.IsCA {
+		t.Error("certificate should not assert the CA basic constraint")
+	}
+	if !cert.BasicConstraintsValid {
+		t.Error("basic constraints should be marked valid")
+	}
+
+	// It must still verify as its own trust anchor, which is how it is used.
+	pool := x509.NewCertPool()
+	if !pool.AppendCertsFromPEM(res.CertPEM) {
+		t.Fatal("failed to add certificate to pool")
+	}
+	if _, err := cert.Verify(x509.VerifyOptions{Roots: pool, DNSName: "localhost"}); err != nil {
+		t.Errorf("self-signed certificate should verify against itself: %v", err)
+	}
+}

@@ -36,14 +36,19 @@ var dnsCmd = &cobra.Command{
 				return err
 			}
 			fmt.Fprintln(cmd.OutOrStdout(), string(out))
-			return nil
+		} else {
+			w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
+			for _, r := range result.Records {
+				fmt.Fprintf(w, "%s:\t%s\n", r.Type, r.Value)
+			}
+			w.Flush()
 		}
 
-		w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
-		for _, r := range result.Records {
-			fmt.Fprintf(w, "%s:\t%s\n", r.Type, r.Value)
+		// Without this an unresolvable name prints nothing and exits 0.
+		if len(result.Records) == 0 {
+			fmt.Fprintf(cmd.ErrOrStderr(), "no DNS records found for %q\n", input)
+			return ioutil.NoMatchError{}
 		}
-		w.Flush()
 
 		return nil
 	},

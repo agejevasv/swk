@@ -45,11 +45,13 @@ const highlightSnippet = `<link rel="stylesheet" href="https://cdnjs.cloudflare.
 
 // Precompiled regexes for markdown stripping.
 var (
-	reHeading    = regexp.MustCompile(`(?m)^#{1,6}\s+`)
-	reBold       = regexp.MustCompile(`\*\*(.+?)\*\*`)
-	reBold2      = regexp.MustCompile(`__(.+?)__`)
-	reItalic     = regexp.MustCompile(`\*(.+?)\*`)
-	reItalic2    = regexp.MustCompile(`_(.+?)_`)
+	reHeading = regexp.MustCompile(`(?m)^#{1,6}\s+`)
+	reBold    = regexp.MustCompile(`\*\*(.+?)\*\*`)
+	reBold2   = regexp.MustCompile(`__(.+?)__`)
+	reItalic  = regexp.MustCompile(`\*(.+?)\*`)
+	// Underscore emphasis only applies at word boundaries; CommonMark treats
+	// intra-word underscores as literal, so snake_case_names survive.
+	reItalic2    = regexp.MustCompile(`(^|[^\pL\pN_])_([^_\n]+)_($|[^\pL\pN_])`)
 	reStrike     = regexp.MustCompile(`~~(.+?)~~`)
 	reCode       = regexp.MustCompile("`([^`]+)`")
 	reCodeBlock  = regexp.MustCompile("(?s)```[a-z]*\n?(.*?)```")
@@ -59,6 +61,10 @@ var (
 	reBlockquote = regexp.MustCompile(`(?m)^>\s?`)
 	reBlankLines = regexp.MustCompile(`\n{3,}`)
 )
+
+// themePattern limits --theme to characters that are safe in a URL path
+// segment, so the value cannot break out of the stylesheet link.
+var themePattern = regexp.MustCompile(`^[A-Za-z0-9._-]+$`)
 
 func RenderMarkdown(input []byte, toHTML bool, syntaxHighlight bool, theme string) ([]byte, error) {
 	if toHTML {
@@ -78,12 +84,29 @@ func RenderMarkdown(input []byte, toHTML bool, syntaxHighlight bool, theme strin
 			if theme == "" {
 				theme = "github"
 			}
+			if !themePattern.MatchString(theme) {
+				return nil, fmt.Errorf("invalid theme %q: use letters, digits, dot, dash or underscore", theme)
+			}
 			highlight = strings.ReplaceAll(highlightSnippet, "{{theme}}", theme)
 		}
 		page := fmt.Sprintf(htmlTemplate, highlight, buf.String())
-		return []byte(page), nil
+		return []byte(page + "\n"), nil
 	}
 	return []byte(stripMarkdown(string(input))), nil
+}
+
+// stripUnderscoreEmphasis removes _emphasis_ at word boundaries. The pattern
+// consumes the boundary character on each side, so adjacent spans such as
+// "_a_ _b_" need more than one pass; it runs until the text stops changing.
+func stripUnderscoreEmphasis(s string) string {
+	for i := 0; i < 8; i++ {
+		next := reItalic2.ReplaceAllString(s, "$1$2$3")
+		if next == s {
+			break
+		}
+		s = next
+	}
+	return s
 }
 
 func stripMarkdown(s string) string {
@@ -91,12 +114,14 @@ func stripMarkdown(s string) string {
 	s = reBold.ReplaceAllString(s, "$1")
 	s = reBold2.ReplaceAllString(s, "$1")
 	s = reItalic.ReplaceAllString(s, "$1")
-	s = reItalic2.ReplaceAllString(s, "$1")
+	s = stripUnderscoreEmphasis(s)
 	s = reStrike.ReplaceAllString(s, "$1")
 	s = reCode.ReplaceAllString(s, "$1")
 	s = reCodeBlock.ReplaceAllString(s, "$1")
-	s = reLink.ReplaceAllString(s, "$1")
+	// Images first: the link pattern also matches the "[alt](src)" tail of an
+	// image and would leave a stray "!" behind.
 	s = reImg.ReplaceAllString(s, "$1")
+	s = reLink.ReplaceAllString(s, "$1")
 	s = reHR.ReplaceAllString(s, "")
 	s = reBlockquote.ReplaceAllString(s, "")
 	s = reBlankLines.ReplaceAllString(s, "\n\n")

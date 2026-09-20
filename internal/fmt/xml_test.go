@@ -169,3 +169,9 @@ func TestFormatXML(t *testing.T) {
 		})
 	}
 }
+
+func TestFormatXML_RejectsNegativeIndent(t *testing.T) {
+	if _, err := FormatXML([]byte("<a><b>1</b></a>"), XMLOptions{Indent: -1}); err == nil {
+		t.Error("expected an error for a negative indent")
+	}
+}

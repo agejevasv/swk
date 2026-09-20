@@ -6,11 +6,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+
+	"github.com/agejevasv/swk/internal/jsonx"
 )
 
 func JSONToCSV(input []byte, delimiter rune) ([]byte, error) {
 	var data []map[string]any
-	if err := json.Unmarshal(input, &data); err != nil {
+	if err := jsonx.Decode(input, &data); err != nil {
 		return nil, fmt.Errorf("input must be a JSON array of objects: %w", err)
 	}
 	if len(data) == 0 {
@@ -41,7 +43,7 @@ func JSONToCSV(input []byte, delimiter rune) ([]byte, error) {
 		row := make([]string, len(headers))
 		for i, h := range headers {
 			if v, ok := obj[h]; ok {
-				row[i] = fmt.Sprintf("%v", v)
+				row[i] = formatCellValue(v)
 			}
 		}
 		if err := w.Write(row); err != nil {

@@ -103,3 +103,29 @@ func TestGenerateCron(t *testing.T) {
 		})
 	}
 }
+
+// --month only means something for --yearly; every other combination errors.
+func TestGenerateCron_MonthRequiresYearly(t *testing.T) {
+	tests := []struct {
+		name string
+		opts CronOptions
+	}{
+		{"monthly", CronOptions{Monthly: true, Month: "JAN"}},
+		{"weekly", CronOptions{Weekly: true, Month: "JAN"}},
+		{"daily", CronOptions{Daily: true, Month: "JAN"}},
+		{"weekdays", CronOptions{Weekdays: true, Month: "JAN"}},
+		{"every", CronOptions{Every: "5m", Month: "JAN"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if _, err := GenerateCron(tt.opts); err == nil {
+				t.Error("expected an error when --month cannot apply")
+			}
+		})
+	}
+
+	if _, err := GenerateCron(CronOptions{Yearly: true, Month: "JUN", Day: "1"}); err != nil {
+		t.Errorf("--month with --yearly should work: %v", err)
+	}
+}

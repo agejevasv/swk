@@ -30,7 +30,7 @@ var caseCmd = &cobra.Command{
 }
 
 func init() {
-	caseCmd.Flags().StringP("to", "t", "", "Target case (camel, pascal, snake, kebab, upper, lower, title, sentence, dot, path)")
+	caseCmd.Flags().StringP("to", "t", "", "target case (camel, pascal, snake, kebab, upper, lower, title, sentence, dot, path)")
 	caseCmd.MarkFlagRequired("to")
 	Cmd.AddCommand(caseCmd)
 }

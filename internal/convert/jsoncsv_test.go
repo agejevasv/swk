@@ -201,3 +201,33 @@ func TestJSONCSVRoundtrip(t *testing.T) {
 		}
 	}
 }
+
+// Numbers must reach the CSV as written, not as float64 renderings.
+func TestJSONToCSV_PreservesNumbers(t *testing.T) {
+	input := `[{"id":12345678901234567890,"n":1000000,"big":9007199254740993,"f":0.1}]`
+
+	got, err := JSONToCSV([]byte(input), ',')
+	if err != nil {
+		t.Fatalf("JSONToCSV: %v", err)
+	}
+
+	want := "big,f,id,n\n9007199254740993,0.1,12345678901234567890,1000000\n"
+	if string(got) != want {
+		t.Errorf("JSONToCSV() = %q, want %q", got, want)
+	}
+}
+
+// Nested values belong in the cell as JSON, not as Go's map[...] rendering.
+func TestJSONToCSV_NestedValues(t *testing.T) {
+	input := `[{"a":{"x":1},"b":[1,2]}]`
+
+	got, err := JSONToCSV([]byte(input), ',')
+	if err != nil {
+		t.Fatalf("JSONToCSV: %v", err)
+	}
+
+	want := "a,b\n\"{\"\"x\"\":1}\",\"[1,2]\"\n"
+	if string(got) != want {
+		t.Errorf("JSONToCSV() = %q, want %q", got, want)
+	}
+}

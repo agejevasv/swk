@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -79,7 +80,8 @@ func runServe(cmd *cobra.Command, args []string) error {
 
 	useTLS := ioutil.MustGetBool(cmd, "tls")
 
-	ln, err := net.Listen("tcp", fmt.Sprintf("%s:%d", host, port))
+	// JoinHostPort brackets IPv6 literals; "%s:%d" would produce "::1:8080".
+	ln, err := net.Listen("tcp", net.JoinHostPort(host, strconv.Itoa(port)))
 	if err != nil {
 		return err
 	}
@@ -98,7 +100,12 @@ func runServe(cmd *cobra.Command, args []string) error {
 
 	fmt.Fprintf(cmd.ErrOrStderr(), "Serving %s on %s://%s\n", dir, scheme, ln.Addr())
 
-	server := &http.Server{Handler: handler}
+	server := &http.Server{
+		Handler: handler,
+		// Without a header timeout a single idle connection can hold the
+		// server open indefinitely.
+		ReadHeaderTimeout: 10 * time.Second,
+	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()

@@ -72,11 +72,58 @@ func TestFormatJSON(t *testing.T) {
 			opts:  JSONOptions{Indent: 2},
 			want:  "{\n  \"k\": -100\n}",
 		},
+		// Number literals are preserved exactly as written.
 		{
-			name:  "scientific_number",
+			name:  "scientific_number_kept_verbatim",
 			input: `{"k":1e10}`,
 			opts:  JSONOptions{Minify: true},
-			want:  `{"k":10000000000}`,
+			want:  `{"k":1e10}`,
+		},
+		{
+			name:  "large_integer_keeps_full_precision",
+			input: `{"k":9007199254740993}`,
+			opts:  JSONOptions{Minify: true},
+			want:  `{"k":9007199254740993}`,
+		},
+		{
+			name:  "integer_beyond_int64_is_not_rounded",
+			input: `{"k":12345678901234567890}`,
+			opts:  JSONOptions{Minify: true},
+			want:  `{"k":12345678901234567890}`,
+		},
+		{
+			name:  "round_number_is_not_rewritten_in_exponent_form",
+			input: `{"k":1000000}`,
+			opts:  JSONOptions{Minify: true},
+			want:  `{"k":1000000}`,
+		},
+		{
+			name:  "high_precision_decimal_is_preserved",
+			input: `{"k":0.1234567890123456789}`,
+			opts:  JSONOptions{Minify: true},
+			want:  `{"k":0.1234567890123456789}`,
+		},
+
+		// String contents are not HTML-escaped.
+		{
+			name:  "angle_brackets_and_ampersand_kept_literal",
+			input: `{"k":"<b>&amp;</b>"}`,
+			opts:  JSONOptions{Minify: true},
+			want:  `{"k":"<b>&amp;</b>"}`,
+		},
+
+		// Indent <= 0 falls back to the default of two spaces.
+		{
+			name:  "zero_indent_uses_default",
+			input: `{"a":1}`,
+			opts:  JSONOptions{Indent: 0},
+			want:  "{\n  \"a\": 1\n}",
+		},
+		{
+			name:  "negative_indent_uses_default",
+			input: `{"a":1}`,
+			opts:  JSONOptions{Indent: -4},
+			want:  "{\n  \"a\": 1\n}",
 		},
 		{
 			name:  "bool_true",
@@ -155,6 +202,18 @@ func TestFormatJSON(t *testing.T) {
 		{
 			name:    "empty_string",
 			input:   "",
+			opts:    JSONOptions{Indent: 2},
+			wantErr: true,
+		},
+		{
+			name:    "trailing_content_after_value",
+			input:   `{"a":1} trailing`,
+			opts:    JSONOptions{Indent: 2},
+			wantErr: true,
+		},
+		{
+			name:    "two_top_level_values",
+			input:   `{"a":1}{"b":2}`,
 			opts:    JSONOptions{Indent: 2},
 			wantErr: true,
 		},

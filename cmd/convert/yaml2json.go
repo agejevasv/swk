@@ -20,7 +20,12 @@ var yaml2jsonCmd = &cobra.Command{
 			return err
 		}
 
-		output, err := convLib.YAMLToJSON([]byte(input), ioutil.MustGetInt(cmd, "indent"))
+		indent := ioutil.MustGetInt(cmd, "indent")
+		if indent < 0 {
+			return fmt.Errorf("--indent must be >= 0, got %d", indent)
+		}
+
+		output, err := convLib.YAMLToJSON([]byte(input), indent)
 		if err != nil {
 			return err
 		}

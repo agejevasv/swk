@@ -29,7 +29,23 @@ func randomPalette() []color.RGBA {
 	return colors
 }
 
+// Dimension limits: the shape drawing needs at least MinImageDim pixels per
+// side, and MaxImageDim keeps a stray flag value from exhausting memory.
+const (
+	MinImageDim = 4
+	MaxImageDim = 10000
+)
+
 func GenerateImage(width, height int, style string) ([]byte, error) {
+	if width < MinImageDim || height < MinImageDim {
+		return nil, fmt.Errorf("image dimensions must be at least %dx%d, got %dx%d",
+			MinImageDim, MinImageDim, width, height)
+	}
+	if width > MaxImageDim || height > MaxImageDim {
+		return nil, fmt.Errorf("image dimensions must be at most %dx%d, got %dx%d",
+			MaxImageDim, MaxImageDim, width, height)
+	}
+
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
 
 	pal := randomPalette()

@@ -202,3 +202,22 @@ func TestHTMLQuery(t *testing.T) {
 		})
 	}
 }
+
+// An unparseable selector is an error, not an empty result.
+func TestHTMLQuery_InvalidSelector(t *testing.T) {
+	for _, selector := range []string{"###bad", "div[", "a:bogus-pseudo(", ""} {
+		if _, err := HTMLQuery("<p>x</p>", selector, ""); err == nil {
+			t.Errorf("selector %q should have been rejected", selector)
+		}
+	}
+}
+
+func TestHTMLQuery_ValidSelectorWithNoMatches(t *testing.T) {
+	got, err := HTMLQuery("<p>x</p>", "div.missing", "")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(got) != 0 {
+		t.Errorf("expected no results, got %v", got)
+	}
+}

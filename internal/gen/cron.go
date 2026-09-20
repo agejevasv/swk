@@ -109,10 +109,11 @@ func validateFlagCombinations(opts CronOptions) error {
 			return fmt.Errorf("--month cannot be used with --%s", schedName(opts))
 		}
 	}
-	if opts.Weekly {
-		if opts.Month != "" {
-			return fmt.Errorf("--month cannot be used with --weekly")
-		}
+	if opts.Weekly && opts.Month != "" {
+		return fmt.Errorf("--month cannot be used with --weekly")
+	}
+	if opts.Monthly && opts.Month != "" {
+		return fmt.Errorf("--month cannot be used with --monthly")
 	}
 	return nil
 }

@@ -190,3 +190,11 @@ func TestCronNext_HourlyCorrectTimes(t *testing.T) {
 		t.Errorf("CronNext() second = %v, want 2024-06-15 12:00 UTC", got[1])
 	}
 }
+
+func TestCronNext_RejectsNonPositiveCount(t *testing.T) {
+	for _, n := range []int{0, -1, -100} {
+		if _, err := CronNext("* * * * *", n, time.Now()); err == nil {
+			t.Errorf("CronNext(n=%d) should have returned an error", n)
+		}
+	}
+}

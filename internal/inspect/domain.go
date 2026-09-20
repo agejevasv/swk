@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	neturl "net/url"
 	"strings"
 	"time"
 )
@@ -94,7 +95,8 @@ type rdapNameserver struct {
 func queryRDAP(baseURL string, name string) (*DomainInfo, error) {
 	client := &http.Client{Timeout: 5 * time.Second}
 
-	url := baseURL + "/domain/" + name
+	// Escape the name: a "/" in it would otherwise reshape the request path.
+	url := baseURL + "/domain/" + neturl.PathEscape(name)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err

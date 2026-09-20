@@ -38,6 +38,10 @@ func explainField(field, name string, min, max int) string {
 }
 
 func CronNext(expr string, n int, from time.Time) ([]time.Time, error) {
+	if n <= 0 {
+		return nil, fmt.Errorf("number of runs must be positive, got %d", n)
+	}
+
 	parser := cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
 	sched, err := parser.Parse(expr)
 	if err != nil {

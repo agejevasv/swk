@@ -168,3 +168,49 @@ func TestHTML_QueryAttr(t *testing.T) {
 		t.Errorf("expected 'http://example.com' in output, got %q", out)
 	}
 }
+
+// An empty --replace must delete matches, not fall through to grep mode.
+func TestRegex_ReplaceWithEmptyString(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("regex", "-r", "", "foo ", "foo bar")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if strings.TrimRight(out, "\n") != "bar" {
+		t.Errorf("expected matches to be deleted, got %q", out)
+	}
+}
+
+func TestRegex_ReplaceWithValue(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("regex", "-r", "qux", "bar", "foo bar")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if strings.TrimRight(out, "\n") != "foo qux" {
+		t.Errorf("expected substitution, got %q", out)
+	}
+}
+
+// Without --replace the command still greps.
+func TestRegex_NoReplaceStillGreps(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("regex", "foo", "foo bar")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if strings.TrimRight(out, "\n") != "foo bar" {
+		t.Errorf("expected the matching line, got %q", out)
+	}
+}
+
+func TestHTML_InvalidSelectorIsAnError(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	_, err := executeCommand("html", "###bad", "<p>x</p>")
+	if err == nil {
+		t.Fatal("expected an error for an invalid selector")
+	}
+	if !strings.Contains(err.Error(), "invalid CSS selector") {
+		t.Errorf("expected a selector error, got %v", err)
+	}
+}

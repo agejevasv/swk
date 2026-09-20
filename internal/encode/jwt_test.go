@@ -9,6 +9,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"math/big"
+	"strings"
 	"testing"
 	"time"
 
@@ -195,8 +196,8 @@ func TestJWTVerify_HMAC(t *testing.T) {
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("JWTVerify() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			if info != nil && info.Valid != tt.wantValid {
-				t.Errorf("JWTVerify() valid = %v, want %v", info.Valid, tt.wantValid)
+			if info != nil && info.IsVerified() != tt.wantValid {
+				t.Errorf("JWTVerify() valid = %v, want %v", info.IsVerified(), tt.wantValid)
 			}
 		})
 	}
@@ -263,7 +264,7 @@ func TestJWTEncode_HMAC(t *testing.T) {
 				if err != nil {
 					t.Fatalf("verify failed: %v", err)
 				}
-				if !info.Valid {
+				if !info.IsVerified() {
 					t.Error("expected Valid=true")
 				}
 			},
@@ -329,7 +330,7 @@ func TestJWT_RSA_Roundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("JWTVerify RS256 failed: %v", err)
 	}
-	if !info.Valid {
+	if !info.IsVerified() {
 		t.Error("expected Valid=true for correct public key")
 	}
 
@@ -340,7 +341,7 @@ func TestJWT_RSA_Roundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if info.Valid {
+	if info.IsVerified() {
 		t.Error("expected Valid=false for wrong public key")
 	}
 }
@@ -371,7 +372,7 @@ func TestJWT_ECDSA_Roundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("JWTVerify ES256 failed: %v", err)
 	}
-	if !info.Valid {
+	if !info.IsVerified() {
 		t.Error("expected Valid=true")
 	}
 }
@@ -402,7 +403,7 @@ func TestJWT_Ed25519_Roundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("JWTVerify EdDSA failed: %v", err)
 	}
-	if !info.Valid {
+	if !info.IsVerified() {
 		t.Error("expected Valid=true")
 	}
 }
@@ -420,7 +421,7 @@ func TestJWT_KeyErrors(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if info.Valid {
+	if info.IsVerified() {
 		t.Error("expected Valid=false for HMAC verify without secret")
 	}
 
@@ -454,7 +455,7 @@ func TestJWT_ParsePrivateKey_PKCS1(t *testing.T) {
 	if err != nil {
 		t.Fatalf("JWTVerify failed: %v", err)
 	}
-	if !info.Valid {
+	if !info.IsVerified() {
 		t.Error("expected Valid=true")
 	}
 }
@@ -484,7 +485,7 @@ func TestJWT_ParsePrivateKey_EC(t *testing.T) {
 	if err != nil {
 		t.Fatalf("JWTVerify failed: %v", err)
 	}
-	if !info.Valid {
+	if !info.IsVerified() {
 		t.Error("expected Valid=true")
 	}
 }
@@ -510,7 +511,7 @@ func TestJWT_ParsePublicKey_PKCS1RSA(t *testing.T) {
 	if err != nil {
 		t.Fatalf("JWTVerify with PKCS1 public key failed: %v", err)
 	}
-	if !info.Valid {
+	if !info.IsVerified() {
 		t.Error("expected Valid=true")
 	}
 }
@@ -543,7 +544,7 @@ func TestJWT_ParsePublicKey_FromCertificate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("JWTVerify with certificate failed: %v", err)
 	}
-	if !info.Valid {
+	if !info.IsVerified() {
 		t.Error("expected Valid=true")
 	}
 }
@@ -568,16 +569,17 @@ func TestJWT_ParsePublicKey_InvalidBytes(t *testing.T) {
 
 	// Bad public key should either error or return Valid=false
 	info, err := JWTVerify(rsaToken, "", badPEM)
-	if err == nil && info != nil && info.Valid {
+	if err == nil && info.IsVerified() {
 		t.Error("expected either error or Valid=false for unparseable public key")
 	}
 }
 
 func TestJWTInfoJSON(t *testing.T) {
+	valid := true
 	info := &JWTInfo{
 		Header:  map[string]any{"alg": "HS256", "typ": "JWT"},
 		Payload: map[string]any{"sub": "123"},
-		Valid:   true,
+		Valid:   &valid,
 	}
 	out, err := JWTInfoJSON(info)
 	if err != nil {
@@ -585,5 +587,57 @@ func TestJWTInfoJSON(t *testing.T) {
 	}
 	if len(out) == 0 {
 		t.Error("expected non-empty JSON output")
+	}
+	if !strings.Contains(string(out), `"valid": true`) {
+		t.Errorf("expected valid field in output, got %s", out)
+	}
+}
+
+// A decode without verification must not claim the token is invalid.
+func TestJWTDecode_OmitsValidField(t *testing.T) {
+	token, err := JWTEncode(`{"sub":"u1"}`, "secret", nil, "HS256")
+	if err != nil {
+		t.Fatalf("setup: %v", err)
+	}
+
+	info, err := JWTDecode(token)
+	if err != nil {
+		t.Fatalf("JWTDecode: %v", err)
+	}
+	if info.Valid != nil {
+		t.Errorf("expected Valid to be nil for a plain decode, got %v", *info.Valid)
+	}
+	if info.IsVerified() {
+		t.Error("expected IsVerified() to be false for a plain decode")
+	}
+
+	out, err := JWTInfoJSON(info)
+	if err != nil {
+		t.Fatalf("JWTInfoJSON: %v", err)
+	}
+	if strings.Contains(string(out), `"valid"`) {
+		t.Errorf("decode output should not contain a valid field, got %s", out)
+	}
+}
+
+// A failed verification must record why.
+func TestJWTVerify_ReportsReason(t *testing.T) {
+	token, err := JWTEncode(`{"sub":"u1"}`, "right-secret", nil, "HS256")
+	if err != nil {
+		t.Fatalf("setup: %v", err)
+	}
+
+	info, err := JWTVerify(token, "wrong-secret", nil)
+	if err != nil {
+		t.Fatalf("JWTVerify: %v", err)
+	}
+	if info.IsVerified() {
+		t.Error("expected verification to fail with the wrong secret")
+	}
+	if info.Valid == nil || *info.Valid {
+		t.Error("expected Valid to be explicitly false")
+	}
+	if info.Error == "" {
+		t.Error("expected a reason for the failure")
 	}
 }

@@ -10,11 +10,17 @@ import (
 
 // XMLOptions holds options for XML formatting.
 type XMLOptions struct {
+	// Indent is the number of spaces per level; 0 produces unindented output.
+	// Negative values are rejected.
 	Indent int
 	Minify bool
 }
 
 func FormatXML(input []byte, opts XMLOptions) ([]byte, error) {
+	if opts.Indent < 0 {
+		return nil, fmt.Errorf("indent must be >= 0, got %d", opts.Indent)
+	}
+
 	decoder := xml.NewDecoder(bytes.NewReader(input))
 	var buf bytes.Buffer
 	encoder := xml.NewEncoder(&buf)
