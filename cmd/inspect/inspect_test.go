@@ -457,3 +457,65 @@ func TestJWT_RegisteredClaimsOrder(t *testing.T) {
 		t.Errorf("expected registered claims before custom claims")
 	}
 }
+
+// --all only means something together with --local.
+func TestIP_AllRequiresLocal(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	_, err := executeCommand("ip", "--all")
+	if err == nil {
+		t.Fatal("expected an error for --all without --local")
+	}
+	if !strings.Contains(err.Error(), "--all requires --local") {
+		t.Errorf("unexpected error: %v", err)
+	}
+}
+
+func TestIP_LocalTable(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("ip", "--local", "--all")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// --all always includes loopback, whatever the host looks like.
+	if !strings.Contains(out, "127.0.0.1/8") && !strings.Contains(out, "::1/128") {
+		t.Errorf("expected a loopback address in the table, got %q", out)
+	}
+}
+
+func TestIP_LocalJSON(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("ip", "--local", "--all", "--json")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var addrs []struct {
+		Interface string `json:"interface"`
+		IP        string `json:"ip"`
+		Prefix    int    `json:"prefix"`
+		Family    string `json:"family"`
+	}
+	if err := json.Unmarshal([]byte(out), &addrs); err != nil {
+		t.Fatalf("output is not valid JSON: %v (%q)", err, out)
+	}
+	if len(addrs) == 0 {
+		t.Fatal("expected at least the loopback address")
+	}
+	for _, a := range addrs {
+		if a.Interface == "" || a.IP == "" {
+			t.Errorf("incomplete entry: %+v", a)
+		}
+	}
+}
+
+// The short forms are what people will actually type.
+func TestIP_LocalShortFlags(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	out, err := executeCommand("ip", "-l", "-a")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if out == "" {
+		t.Error("expected output for -l -a")
+	}
+}
