@@ -9,6 +9,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"math/big"
 	"strings"
 	"testing"
@@ -458,15 +459,119 @@ func TestJWT_RegisteredClaimsOrder(t *testing.T) {
 	}
 }
 
-// --all only means something together with --local.
-func TestIP_AllRequiresLocal(t *testing.T) {
-	t.Cleanup(resetAllFlags)
-	_, err := executeCommand("ip", "--all")
-	if err == nil {
-		t.Fatal("expected an error for --all without --local")
+// --local pins the output to the local view; --all on its own covers both.
+func TestIP_ResolveMode(t *testing.T) {
+	tests := []struct {
+		name                                     string
+		local, all                               bool
+		wantPublic, wantLocal, wantIncludeHidden bool
+	}{
+		{"no flags: public only", false, false, true, false, false},
+		{"--local: local only, filtered", true, false, false, true, false},
+		{"--local --all: local only, unfiltered", true, true, false, true, true},
+		{"--all: both, unfiltered", false, true, true, true, true},
 	}
-	if !strings.Contains(err.Error(), "--all requires --local") {
-		t.Errorf("unexpected error: %v", err)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			public, local, hidden := resolveIPMode(tt.local, tt.all)
+			if public != tt.wantPublic || local != tt.wantLocal || hidden != tt.wantIncludeHidden {
+				t.Errorf("resolveIPMode(%v, %v) = (%v, %v, %v), want (%v, %v, %v)",
+					tt.local, tt.all, public, local, hidden,
+					tt.wantPublic, tt.wantLocal, tt.wantIncludeHidden)
+			}
+		})
+	}
+}
+
+// stubPublicIP replaces the public lookup for the duration of a test.
+func stubPublicIP(t *testing.T, ip string, err error) {
+	t.Helper()
+	original := lookupPublicIP
+	lookupPublicIP = func() (string, error) { return ip, err }
+	t.Cleanup(func() { lookupPublicIP = original })
+}
+
+// Losing the network must not throw away the local addresses as well.
+func TestIP_PublicFailureKeepsLocalResults(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	stubPublicIP(t, "", errors.New("network is unreachable"))
+
+	out, err := executeCommand("ip", "--all")
+	if err != nil {
+		t.Fatalf("a failed public lookup should not fail the command: %v", err)
+	}
+	if !strings.Contains(out, "127.0.0.1/8") && !strings.Contains(out, "::1/128") {
+		t.Errorf("expected local addresses in the output, got %q", out)
+	}
+	if !strings.Contains(out, "public IP unavailable") {
+		t.Errorf("expected a diagnostic about the failed lookup, got %q", out)
+	}
+}
+
+// With nothing else to show, the failure is the whole answer.
+func TestIP_PublicFailureAloneIsAnError(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	stubPublicIP(t, "", errors.New("network is unreachable"))
+
+	if _, err := executeCommand("ip"); err == nil {
+		t.Fatal("expected an error when the only requested view fails")
+	}
+}
+
+func TestIP_PublicAloneStaysBare(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	stubPublicIP(t, "203.0.113.7", nil)
+
+	out, err := executeCommand("ip")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if strings.TrimRight(out, "\n") != "203.0.113.7" {
+		t.Errorf("public output should be the bare address, got %q", out)
+	}
+}
+
+func TestIP_AllShowsBothViews(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	stubPublicIP(t, "203.0.113.7", nil)
+
+	out, err := executeCommand("ip", "--all")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "public") || !strings.Contains(out, "203.0.113.7") {
+		t.Errorf("expected the public address in the table, got %q", out)
+	}
+	if !strings.Contains(out, "127.0.0.1/8") && !strings.Contains(out, "::1/128") {
+		t.Errorf("expected loopback in the table, got %q", out)
+	}
+}
+
+func TestIP_AllJSONCarriesBoth(t *testing.T) {
+	t.Cleanup(resetAllFlags)
+	stubPublicIP(t, "203.0.113.7", nil)
+
+	out, err := executeCommand("ip", "--all", "--json")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var got struct {
+		Public string `json:"public"`
+		Local  []struct {
+			Interface string `json:"interface"`
+			IP        string `json:"ip"`
+		} `json:"local"`
+	}
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatalf("output is not valid JSON: %v (%q)", err, out)
+	}
+	if got.Public != "203.0.113.7" {
+		t.Errorf("public = %q, want 203.0.113.7", got.Public)
+	}
+	if len(got.Local) == 0 {
+		t.Error("expected local addresses alongside the public one")
 	}
 }
 

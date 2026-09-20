@@ -321,7 +321,7 @@ swk generate uuid --version 7
 | `inspect cron` | Explain cron expressions |
 | `inspect dns` | DNS lookups (A, AAAA, MX, NS, TXT, CNAME) |
 | `inspect domain` | Domain registration info via RDAP |
-| `inspect ip` | Show your public IP, or local interface addresses |
+| `inspect ip` | Show your public IP, local interface addresses, or both |
 | `inspect jwt` | Inspect JWT token claims and expiry |
 | `inspect net` | List processes listening on network ports (Linux/macOS) |
 | `inspect subnet` | Calculate subnet information from CIDR |
@@ -353,8 +353,11 @@ swk inspect ip
 
 # Local interface addresses
 swk inspect ip --local                  # skips loopback, down and link-local
-swk inspect ip --local --all            # includes them
+swk inspect ip --local --all            # includes them, no network lookup
 swk inspect ip --local --json
+
+# Everything: public plus every local address
+swk inspect ip --all
 
 # JWT token inspection
 swk inspect jwt 'eyJhbGciOiJIUzI1NiIs...'
