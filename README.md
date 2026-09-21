@@ -106,9 +106,9 @@ swk convert base 255 --from dec --to hex
 
 # Byte sizes (default: 1024-based with IEC labels)
 swk convert bytes 1073741824           # 1 GiB
-swk convert bytes '1.5GiB'            # 1610612736
+swk convert bytes '1.5GiB'             # 1610612736
 swk convert bytes -d 1000000000        # 1 GB (decimal, 1000-based)
-swk convert bytes '1.5GB'             # 1500000000
+swk convert bytes '1.5GB'              # 1500000000
 
 # Case conversion
 echo 'helloWorld' | swk convert case --to snake    # hello_world
@@ -116,7 +116,7 @@ echo 'hello world' | swk convert case --to camel   # helloWorld
 
 # File permissions
 swk convert chmod 755                  # shows rwxr-xr-x + breakdown
-swk convert chmod rwxr-xr-x           # shows 755 + breakdown
+swk convert chmod rwxr-xr-x            # shows 755 + breakdown
 swk convert chmod 4755                 # setuid support
 
 # Color format conversion
@@ -133,9 +133,9 @@ swk convert date '2023-11-14' --from '%Y-%m-%d' --to unix
 
 # Duration conversion
 swk convert duration 86400             # 1d
-swk convert duration '2d 5h 30m'      # 192600
+swk convert duration '2d 5h 30m'       # 192600
 swk convert duration 31536000          # 1y
-swk convert duration '1y 6mo'         # 47088000
+swk convert duration '1y 6mo'          # 47088000
 
 # Image conversion (accepts file path)
 swk convert image photo.png --to jpeg -o photo.jpg
